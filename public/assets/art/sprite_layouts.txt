@@ -1,0 +1,16 @@
+OUTPOST BUILDER ART
+34 transparent PNGs. Asset names are at the ZIP root.
+
+Astronaut sheet: 768 x 640, five rows, 96 x 128 cells.
+Top to bottom: idle (2), walk (6), dance (8), shiver (2), run (6).
+Frames start at the left and unused cells are transparent.
+Idle and shiver use two slight variations each; dance reuses two poses.
+
+Mission control: 576 x 192, three 192 x 192 cells.
+Left to right: calm, worried, cheering.
+
+Lunar set: 768 x 128, three 256 x 128 cells.
+Left to right: ground, ice, rock.
+
+Icons: 128 x 128. Logo: 192 x 192.
+Sheet layouts were inferred from the brief and have not been tested in the game.

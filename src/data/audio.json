@@ -1,0 +1,298 @@
+[
+  {
+    "name": "ui_tap",
+    "approved": false,
+    "realRecording": false,
+    "source": "",
+    "sourceUrl": "",
+    "edits": ""
+  },
+  {
+    "name": "ui_select",
+    "approved": false,
+    "realRecording": false,
+    "source": "",
+    "sourceUrl": "",
+    "edits": ""
+  },
+  {
+    "name": "ui_cant",
+    "approved": false,
+    "realRecording": false,
+    "source": "",
+    "sourceUrl": "",
+    "edits": ""
+  },
+  {
+    "name": "ui_open_panel",
+    "approved": false,
+    "realRecording": false,
+    "source": "",
+    "sourceUrl": "",
+    "edits": ""
+  },
+  {
+    "name": "ui_end_day",
+    "approved": false,
+    "realRecording": false,
+    "source": "",
+    "sourceUrl": "",
+    "edits": ""
+  },
+  {
+    "name": "bld_place",
+    "approved": false,
+    "realRecording": false,
+    "source": "",
+    "sourceUrl": "",
+    "edits": ""
+  },
+  {
+    "name": "bld_remove",
+    "approved": false,
+    "realRecording": false,
+    "source": "",
+    "sourceUrl": "",
+    "edits": ""
+  },
+  {
+    "name": "bld_power_down",
+    "approved": false,
+    "realRecording": false,
+    "source": "",
+    "sourceUrl": "",
+    "edits": ""
+  },
+  {
+    "name": "bld_power_up",
+    "approved": false,
+    "realRecording": false,
+    "source": "",
+    "sourceUrl": "",
+    "edits": ""
+  },
+  {
+    "name": "bld_broken",
+    "approved": false,
+    "realRecording": false,
+    "source": "",
+    "sourceUrl": "",
+    "edits": ""
+  },
+  {
+    "name": "bld_repaired",
+    "approved": false,
+    "realRecording": false,
+    "source": "",
+    "sourceUrl": "",
+    "edits": ""
+  },
+  {
+    "name": "evt_storm_warning",
+    "approved": false,
+    "realRecording": false,
+    "source": "",
+    "sourceUrl": "",
+    "edits": ""
+  },
+  {
+    "name": "evt_storm_hit",
+    "approved": false,
+    "realRecording": false,
+    "source": "",
+    "sourceUrl": "",
+    "edits": ""
+  },
+  {
+    "name": "evt_rocket_land",
+    "approved": false,
+    "realRecording": false,
+    "source": "",
+    "sourceUrl": "",
+    "edits": ""
+  },
+  {
+    "name": "evt_survey_expand",
+    "approved": false,
+    "realRecording": false,
+    "source": "",
+    "sourceUrl": "",
+    "edits": ""
+  },
+  {
+    "name": "evt_request_done",
+    "approved": false,
+    "realRecording": false,
+    "source": "",
+    "sourceUrl": "",
+    "edits": ""
+  },
+  {
+    "name": "evt_chapter_complete",
+    "approved": false,
+    "realRecording": false,
+    "source": "",
+    "sourceUrl": "",
+    "edits": ""
+  },
+  {
+    "name": "evt_run_over",
+    "approved": false,
+    "realRecording": false,
+    "source": "",
+    "sourceUrl": "",
+    "edits": ""
+  },
+  {
+    "name": "prd_question",
+    "approved": false,
+    "realRecording": false,
+    "source": "",
+    "sourceUrl": "",
+    "edits": ""
+  },
+  {
+    "name": "prd_right",
+    "approved": false,
+    "realRecording": false,
+    "source": "",
+    "sourceUrl": "",
+    "edits": ""
+  },
+  {
+    "name": "prd_wrong",
+    "approved": false,
+    "realRecording": false,
+    "source": "",
+    "sourceUrl": "",
+    "edits": ""
+  },
+  {
+    "name": "mc_radio_open",
+    "approved": false,
+    "realRecording": false,
+    "source": "",
+    "sourceUrl": "",
+    "edits": ""
+  },
+  {
+    "name": "mc_radio_close",
+    "approved": false,
+    "realRecording": false,
+    "source": "",
+    "sourceUrl": "",
+    "edits": ""
+  },
+  {
+    "name": "mc_typing",
+    "approved": false,
+    "realRecording": false,
+    "source": "",
+    "sourceUrl": "",
+    "edits": ""
+  },
+  {
+    "name": "mc_real_event",
+    "approved": false,
+    "realRecording": false,
+    "source": "",
+    "sourceUrl": "",
+    "edits": ""
+  },
+  {
+    "name": "astro_dance",
+    "approved": false,
+    "realRecording": false,
+    "source": "",
+    "sourceUrl": "",
+    "edits": ""
+  },
+  {
+    "name": "astro_shiver",
+    "approved": false,
+    "realRecording": false,
+    "source": "",
+    "sourceUrl": "",
+    "edits": ""
+  },
+  {
+    "name": "amb_mars_wind",
+    "approved": false,
+    "realRecording": false,
+    "source": "",
+    "sourceUrl": "",
+    "edits": ""
+  },
+  {
+    "name": "amb_solar_storm",
+    "approved": false,
+    "realRecording": false,
+    "source": "",
+    "sourceUrl": "",
+    "edits": ""
+  },
+  {
+    "name": "mus_calm_loop",
+    "approved": false,
+    "realRecording": false,
+    "source": "",
+    "sourceUrl": "",
+    "edits": ""
+  },
+  {
+    "name": "mus_report",
+    "approved": false,
+    "realRecording": false,
+    "source": "",
+    "sourceUrl": "",
+    "edits": ""
+  },
+  {
+    "name": "evt_dust_arrive",
+    "approved": false,
+    "realRecording": false,
+    "source": "",
+    "sourceUrl": "",
+    "edits": ""
+  },
+  {
+    "name": "evt_night_fall",
+    "approved": false,
+    "realRecording": false,
+    "source": "",
+    "sourceUrl": "",
+    "edits": ""
+  },
+  {
+    "name": "evt_research_done",
+    "approved": false,
+    "realRecording": false,
+    "source": "",
+    "sourceUrl": "",
+    "edits": ""
+  },
+  {
+    "name": "evt_notebook_page",
+    "approved": false,
+    "realRecording": false,
+    "source": "",
+    "sourceUrl": "",
+    "edits": ""
+  },
+  {
+    "name": "amb_mars_dust_storm",
+    "approved": false,
+    "realRecording": false,
+    "source": "",
+    "sourceUrl": "",
+    "edits": ""
+  },
+  {
+    "name": "amb_moon_base",
+    "approved": false,
+    "realRecording": false,
+    "source": "",
+    "sourceUrl": "",
+    "edits": ""
+  }
+]

@@ -1,0 +1,15 @@
+node_modules
+dist
+*.log
+.DS_Store
+
+# Sounds taken from the game Factorio (SPEC 11.3, 16.1). Never commit these.
+public/assets/audio/amb_moon_base.*
+public/assets/audio/ui_open_panel.*
+public/assets/audio/bld_power_up.*
+public/assets/audio/bld_repaired.*
+public/assets/audio/evt_storm_warning.*
+public/assets/audio/evt_rocket_land.*
+public/assets/audio/evt_survey_expand.*
+public/assets/audio/prd_question.*
+public/assets/audio/astro_dance.*
