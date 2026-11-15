@@ -328,14 +328,20 @@ export const CAMERA = {
 // ---- Life (phase 4, SPEC 11.2, 11.3). Render and sound only, never read by the rules. ----
 
 export const AUDIO = {
-  /** Volume groups (SPEC 11.3). */
-  volume: { ambience: 0.5, effects: 1, music: 0.6 },
+  /**
+   * Volume groups. Every sound also has its own `gain` in audio.json (measured with ffmpeg), so
+   * the groups only set the balance. Effects 0.6 keeps the loudest effect's peak 6 dB under full
+   * scale; music 0.5 puts the music's average 6 to 7 dB under a typical effect; ambience 0.3 sits under both.
+   */
+  volume: { ambience: 0.3, effects: 0.6, music: 0.7 },
   /** Ambience and music drop to this share of their volume while a Mission Control sound plays. */
   duckShare: 0.35,
   /** At most this many event sounds play together at the end of a day. */
   maxDaySounds: 2,
   /** A storm that hits at this radiation level or above plays the storm-hit sound. */
   stormHitLevel: 2,
+  /** On a day whose radiation today is this level or above, the storm music plays in place of the playlist. */
+  stormMusicLevel: 2,
 } as const;
 
 export const ASTRONAUT = {

@@ -63,7 +63,7 @@ import {
   sourcesBodyHtml,
   sourcesModalHtml,
 } from './screens.ts';
-import { MESSAGE_WRAP, SOUND, SoundBoard, ambienceFor, daySounds, nowPlaying } from './sound.ts';
+import { MESSAGE_WRAP, SOUND, SoundBoard, ambienceFor, daySounds, musicModeFor, nowPlaying } from './sound.ts';
 import { t, type StringKey } from './strings.ts';
 import {
   buildHtml,
@@ -524,8 +524,8 @@ export class App {
     const { today } = forecast(chapter, run.chapterDay);
     this.sound.setAmbience(ambienceFor(chapter.site, today ? today.radiation : 0));
     const reportOpen = run.pendingReport || this.overlay === 'lostReport';
-    if (reportOpen) this.sound.setMusic(this.reportMusicReady ? SOUND.report : null);
-    else this.sound.setMusic(run.state.lost ? null : SOUND.calm);
+    const mode = musicModeFor(reportOpen, Boolean(run.state.lost), today ? today.radiation : 0);
+    this.sound.setMusic(reportOpen && !this.reportMusicReady ? null : mode);
   }
 
   /** The key of this morning, for remembering a closed card. */

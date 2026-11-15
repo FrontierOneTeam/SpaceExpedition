@@ -48,12 +48,15 @@ NASA observations are archived inputs. Production, damage, equipment incidents, 
 - **amb_mars_wind** — Team-approved sound; original creator/source still to be documented. 
 - **amb_mars_wind_real** — NASA/JPL-Caltech/LANL/CNES/CNRS/ISAE-Supaero https://assets.science.nasa.gov/content/dam/science/psd/mars/downloadable_items/4/5/45828_SCAM_MIC_SOL004_RUN001.mp3 Edits: Downloaded from NASA as a 40 s stereo MP3 (256 kbit/s). Re-encoded with ffmpeg to mono at 64 kbit/s, once as MP3 and once as Ogg Vorbis, to keep the files small. The recording was not cut, filtered or otherwise changed.
 - **amb_solar_storm** — Team-approved sound; original creator/source still to be documented. 
-- **mus_calm_loop** — Team-approved sound; original creator/source still to be documented.  Edits: Playback skips the first 5.4 s, which SPEC 11.3 measured as silent, and loops from there. The audio file itself is not changed.
-- **mus_report** — Team-approved sound; original creator/source still to be documented.  Edits: Playback skips the first 2.0 s, which SPEC 11.3 measured as silent, and loops from there. The audio file itself is not changed.
+- **Deep Space Habitat** (`mus_habitat`, "Track 1"): music made by the team for this game (NASA Space Apps Challenge 2026). Levelled and compressed with ffmpeg; not cut or changed otherwise.
+- **New Music Recording** (`mus_groove`, "Track 3"): music made by the team for this game (NASA Space Apps Challenge 2026). Levelled and compressed with ffmpeg; not cut or changed otherwise.
+- **Space Drone** (`mus_drone`, "Track 2"): music made by the team for this game (NASA Space Apps Challenge 2026). Levelled and compressed with ffmpeg; not cut or changed otherwise.
+- **Main Theme Track** (`mus_theme`, "Track 4"): music made by the team for this game (NASA Space Apps Challenge 2026). Levelled and compressed with ffmpeg; not cut or changed otherwise.
+- **Theme Variation** (`mus_storm`, "Track 5"): music made by the team for this game (NASA Space Apps Challenge 2026). Levelled and compressed with ffmpeg; not cut or changed otherwise.
 - **evt_dust_arrive** — Team-approved sound; original creator/source still to be documented. 
 - **evt_night_fall** — Team-approved sound; original creator/source still to be documented. 
 - **evt_research_done** — Team-approved sound; original creator/source still to be documented. 
 - **evt_notebook_page** — Team-approved sound; original creator/source still to be documented. 
 - **amb_mars_dust_storm** — Team-approved sound; original creator/source still to be documented.  Edits: Playback skips the first 6.0 s, which SPEC 11.3 measured as silent, and loops from there. The audio file itself is not changed.
 
-Nine Factorio-derived sounds are excluded from Git and production. Art was supplied by the team. AI tools assisted implementation and text preparation. Music creator/provenance and subjective listening are still team review items.
+Nine Factorio-derived sounds are excluded from Git and production. Art was supplied by the team. AI tools assisted implementation and text preparation. The five music tracks are by the team (see above); who made the sound effects is still to be documented, and subjective listening is still a team review item.

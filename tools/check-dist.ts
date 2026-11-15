@@ -2,6 +2,8 @@
 //
 // - dist/assets/audio holds every approved sound whose file is in public/, as .ogg and .mp3, and
 //   never one of the nine sounds that stay unapproved (SPEC 16.1, 16.4);
+// - the five music tracks are in dist in both formats, the two first-version tracks are not, and no
+//   music is part of the first visit's download (each track is fetched when first needed);
 // - the service worker does not precache sounds (they are cached when played);
 // - a web app manifest and a service worker exist, and the service worker precaches only files
 //   of this site (no other origin);
@@ -30,6 +32,12 @@ export const NEVER_SHIPPED = [
   'prd_question',
   'astro_dance',
 ] as const;
+
+/** The five music tracks: each is in dist as .ogg and .mp3, and none is loaded before the first tap. */
+export const MUSIC_TRACKS = ['mus_habitat', 'mus_groove', 'mus_drone', 'mus_theme', 'mus_storm'] as const;
+
+/** The first-version music, replaced by the five above: never loaded and never shipped. */
+export const RETIRED_MUSIC = ['mus_calm_loop', 'mus_report', 'mus_storm_intense'] as const;
 
 /**
  * URLs that may appear in built files because nothing ever requests them:
@@ -171,7 +179,9 @@ async function main(): Promise<void> {
   const audio = audioFiles();
   const want = approvedAudioFiles();
   if (JSON.stringify(audio) !== JSON.stringify(want)) problems.push(`audio in dist: ${audio.join(', ')}; expected ${want.join(', ')}`);
-  for (const name of NEVER_SHIPPED) if (audio.some((f) => f.startsWith(`${name}.`))) problems.push(`${name} must not be in dist`);
+  for (const name of [...NEVER_SHIPPED, ...RETIRED_MUSIC]) if (audio.some((f) => f.startsWith(`${name}.`))) problems.push(`${name} must not be in dist`);
+  for (const name of MUSIC_TRACKS) for (const ext of ['ogg', 'mp3']) if (!audio.includes(`${name}.${ext}`)) problems.push(`${name}.${ext} must be in dist`);
+  if (approvedSounds(audioEntries()).some((n) => n.startsWith('mus_'))) problems.push('music is loaded before the first tap');
   for (const u of precacheList()) if (u.url.startsWith('assets/audio/')) problems.push(`sound precached: ${u.url}`);
   problems.push(...serviceWorkerProblems());
   for (const f of foreignUrls()) problems.push(`other origin in ${f.file}: ${f.url}`);
@@ -181,7 +191,7 @@ async function main(): Promise<void> {
   const first = firstLoadBytes();
   if (first > BUDGET_BYTES) problems.push(`first load ${kb(first)} is over the 6 MB budget`);
   console.log(`Audio in dist: ${audio.length} files`);
-  console.log(`Sounds loaded before the first tap: ogg ${kb(startAudioBytes('ogg'))}, mp3 ${kb(startAudioBytes('mp3'))}; music after the first tap: ogg ${kb(musicBytes('ogg'))}, mp3 ${kb(musicBytes('mp3'))}`);
+  console.log(`Sounds loaded before the first tap (no music): ogg ${kb(startAudioBytes('ogg'))}, mp3 ${kb(startAudioBytes('mp3'))}; music, each track fetched when first needed: ogg ${kb(musicBytes('ogg'))}, mp3 ${kb(musicBytes('mp3'))}`);
   console.log(`Precache: ${pre.length} files, ${kb(preBytes)}`);
   console.log(`First visit downloads: ${kb(first)} (budget ${kb(BUDGET_BYTES)})`);
   if (problems.length > 0) {

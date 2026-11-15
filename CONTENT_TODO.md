@@ -32,10 +32,11 @@ Each line says what is missing and where in SPEC.md it comes from.
 ## Audio (SPEC 11.3, 16)
 
 - Replacements for the nine Factorio-derived sounds, which stay `approved: false` and are never loaded: `amb_moon_base`, `ui_open_panel`, `bld_power_up`, `bld_repaired`, `evt_storm_warning`, `evt_rocket_land`, `evt_survey_expand`, `prd_question`, `astro_dance`. The game is silent for them until new files are added and approved.
-- Who made the two music tracks, and with what: `mus_calm_loop`, `mus_report`. They are approved on the team's responsibility (SPEC 16.4).
+- Done: the five music tracks (`mus_habitat`, `mus_groove`, `mus_drone`, `mus_theme`, `mus_storm`) are made by the team for this game (TRACKLIST.txt, NASA Space Apps Challenge 2026), credited in `CREDITS.md`. The first-version `mus_calm_loop` and `mus_report` are replaced and `approved: false`.
+- Still undocumented: who made the sound effects and the delivered Mars wind, and with what (`approved` on the team's responsibility, SPEC 16.4).
 - Exact original clip links for the other sounds described as real NASA recordings: `amb_mars_dust_storm`, `mc_radio_open`, `mc_radio_close`. Until then they stay `realRecording: false` and show no "Now playing" line. The delivered `amb_mars_wind` is no longer played unless the NASA wind fails to load.
 - Done: `amb_mars_wind_real` is NASA's SuperCam recording (credit and clip link in `audio.json`, page in the register as `perseverance-wind`).
-- Someone should listen to every approved sound once, including the NASA wind looped, and the music after its silent start is skipped (`startAt`). Only measured so far, never listened to.
+- Someone should listen to every approved sound once, including the NASA wind looped, the five music tracks (playlist order, the switch to the theme on the report and to the storm track on a storm day) and the levels between music, effects and wind (`gain` in `audio.json`, group volumes in `config.ts`). Only measured so far, never listened to.
 
 ## Cards (SPEC 9.3)
 

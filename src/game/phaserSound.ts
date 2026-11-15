@@ -1,6 +1,6 @@
 // The sound backend over Phaser's sound manager (SPEC 11.3). Every call is guarded: a missing
-// or broken sound is silent and never throws. Includes WebAudio unlock sync, music gain
-// compensation for softly mastered loops, and an HTML5 <audio> fallback.
+// or broken sound is silent and never throws. Includes WebAudio unlock sync
+// and an HTML5 <audio> fallback.
 
 import type Phaser from 'phaser';
 import type { SoundBackend, SoundHandle } from '../ui/sound.ts';
@@ -12,10 +12,9 @@ export function soundUrls(name: string): string[] {
   return [`${AUDIO}${name}.ogg`, `${AUDIO}${name}.mp3`];
 }
 
-/** Boost softly mastered music loops at hardware output without changing simulation config numbers. */
-function outputVolume(name: string, volume: number): number {
-  const scaled = name === 'mus_calm_loop' || name === 'mus_report' ? volume * 1.65 : volume;
-  return Math.max(0, Math.min(1, scaled));
+/** The volume the board asks for (group volume times the sound's gain), kept between 0 and 1. */
+function outputVolume(_name: string, volume: number): number {
+  return Math.max(0, Math.min(1, volume));
 }
 
 /** The map scene's loader, which also loads the sounds. Null until the scene exists. */

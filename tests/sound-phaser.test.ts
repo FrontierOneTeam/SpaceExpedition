@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type Phaser from 'phaser';
 import { phaserSoundBackend } from '../src/game/phaserSound.ts';
-import { SOUND, SoundBoard } from '../src/ui/sound.ts';
+import { config } from '../src/sim/index.ts';
+import { SOUND, SoundBoard, gainOf } from '../src/ui/sound.ts';
 
 // A small stand-in for Phaser's game: a loader, an audio cache and a sound manager.
 function fakeGame() {
@@ -10,6 +11,7 @@ function fakeGame() {
   const added: { key: string; config: { volume: number; loop: boolean } }[] = [];
   const plays: { key: string; marker: string | null; markers: { name: string; start: number; duration: number; config: { loop: boolean } }[] }[] = [];
   const handlers: Record<string, ((...a: unknown[]) => void)[]> = {};
+  const completes: (() => void)[] = [];
   const loader = {
     on: (ev: string, fn: (...a: unknown[]) => void) => void (handlers[ev] ??= []).push(fn),
     once: (ev: string, fn: (...a: unknown[]) => void) => void (handlers[ev] ??= []).push(fn),
@@ -35,7 +37,9 @@ function fakeGame() {
         plays.push(rec);
         return {
           totalDuration: 32.9,
-          once: () => undefined,
+          once: (ev: string, fn: () => void) => {
+            if (ev === 'complete') completes.push(fn);
+          },
           addMarker: (m: { name: string; start: number; duration: number; config: { loop: boolean } }) => void markers.push(m),
           play: (marker?: string) => {
             rec.marker = marker ?? null;
@@ -53,6 +57,8 @@ function fakeGame() {
     added,
     plays,
     decode: (key: string) => cache.add(key),
+    /** The newest one-shot sound reaches its end. */
+    complete: () => completes.at(-1)?.(),
     emit: (ev: string, ...a: unknown[]) => (handlers[ev] ?? []).forEach((fn) => fn(...a)),
   };
 }
@@ -92,31 +98,76 @@ describe('music through the Phaser backend (SPEC 11.3)', () => {
     const board = new SoundBoard();
     board.attach(backend);
     board.unlock();
-    board.setMusic(SOUND.calm);
-    // The music was queued with Phaser's loader after the first tap ...
-    expect(f.queued).toEqual(expect.arrayContaining(['mus_calm_loop', 'mus_report']));
+    board.setMusic('build');
+    // Only the first playlist track was queued with Phaser's loader, after the first tap ...
+    expect(f.queued).toEqual(['mus_habitat']);
     // ... and is not "ready" yet, so nothing was started in a bare <audio> element.
-    expect(backend.has('mus_calm_loop')).toBe(false);
+    expect(backend.has('mus_habitat')).toBe(false);
     expect(FakeAudio.played).toBe(0);
     expect(f.added).toEqual([]);
   });
 
-  it('plays the music with Web Audio, looping from its startAt, as soon as Phaser has decoded it', () => {
+  it('plays a playlist track once with Web Audio, at exactly its group volume, as soon as Phaser has decoded it', () => {
     vi.stubGlobal('Audio', FakeAudio);
     const f = fakeGame();
     const backend = phaserSoundBackend(f.game);
     const board = new SoundBoard();
     board.attach(backend);
     board.unlock();
-    board.setMusic(SOUND.calm);
-    f.decode('mus_calm_loop');
+    board.setMusic('build');
+    f.decode('mus_habitat');
     board.refresh(); // the map's 'filecomplete' handler does this
-    expect(f.added.map((a) => a.key)).toEqual(['mus_calm_loop']);
-    expect(f.added[0].config.loop).toBe(true);
-    expect(f.added[0].config.volume).toBeGreaterThan(0.5);
-    expect(f.plays[0].marker).toBe('start');
-    expect(f.plays[0].markers[0]).toMatchObject({ name: 'start', start: 5.4, config: { loop: true } });
+    expect(f.added.map((a) => a.key)).toEqual(['mus_habitat']);
+    expect(f.added[0].config.loop).toBe(false);
+    // No special boost for music any more: the group volume times the track's gain (1).
+    expect(f.added[0].config.volume).toBe(config.AUDIO.volume.music);
+    expect(f.plays[0].marker).toBeNull();
     expect(FakeAudio.played).toBe(0);
+  });
+
+  it('a finished track makes the board ask for and play the next one', () => {
+    const f = fakeGame();
+    const backend = phaserSoundBackend(f.game);
+    const board = new SoundBoard();
+    board.attach(backend);
+    board.unlock();
+    board.setMusic('build');
+    f.decode('mus_habitat');
+    board.refresh();
+    f.complete();
+    expect(f.queued).toEqual(['mus_habitat', 'mus_groove']);
+    f.decode('mus_groove');
+    board.refresh();
+    expect(f.added.map((a) => a.key)).toEqual(['mus_habitat', 'mus_groove']);
+  });
+
+  it('plays the report and storm tracks looped', () => {
+    const f = fakeGame();
+    const backend = phaserSoundBackend(f.game);
+    const board = new SoundBoard();
+    board.attach(backend);
+    board.unlock();
+    board.setMusic('report');
+    f.decode('mus_theme');
+    board.refresh();
+    board.setMusic('storm');
+    f.decode('mus_storm');
+    board.refresh();
+    expect(f.added.map((a) => [a.key, a.config.loop])).toEqual([['mus_theme', true], ['mus_storm', true]]);
+    expect(f.queued).toEqual(['mus_theme', 'mus_storm']);
+  });
+
+  it('applies the gain of an effect, and never asks for the first-version tracks', () => {
+    const f = fakeGame();
+    f.decode('ui_tap');
+    const backend = phaserSoundBackend(f.game);
+    const board = new SoundBoard();
+    board.attach(backend);
+    board.unlock();
+    board.effect(SOUND.tap);
+    expect(f.added[0].config.volume).toBeCloseTo(config.AUDIO.volume.effects * gainOf(SOUND.tap), 9);
+    for (const mode of ['build', 'report', 'storm'] as const) board.setMusic(mode);
+    for (const old of ['mus_calm_loop', 'mus_report', 'mus_storm_intense']) expect(f.queued).not.toContain(old);
   });
 
   it('uses <audio> only for a file Phaser failed to load, once the browser has read it', () => {
@@ -132,12 +183,28 @@ describe('music through the Phaser backend (SPEC 11.3)', () => {
     const board = new SoundBoard();
     board.attach(backend);
     board.unlock();
-    board.setMusic(SOUND.calm);
-    f.emit('loaderror', { type: 'audio', key: 'mus_calm_loop' });
-    expect(backend.has('mus_calm_loop')).toBe(false); // the mp3 header has not arrived yet
-    listeners['loadedmetadata:mus_calm_loop.mp3']();
-    expect(backend.has('mus_calm_loop')).toBe(true);
-    expect(FakeAudio.played).toBe(1); // the board was told and started the track
+    f.emit('loaderror', { type: 'audio', key: 'ui_tap' });
+    expect(backend.has('ui_tap')).toBe(false); // the mp3 header has not arrived yet
+    board.effect(SOUND.tap);
+    expect(FakeAudio.played).toBe(0);
+    listeners['loadedmetadata:ui_tap.mp3']();
+    expect(backend.has('ui_tap')).toBe(true);
+    board.effect(SOUND.tap);
+    expect(FakeAudio.played).toBe(1);
+  });
+
+  it('skips a music track whose file failed to load and asks for the next one', () => {
+    vi.stubGlobal('Audio', FakeAudio);
+    const f = fakeGame();
+    const backend = phaserSoundBackend(f.game);
+    const board = new SoundBoard();
+    board.attach(backend);
+    board.unlock();
+    board.setMusic('build');
+    expect(f.queued).toEqual(['mus_habitat']);
+    f.emit('loaderror', { type: 'audio', key: 'mus_habitat' });
+    expect(f.queued).toEqual(['mus_habitat', 'mus_groove']);
+    expect(FakeAudio.played).toBe(0);
   });
 
   it('the wind and other ambience follow the sound effects switch', () => {

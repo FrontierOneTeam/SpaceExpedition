@@ -5,7 +5,8 @@
     "realRecording": false,
     "source": "",
     "sourceUrl": "",
-    "edits": ""
+    "edits": "Level measured with ffmpeg: mean -20.3 dB over the non-silent part (-26.4 dB over the whole file), peak -2.9 dB. Playback gain 1.13 aimed at about -17 dB so it sits level with the other effects, kept low enough that its peak stays well below full scale. The audio file itself is not changed.",
+    "gain": 1.13
   },
   {
     "name": "ui_select",
@@ -13,7 +14,8 @@
     "realRecording": false,
     "source": "",
     "sourceUrl": "",
-    "edits": ""
+    "edits": "Level measured with ffmpeg: mean -12.8 dB over the non-silent part (-12.9 dB over the whole file), peak -3 dB. Playback gain 0.61 aimed at about -17 dB so it sits level with the other effects, kept low enough that its peak stays well below full scale. The audio file itself is not changed.",
+    "gain": 0.61
   },
   {
     "name": "ui_cant",
@@ -21,7 +23,8 @@
     "realRecording": false,
     "source": "",
     "sourceUrl": "",
-    "edits": ""
+    "edits": "Level measured with ffmpeg: mean -10.6 dB over the non-silent part (-10.6 dB over the whole file), peak -3.2 dB. Playback gain 0.47 aimed at about -17 dB so it sits level with the other effects, kept low enough that its peak stays well below full scale. The audio file itself is not changed.",
+    "gain": 0.47
   },
   {
     "name": "ui_open_panel",
@@ -37,7 +40,8 @@
     "realRecording": false,
     "source": "",
     "sourceUrl": "",
-    "edits": ""
+    "edits": "Level measured with ffmpeg: mean -13.5 dB over the non-silent part (-13.5 dB over the whole file), peak -2.9 dB. Playback gain 0.66 aimed at about -17 dB so it sits level with the other effects, kept low enough that its peak stays well below full scale. The audio file itself is not changed.",
+    "gain": 0.66
   },
   {
     "name": "bld_place",
@@ -45,7 +49,8 @@
     "realRecording": false,
     "source": "",
     "sourceUrl": "",
-    "edits": ""
+    "edits": "Level measured with ffmpeg: mean -18.2 dB over the non-silent part (-20 dB over the whole file), peak -3.3 dB. Playback gain 1.14 aimed at about -17 dB so it sits level with the other effects, kept low enough that its peak stays well below full scale. The audio file itself is not changed.",
+    "gain": 1.14
   },
   {
     "name": "bld_remove",
@@ -53,7 +58,8 @@
     "realRecording": false,
     "source": "",
     "sourceUrl": "",
-    "edits": ""
+    "edits": "Level measured with ffmpeg: mean -16.6 dB over the non-silent part (-16.6 dB over the whole file), peak -3.6 dB. Playback gain 0.95 aimed at about -17 dB so it sits level with the other effects, kept low enough that its peak stays well below full scale. The audio file itself is not changed.",
+    "gain": 0.95
   },
   {
     "name": "bld_power_down",
@@ -61,7 +67,8 @@
     "realRecording": false,
     "source": "",
     "sourceUrl": "",
-    "edits": ""
+    "edits": "Level measured with ffmpeg: mean -11.7 dB over the non-silent part (-11.7 dB over the whole file), peak -2.9 dB. Playback gain 0.54 aimed at about -17 dB so it sits level with the other effects, kept low enough that its peak stays well below full scale. The audio file itself is not changed.",
+    "gain": 0.54
   },
   {
     "name": "bld_power_up",
@@ -77,7 +84,8 @@
     "realRecording": false,
     "source": "",
     "sourceUrl": "",
-    "edits": ""
+    "edits": "Level measured with ffmpeg: mean -22.1 dB over the non-silent part (-22.4 dB over the whole file), peak -2.8 dB. Playback gain 1.12 aimed at about -17 dB so it sits level with the other effects, kept low enough that its peak stays well below full scale. The audio file itself is not changed.",
+    "gain": 1.12
   },
   {
     "name": "bld_repaired",
@@ -101,7 +109,8 @@
     "realRecording": false,
     "source": "",
     "sourceUrl": "",
-    "edits": ""
+    "edits": "Level measured with ffmpeg: mean -18.2 dB over the non-silent part (-18.2 dB over the whole file), peak -2.5 dB. Playback gain 1.08 aimed at about -17 dB so it sits level with the other effects, kept low enough that its peak stays well below full scale. The audio file itself is not changed.",
+    "gain": 1.08
   },
   {
     "name": "evt_rocket_land",
@@ -125,7 +134,8 @@
     "realRecording": false,
     "source": "",
     "sourceUrl": "",
-    "edits": ""
+    "edits": "Level measured with ffmpeg: mean -16.6 dB over the non-silent part (-16.8 dB over the whole file), peak -3 dB. Playback gain 0.95 aimed at about -17 dB so it sits level with the other effects, kept low enough that its peak stays well below full scale. The audio file itself is not changed.",
+    "gain": 0.95
   },
   {
     "name": "evt_chapter_complete",
@@ -133,7 +143,8 @@
     "realRecording": false,
     "source": "",
     "sourceUrl": "",
-    "edits": ""
+    "edits": "Level measured with ffmpeg: mean -19.4 dB over the non-silent part (-19.4 dB over the whole file), peak -3.2 dB. Playback gain 1.14 aimed at about -17 dB so it sits level with the other effects, kept low enough that its peak stays well below full scale. The audio file itself is not changed.",
+    "gain": 1.14
   },
   {
     "name": "evt_run_over",
@@ -141,7 +152,8 @@
     "realRecording": false,
     "source": "",
     "sourceUrl": "",
-    "edits": ""
+    "edits": "Level measured with ffmpeg: mean -13.7 dB over the non-silent part (-13.8 dB over the whole file), peak -3 dB. Playback gain 0.68 aimed at about -17 dB so it sits level with the other effects, kept low enough that its peak stays well below full scale. The audio file itself is not changed.",
+    "gain": 0.68
   },
   {
     "name": "prd_question",
@@ -157,7 +169,8 @@
     "realRecording": false,
     "source": "",
     "sourceUrl": "",
-    "edits": ""
+    "edits": "Level measured with ffmpeg: mean -18.2 dB over the non-silent part (-18.7 dB over the whole file), peak -3.2 dB. Playback gain 1.14 aimed at about -17 dB so it sits level with the other effects, kept low enough that its peak stays well below full scale. The audio file itself is not changed.",
+    "gain": 1.14
   },
   {
     "name": "prd_wrong",
@@ -165,7 +178,8 @@
     "realRecording": false,
     "source": "",
     "sourceUrl": "",
-    "edits": ""
+    "edits": "Level measured with ffmpeg: mean -14.9 dB over the non-silent part (-14.9 dB over the whole file), peak -2.9 dB. Playback gain 0.78 aimed at about -17 dB so it sits level with the other effects, kept low enough that its peak stays well below full scale. The audio file itself is not changed.",
+    "gain": 0.78
   },
   {
     "name": "mc_radio_open",
@@ -173,7 +187,8 @@
     "realRecording": false,
     "source": "",
     "sourceUrl": "",
-    "edits": ""
+    "edits": "Level measured with ffmpeg: mean -9.7 dB over the non-silent part (-9.9 dB over the whole file), peak -4.8 dB. Playback gain 0.43 aimed at about -17 dB so it sits level with the other effects, kept low enough that its peak stays well below full scale. The audio file itself is not changed.",
+    "gain": 0.43
   },
   {
     "name": "mc_radio_close",
@@ -181,7 +196,8 @@
     "realRecording": false,
     "source": "",
     "sourceUrl": "",
-    "edits": ""
+    "edits": "Level measured with ffmpeg: mean -8.4 dB over the non-silent part (-8.6 dB over the whole file), peak -4.1 dB. Playback gain 0.37 aimed at about -17 dB so it sits level with the other effects, kept low enough that its peak stays well below full scale. The audio file itself is not changed.",
+    "gain": 0.37
   },
   {
     "name": "mc_typing",
@@ -189,7 +205,8 @@
     "realRecording": false,
     "source": "",
     "sourceUrl": "",
-    "edits": ""
+    "edits": "Level measured with ffmpeg: mean -16.5 dB over the non-silent part (-21.2 dB over the whole file), peak -2.9 dB. Playback gain 0.94 aimed at about -17 dB so it sits level with the other effects, kept low enough that its peak stays well below full scale. The audio file itself is not changed.",
+    "gain": 0.94
   },
   {
     "name": "mc_real_event",
@@ -197,7 +214,8 @@
     "realRecording": false,
     "source": "",
     "sourceUrl": "",
-    "edits": ""
+    "edits": "Level measured with ffmpeg: mean -18.4 dB over the non-silent part (-18.4 dB over the whole file), peak -3 dB. Playback gain 1.14 aimed at about -17 dB so it sits level with the other effects, kept low enough that its peak stays well below full scale. The audio file itself is not changed.",
+    "gain": 1.14
   },
   {
     "name": "astro_dance",
@@ -213,7 +231,8 @@
     "realRecording": false,
     "source": "",
     "sourceUrl": "",
-    "edits": ""
+    "edits": "Level measured with ffmpeg: mean -14.8 dB over the non-silent part (-14.9 dB over the whole file), peak -3 dB. Playback gain 0.77 aimed at about -17 dB so it sits level with the other effects, kept low enough that its peak stays well below full scale. The audio file itself is not changed.",
+    "gain": 0.77
   },
   {
     "name": "amb_mars_wind",
@@ -221,7 +240,8 @@
     "realRecording": false,
     "source": "",
     "sourceUrl": "",
-    "edits": ""
+    "edits": "Level measured with ffmpeg: mean -24.9 dB over the non-silent part (-25.4 dB over the whole file), peak -6 dB. Playback gain 1.39 aimed at about -22 dB so it sits level with the other ambience loops, kept low enough that its peak stays well below full scale. The audio file itself is not changed.",
+    "gain": 1.39
   },
   {
     "name": "amb_mars_wind_real",
@@ -229,7 +249,8 @@
     "realRecording": true,
     "source": "NASA/JPL-Caltech/LANL/CNES/CNRS/ISAE-Supaero",
     "sourceUrl": "https://assets.science.nasa.gov/content/dam/science/psd/mars/downloadable_items/4/5/45828_SCAM_MIC_SOL004_RUN001.mp3",
-    "edits": "Downloaded from NASA as a 40 s stereo MP3 (256 kbit/s). Re-encoded with ffmpeg to mono at 64 kbit/s, once as MP3 and once as Ogg Vorbis, to keep the files small. The recording was not cut, filtered or otherwise changed."
+    "edits": "Downloaded from NASA as a 40 s stereo MP3 (256 kbit/s). Re-encoded with ffmpeg to mono at 64 kbit/s, once as MP3 and once as Ogg Vorbis, to keep the files small. The recording was not cut, filtered or otherwise changed. Level measured with ffmpeg: mean -26.1 dB over the non-silent part (-27 dB over the whole file), peak -0.4 dB. Playback gain 1.6 aimed at about -22 dB so it sits level with the other ambience loops, kept low enough that its peak stays well below full scale. The audio file itself is not changed.",
+    "gain": 1.6
   },
   {
     "name": "amb_solar_storm",
@@ -237,25 +258,66 @@
     "realRecording": false,
     "source": "",
     "sourceUrl": "",
-    "edits": ""
+    "edits": "Level measured with ffmpeg: mean -29.6 dB over the non-silent part (-29.6 dB over the whole file), peak -13.1 dB. Playback gain 2 aimed at about -22 dB so it sits level with the other ambience loops, kept low enough that its peak stays well below full scale. The audio file itself is not changed.",
+    "gain": 2
   },
   {
     "name": "mus_calm_loop",
-    "approved": true,
+    "approved": false,
     "realRecording": false,
     "source": "",
     "sourceUrl": "",
-    "edits": "Playback skips the first 5.4 s, which SPEC 11.3 measured as silent, and loops from there. The audio file itself is not changed.",
+    "edits": "Playback skips the first 5.4 s, which SPEC 11.3 measured as silent, and loops from there. The audio file itself is not changed. Replaced by the new music tracks (mus_habitat, mus_groove, mus_drone, mus_theme, mus_storm); no longer loaded or shipped.",
     "startAt": 5.4
   },
   {
     "name": "mus_report",
-    "approved": true,
+    "approved": false,
     "realRecording": false,
     "source": "",
     "sourceUrl": "",
-    "edits": "Playback skips the first 2.0 s, which SPEC 11.3 measured as silent, and loops from there. The audio file itself is not changed.",
+    "edits": "Playback skips the first 2.0 s, which SPEC 11.3 measured as silent, and loops from there. The audio file itself is not changed. Replaced by the new music tracks (mus_habitat, mus_groove, mus_drone, mus_theme, mus_storm); no longer loaded or shipped.",
     "startAt": 2
+  },
+  {
+    "name": "mus_habitat",
+    "approved": true,
+    "realRecording": false,
+    "source": "Made by the team for this game (NASA Space Apps Challenge 2026)",
+    "sourceUrl": "",
+    "edits": "Made with ffmpeg from the team's file \"Track 1 - Deep Space Habitat (5-Min Master with Fades).mp3\". Loudness levelled with loudnorm in two passes (target -20 LUFS integrated, true peak -2 dB, linear mode, measured input -15.09 LUFS and true peak -3.76 dB, so a gain of -4.9 dB; no compression). Stereo, 44.1 kHz, full length 299.9 s: nothing cut, faded or otherwise changed. Encoded as Ogg Vorbis quality 0.6 (about 54 kbit/s) and MP3 CBR 56 kbit/s. Measured after encoding: about -20.0 LUFS. Playback gain 1."
+  },
+  {
+    "name": "mus_drone",
+    "approved": true,
+    "realRecording": false,
+    "source": "Made by the team for this game (NASA Space Apps Challenge 2026)",
+    "sourceUrl": "",
+    "edits": "Made with ffmpeg from the team's file \"Track 2 - Space Drone (2m 27s).mp3\". Loudness levelled with loudnorm in two passes (target -20 LUFS integrated, true peak -2 dB, linear mode, measured input -8.68 LUFS and true peak -0.13 dB, so a gain of -11.3 dB; no compression). Stereo, 44.1 kHz, full length 147.5 s: nothing cut, faded or otherwise changed. Encoded as Ogg Vorbis quality 1 and MP3 CBR 64 kbit/s. Measured after encoding: about -20.0 LUFS. Playback gain 1."
+  },
+  {
+    "name": "mus_groove",
+    "approved": true,
+    "realRecording": false,
+    "source": "Made by the team for this game (NASA Space Apps Challenge 2026)",
+    "sourceUrl": "",
+    "edits": "Made with ffmpeg from the team's file \"Track 3 - New Music Recording (2m 47s Master).mp3\". Loudness levelled with loudnorm in two passes (target -20 LUFS integrated, true peak -2 dB, linear mode, measured input -15.53 LUFS and true peak -3.04 dB, so a gain of -4.5 dB; no compression). Stereo, 44.1 kHz, full length 167.6 s: nothing cut, faded or otherwise changed. Encoded as Ogg Vorbis quality 1 and MP3 CBR 64 kbit/s. Measured after encoding: about -20.0 LUFS. Playback gain 1."
+  },
+  {
+    "name": "mus_theme",
+    "approved": true,
+    "realRecording": false,
+    "source": "Made by the team for this game (NASA Space Apps Challenge 2026)",
+    "sourceUrl": "",
+    "edits": "Made with ffmpeg from the team's file \"Track 4 - Main Theme Track (3m 41s).mp3\". Loudness levelled with loudnorm in two passes (target -20 LUFS integrated, true peak -2 dB, linear mode, measured input -8.34 LUFS and true peak -0.36 dB, so a gain of -11.7 dB; no compression). Stereo, 44.1 kHz, full length 221.7 s: nothing cut, faded or otherwise changed. Encoded as Ogg Vorbis quality 1 and MP3 CBR 64 kbit/s. Measured after encoding: about -20.0 LUFS. Playback gain 1."
+  },
+  {
+    "name": "mus_storm",
+    "approved": true,
+    "realRecording": false,
+    "source": "Made by the team for this game (NASA Space Apps Challenge 2026)",
+    "sourceUrl": "",
+    "edits": "Made with ffmpeg from the team's file \"Track 5 - Theme Variation (Faded Out).mp3\". Loudness levelled with loudnorm in two passes (target -20 LUFS integrated, true peak -2 dB, linear mode, measured input -12.88 LUFS and true peak -0.26 dB, so a gain of -7.1 dB; no compression). Stereo, 44.1 kHz, full length 128 s: nothing cut, faded or otherwise changed. Encoded as Ogg Vorbis quality 1 and MP3 CBR 64 kbit/s. Measured after encoding: about -20.0 LUFS. Playback gain 1."
   },
   {
     "name": "evt_dust_arrive",
@@ -263,7 +325,8 @@
     "realRecording": false,
     "source": "",
     "sourceUrl": "",
-    "edits": ""
+    "edits": "Level measured with ffmpeg: mean -18.7 dB over the non-silent part (-19 dB over the whole file), peak -3.1 dB. Playback gain 1.14 aimed at about -17 dB so it sits level with the other effects, kept low enough that its peak stays well below full scale. The audio file itself is not changed.",
+    "gain": 1.14
   },
   {
     "name": "evt_night_fall",
@@ -271,7 +334,8 @@
     "realRecording": false,
     "source": "",
     "sourceUrl": "",
-    "edits": ""
+    "edits": "Level measured with ffmpeg: mean -9.4 dB over the non-silent part (-9.4 dB over the whole file), peak -2.9 dB. Playback gain 0.41 aimed at about -17 dB so it sits level with the other effects, kept low enough that its peak stays well below full scale. The audio file itself is not changed.",
+    "gain": 0.41
   },
   {
     "name": "evt_research_done",
@@ -279,7 +343,8 @@
     "realRecording": false,
     "source": "",
     "sourceUrl": "",
-    "edits": ""
+    "edits": "Level measured with ffmpeg: mean -16.3 dB over the non-silent part (-16.3 dB over the whole file), peak -2.9 dB. Playback gain 0.92 aimed at about -17 dB so it sits level with the other effects, kept low enough that its peak stays well below full scale. The audio file itself is not changed.",
+    "gain": 0.92
   },
   {
     "name": "evt_notebook_page",
@@ -287,7 +352,8 @@
     "realRecording": false,
     "source": "",
     "sourceUrl": "",
-    "edits": ""
+    "edits": "Level measured with ffmpeg: mean -19.3 dB over the non-silent part (-20 dB over the whole file), peak -3.1 dB. Playback gain 1.14 aimed at about -17 dB so it sits level with the other effects, kept low enough that its peak stays well below full scale. The audio file itself is not changed.",
+    "gain": 1.14
   },
   {
     "name": "amb_mars_dust_storm",
@@ -295,7 +361,8 @@
     "realRecording": false,
     "source": "",
     "sourceUrl": "",
-    "edits": "Playback skips the first 6.0 s, which SPEC 11.3 measured as silent, and loops from there. The audio file itself is not changed.",
+    "edits": "Playback skips the first 6.0 s, which SPEC 11.3 measured as silent, and loops from there. The audio file itself is not changed. Level measured with ffmpeg: mean -20.3 dB over the non-silent part (-24 dB over the whole file), peak -5.3 dB. Playback gain 0.82 aimed at about -22 dB so it sits level with the other ambience loops, kept low enough that its peak stays well below full scale. The audio file itself is not changed.",
+    "gain": 0.82,
     "startAt": 6
   },
   {

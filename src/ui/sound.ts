@@ -17,6 +17,8 @@ export interface AudioEntry {
   edits: string;
   /** Seconds of silent start to skip, also on every loop (SPEC 11.3). */
   startAt?: number;
+  /** Playback multiplier that levels this sound with the others (1 when missing). Measured with ffmpeg, see `edits`. */
+  gain?: number;
 }
 
 export const AUDIO_ENTRIES = audioJson as AudioEntry[];
@@ -54,9 +56,28 @@ export const SOUND = {
   windMarsReal: 'amb_mars_wind_real',
   solarStorm: 'amb_solar_storm',
   moonBase: 'amb_moon_base',
-  calm: 'mus_calm_loop',
-  report: 'mus_report',
+  habitat: 'mus_habitat',
+  groove: 'mus_groove',
+  drone: 'mus_drone',
+  theme: 'mus_theme',
+  stormMusic: 'mus_storm',
 } as const;
+
+/** The building playlist: each track plays once to its end, then the next, then around again. */
+export const PLAYLIST: readonly SoundName[] = [SOUND.habitat, SOUND.groove, SOUND.drone];
+
+/** The music tracks of the first versions, replaced by the five above. Kept in audio.json as unapproved, never loaded. */
+export const RETIRED_SOUNDS = ['mus_calm_loop', 'mus_report'] as const;
+
+/** What the music is for: the playlist while building, the main theme on the report, the storm track on a storm day. */
+export type MusicMode = 'build' | 'report' | 'storm';
+
+/** The music mode for the screen now. Null: no music (the run is lost and no report is open). */
+export function musicModeFor(reportOpen: boolean, lost: boolean, radiationToday: number): MusicMode | null {
+  if (reportOpen) return 'report';
+  if (lost) return null;
+  return radiationToday >= AUDIO.stormMusicLevel ? 'storm' : 'build';
+}
 
 export type SoundName = (typeof SOUND)[keyof typeof SOUND];
 
@@ -100,6 +121,12 @@ export function approvedSounds(entries: readonly AudioEntry[] = AUDIO_ENTRIES): 
   const later = new Set<string>(LATER_PHASE_SOUNDS);
   const standIns = new Set(Object.entries(FALLBACK).filter(([real]) => all.includes(real)).map(([, stand]) => stand));
   return all.filter((n) => groupOf(n) !== 'music' && !later.has(n) && !standIns.has(n));
+}
+
+/** The playback multiplier of a sound: its `gain` in audio.json, 1 when missing or not a number above 0 and up to 2. */
+export function gainOf(name: string, entries: readonly AudioEntry[] = AUDIO_ENTRIES): number {
+  const v = entries.find((e) => e.name === name)?.gain;
+  return typeof v === 'number' && Number.isFinite(v) && v > 0 && v <= 2 ? v : 1;
 }
 
 /** Seconds to skip at the start of a sound: 0 unless the entry has a positive startAt. */
@@ -208,14 +235,20 @@ export class SoundBoard {
   private groupMuted = {music:false,effects:false,ambience:false};
   setGroupMuted(group:SoundGroup,muted:boolean):void {
     this.groupMuted[group] = muted;
-    if (!muted && this.unlocked && !this.muted) this.refresh();
+    // A music switch that is off stops the track and fetches nothing; turning it on starts the track again.
+    if (this.unlocked) this.refresh();
     this.applyVolumes();
   }
   private readonly approved: Set<string>;
   private readonly entries: readonly AudioEntry[];
-  private deferredAsked = false;
   private ambienceWanted: string[] = [];
-  private musicWanted: string | null = null;
+  private musicMode: MusicMode | null = null;
+  /** Position in PLAYLIST of the track to play (or playing) while building. */
+  private playlistIndex = 0;
+  /** Tracks already asked for: each is fetched once, when first needed. */
+  private readonly musicAsked = new Set<string>();
+  private readonly loadFailed = new Set<string>();
+  private musicToken = 0;
   private ambience: Loop | null = null;
   private music: Loop | null = null;
   private ducks = 0;
@@ -241,12 +274,18 @@ export class SoundBoard {
 
   attach(backend: SoundBackend): void {
     this.backend = backend;
-    this.deferredAsked = false;
+    this.musicAsked.clear();
     this.safe(() => backend.setMuted(this.muted));
-    this.safe(() => backend.onLoadFailed?.((name) => this.loadFallback(name)));
+    this.safe(() => backend.onLoadFailed?.((name) => this.onLoadFailed(name)));
     this.safe(() => backend.onFallbackReady?.(() => this.refresh()));
-    this.loadDeferred();
     this.refresh();
+  }
+
+  private onLoadFailed(name: string): void {
+    this.loadFailed.add(name);
+    this.loadFallback(name);
+    // A music track that cannot load is skipped.
+    if (groupOf(name) === 'music') this.refresh();
   }
 
   /** The real sound could not load: load its stand-in, if that is approved. */
@@ -256,18 +295,10 @@ export class SoundBoard {
     if (stand && b && this.approved.has(stand)) this.safe(() => b.load?.([stand]));
   }
 
-  /** After the first tap: load the music, which is not part of the first page load. */
-  private loadDeferred(): void {
-    const b = this.backend;
-    if (!this.unlocked || !b || this.deferredAsked) return;
-    this.deferredAsked = true;
-    const names = musicSounds(this.entries);
-    if (names.length > 0) this.safe(() => b.load?.(names));
-  }
-
   detach(): void {
     this.stopLoop('ambience');
     this.stopLoop('music');
+    this.musicAsked.clear();
     this.ducks = 0;
     this.backend = null;
   }
@@ -277,7 +308,6 @@ export class SoundBoard {
     warmAudioContext();
     if (this.unlocked) return;
     this.unlocked = true;
-    this.loadDeferred();
     this.refresh();
   }
 
@@ -319,17 +349,45 @@ export class SoundBoard {
     this.refresh();
   }
 
-  setMusic(name: string | null): void {
-    this.musicWanted = name;
+  /** What the music is for now (null: none). The board picks the track and fetches it when it is first needed. */
+  setMusic(mode: MusicMode | null): void {
+    this.musicMode = mode;
     this.refresh();
+  }
+
+  /** The music track playing now, if any. */
+  musicName(): string | null {
+    return this.music ? this.music.name : null;
+  }
+
+  /** The track wanted now. A track that failed to load is skipped (the playlist goes on to the next). */
+  private wantedTrack(): string | null {
+    const mode = this.musicMode;
+    if (!mode || this.groupMuted.music) return null;
+    const usable = (n: string) => this.approved.has(n) && !(this.loadFailed.has(n) && !this.canPlay(n));
+    const special = mode === 'report' ? SOUND.theme : mode === 'storm' ? SOUND.stormMusic : null;
+    if (special && usable(special)) return special;
+    for (let i = 0; i < PLAYLIST.length; i++) {
+      const at = (this.playlistIndex + i) % PLAYLIST.length;
+      if (usable(PLAYLIST[at])) {
+        this.playlistIndex = at;
+        return PLAYLIST[at];
+      }
+    }
+    return null;
   }
 
   /** Start or switch the loops to match what is wanted. Call again once more sounds have loaded. */
   refresh(): void {
     const amb = this.ambienceWanted.find((n) => this.canPlay(n)) ?? null;
     this.setLoop('ambience', amb);
-    const mus = this.musicWanted && this.canPlay(this.musicWanted) ? this.musicWanted : null;
-    this.setLoop('music', mus);
+    const track = this.unlocked ? this.wantedTrack() : null;
+    const b = this.backend;
+    if (track && b && !this.musicAsked.has(track)) {
+      this.musicAsked.add(track);
+      this.safe(() => b.load?.([track]));
+    }
+    this.setLoop('music', track && this.canPlay(track) ? track : null);
   }
 
   private canPlay(name: string): boolean {
@@ -348,7 +406,7 @@ export class SoundBoard {
   private start(name: string, loop: boolean, onEnd: () => void): SoundHandle | null {
     const b = this.backend;
     if (!b || !this.canPlay(name)) return null;
-    return this.safe(() => b.play(name, this.volumeOf(groupOf(name)), loop, onEnd, startAtOf(name, this.entries))) ?? null;
+    return this.safe(() => b.play(name, this.volumeOf(groupOf(name)) * gainOf(name, this.entries), loop, onEnd, startAtOf(name, this.entries))) ?? null;
   }
 
   private setLoop(group: 'ambience' | 'music', name: string | null): void {
@@ -356,10 +414,22 @@ export class SoundBoard {
     if ((current ? current.name : null) === name) return;
     this.stopLoop(group);
     if (!name) return;
-    const handle = this.start(name, true, () => undefined);
+    // Ambience and the report and storm tracks loop. A playlist track plays once; its end starts the next.
+    const loops = group === 'ambience' || this.musicMode !== 'build';
+    const token = group === 'music' ? ++this.musicToken : 0;
+    const onEnd = loops ? () => undefined : () => this.playlistEnded(token);
+    const handle = this.start(name, loops, onEnd);
     const loop = handle ? { name, group, handle } : null;
     if (group === 'ambience') this.ambience = loop;
     else this.music = loop;
+  }
+
+  /** A playlist track finished: the next one plays (around again after the last). */
+  private playlistEnded(token: number): void {
+    if (token !== this.musicToken || this.musicMode !== 'build' || !this.music) return;
+    this.music = null;
+    this.playlistIndex = (this.playlistIndex + 1) % PLAYLIST.length;
+    this.refresh();
   }
 
   private stopLoop(group: 'ambience' | 'music'): void {
@@ -371,7 +441,7 @@ export class SoundBoard {
 
   private applyVolumes(): void {
     for (const loop of [this.ambience, this.music]) {
-      if (loop) this.safe(() => loop.handle.setVolume(this.volumeOf(loop.group)));
+      if (loop) this.safe(() => loop.handle.setVolume(this.volumeOf(loop.group) * gainOf(loop.name, this.entries)));
     }
   }
 
