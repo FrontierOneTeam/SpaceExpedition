@@ -18,7 +18,8 @@ describe('strings', () => {
     const files = [...sourceFiles('src/ui'), ...sourceFiles('src/game')];
     const used: string[] = [];
     for (const file of files) {
-      for (const m of readFileSync(file, 'utf8').matchAll(/\bt\(\s*['"]([^'"]+)['"]\s*\)/g)) {
+      // t('key') and t('key', { ... }). Keys held in typed maps are checked by TypeScript (StringKey).
+      for (const m of readFileSync(file, 'utf8').matchAll(/\bt\(\s*['"]([^'"]+)['"]\s*[,)]/g)) {
         used.push(m[1]);
       }
     }

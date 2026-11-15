@@ -1,6 +1,7 @@
 import { t } from './strings';
 
-export function renderHome(root: HTMLElement, onStart: () => void): void {
+/** Home (SPEC 6.1): one main button. "Continue Your Outpost" when a run is saved. */
+export function renderHome(root: HTMLElement, hasSave: boolean, onStart: () => void): void {
   root.innerHTML = '';
 
   const screen = document.createElement('main');
@@ -25,7 +26,8 @@ export function renderHome(root: HTMLElement, onStart: () => void): void {
   const start = document.createElement('button');
   start.type = 'button';
   start.className = 'button';
-  start.textContent = t('home.start');
+  start.dataset.action = 'home-start';
+  start.textContent = hasSave ? t('home.continue') : t('home.start');
   start.addEventListener('click', onStart);
 
   panel.append(logo, title, objective, start);

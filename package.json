@@ -8,7 +8,10 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "placeholders": "tsx tools/make-placeholders.ts"
+    "placeholders": "tsx tools/make-placeholders.ts",
+    "fetch:donki": "tsx tools/fetch-donki.ts",
+    "build:chapter": "tsx tools/build-chapter.ts",
+    "bot": "tsx tools/balance-bot.ts"
   },
   "dependencies": {
     "@fontsource/atkinson-hyperlegible": "^5.3.0",
@@ -17,6 +20,7 @@
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
+    "happy-dom": "^21.0.4",
     "sharp": "^0.35.5",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2",
