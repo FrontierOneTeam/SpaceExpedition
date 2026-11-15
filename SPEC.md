@@ -884,6 +884,24 @@ These rules come from the review of the work in section 17 and from the user's r
 2. Goals are chosen from the state of the base and the coming weather, not from a fixed cycle. A goal is always reachable, the same kind of goal does not come twice in a row, and finishing goals is what opens new land.
 3. The outpost has named stages the player can see and work toward.
 
+How the build does this. Every number is in `src/sim/config.ts`:
+
+| Rule | Value |
+|---|---|
+| Stages | 1 Landing camp. 2 Small base: 12 goals and 4 crew. 3 Busy outpost: 42 goals and 8 crew. 4 Little village: 82 goals and 14 crew. 5 Mars village: 115 goals and 18 crew. 6 Mars town: 150 goals and 24 crew. Free play after that. At most one new stage a day. |
+| Parts storage by stage | 20, 30, 40, 50, 60, 70 |
+| Soil storage by stage | 10, 15, 20, 25, 30, 35 |
+| Full stores | What does not fit is lost at the end of the day. A factory or digger stops when its store is full. |
+| Goals per day | At most 1 |
+| Rewards | The four starter goals keep 3 parts and their unlocks. A chosen goal gives no parts. It gives a step toward the next stage, and more land on every second chosen goal. |
+| Goal chooser | Urgent goals first: shelter before tomorrow's storm, fix a problem, shelter the habitats. Then growth goals in turn: house crew, more air, more food, a new mine, more power, shelter machines, research, a new digger. Fillers only when nothing else fits: more batteries, spare power. |
+| Chooser limits | A goal is offered only if the base can reach it and still needs it. The kind just finished is never next. It reads only today's and tomorrow's weather. A storm goal ends with no reward once its storm has hit. |
+| Idle base | A base that only ends the day never gains goals, stage, crew or land. With the rescue window in section 17 it is lost on sol 8. |
+| Save size | A 1,200-sol run saves in under 1 MB. The stored day log keeps 32 days. |
+| Save slots | Three slots in the browser, apart from the automatic save. File backup sits under Settings. |
+
+Measured with the sensible bot on 10 sites for 1,200 sols: every site survives; the second stage comes at sol 14 on a typical site and sol 30 on the slowest; the last stage at about sol 271; crew is 18 at sol 160 and 48 at sol 1,200; stocks never pass their limits. Two targets are missed on slow-starting sites: the second stage by sol 20, and a gap of at most 80 sols between stages (the longest is 83).
+
 ### 18.3 Words and sound
 
 1. All text is for ages 7 to 12: short sentences, common words, one idea at a time. This wins over "ages 10-12" in section 17 for the wording. Every control says what it does.

@@ -2361,10 +2361,31 @@ p {
     height: 38dvh;
   }
 
-  /* Not sticky: a bar fixed to the bottom would cover the map while scrolling (SPEC 16.4.1). */
+  /* SPEC 10.5: End the day is always visible. The screen is split in two boxes: the play area scrolls
+     and ends exactly where the stock-and-End-the-day row begins, so the row never sits on the map or on any
+     other row (SPEC 16.4.1). */
+  .play {
+    --end-h: calc(72px + env(safe-area-inset-bottom, 0px));
+    /* Every row keeps its own height. The map keeps 38% of the screen (never less than 35%). */
+    grid-template-rows: repeat(4, max-content) 38dvh repeat(4, max-content);
+    height: calc(100dvh - var(--end-h));
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
   .play .endrow {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 10;
+    box-sizing: border-box;
+    height: var(--end-h);
     background: var(--panel);
-    padding: 8px 10px;
+    border-top: 1px solid var(--line);
+    padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px));
   }
 
   .record__text {

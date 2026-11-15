@@ -550,7 +550,7 @@ function printTable(table: string[][]): void {
   for (const r of table.slice(1)) console.log(line(r));
 }
 
-console.log(`Outpost Builder balance bot: chapter ${book.archive[0]}, ${RUNS} runs per bot, sites 1 to ${RUNS}\n`);
+console.log(`Spacekeepers balance bot: chapter ${book.archive[0]}, ${RUNS} runs per bot, sites 1 to ${RUNS}\n`);
 printTable(rows);
 
 // Sensible bot through the chapter and three replays.

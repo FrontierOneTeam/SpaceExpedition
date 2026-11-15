@@ -67,9 +67,9 @@ export default defineConfig({
       // The manifest icons are precached by the plugin itself; this adds the iOS one.
       includeAssets: ['icons/apple-touch-icon.png'],
       manifest: {
-        name: 'Outpost Builder',
-        short_name: 'Outpost',
-        description: 'Grow your outpost. Keep your crew supplied. Get ready for what comes next.',
+        name: 'Spacekeepers',
+        short_name: 'Spacekeepers',
+        description: 'Build your Mars base. Keep your crew safe and fed. Get ready for space storms.',
         lang: 'en',
         start_url: BASE,
         scope: BASE,

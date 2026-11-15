@@ -150,7 +150,7 @@ describe('smoke: Your Outpost through the interface', () => {
     expect(root.querySelector('.flash')?.textContent).toContain('Something is already here.');
     map.tap(0, 0);
     expect(root.querySelectorAll('.flash').length).toBe(1);
-    expect(root.querySelector('.flash')?.textContent).toContain('That land is not surveyed yet.');
+    expect(root.querySelector('.flash')?.textContent).toContain('You have not explored that land yet.');
   });
 
   it('saves after every change and reopens the chapter end without running a day', async () => {
@@ -227,7 +227,7 @@ describe('smoke: Your Outpost through the interface', () => {
     expect(root.querySelectorAll('.tl').length).toBe(5);
     expect(root.querySelectorAll('.tl__col--nasa').length).toBe(5);
     expect(root.querySelectorAll('.tl__col--base').length).toBe(5);
-    expect(root.textContent).toContain('What NASA observed');
+    expect(root.textContent).toContain('What NASA saw');
     expect(root.textContent).toContain('What happened in your base');
     expect(root.textContent).toContain('Your outpost grew');
     expect(root.textContent).toContain('6 Sep 2017, 12:02 UTC: a class X9.3 flare.');
@@ -458,7 +458,7 @@ describe('smoke: Your Outpost through the interface', () => {
     // No report yet, so no Past reports link.
     expect(root.querySelector('[data-action="open-reports"]')).toBeNull();
     click('[data-action="open-sources"]');
-    expect(root.textContent).toContain('Where the data comes from');
+    expect(root.textContent).toContain('Where the facts come from');
     expect(root.textContent).toContain("From the challenge's resource list");
     expect(root.textContent).toContain('More sources');
     expect(root.textContent).toContain('DONKI space weather records');
@@ -574,10 +574,10 @@ describe('smoke: Your Outpost through the interface', () => {
     expect(root.querySelector('.tools__about')?.textContent).toContain('It is free.');
     const musicBtn = () => root.querySelector<HTMLButtonElement>('[data-action="music-toggle"]')!;
     expect(musicBtn().getAttribute('aria-pressed')).toBe('true');
-    expect(musicBtn().textContent).toBe('Music: On');
+    expect(musicBtn().textContent).toBe('Background music: On');
     click('[data-action="music-toggle"]');
     expect(musicBtn().getAttribute('aria-pressed')).toBe('false');
-    expect(root.querySelector('.tools__status')?.textContent).toContain('Music turned off.');
+    expect(root.querySelector('.tools__status')?.textContent).toContain('Background music is off.');
     click('[data-action="close-overlay"]');
     expect(root.querySelector('[data-action="music-toggle"]')).toBeNull();
 
@@ -590,7 +590,7 @@ describe('smoke: Your Outpost through the interface', () => {
     s.air = 1;
     click('[data-action="aid"]');
     expect(s.aid?.used).toBe(1);
-    expect(root.querySelector('.tools__status')?.textContent).toContain('Aid arrived');
+    expect(root.querySelector('.tools__status')?.textContent).toContain('Help arrived');
     // Tapping the open tool again closes it.
     click('[data-tool="aid"]');
     expect(root.querySelector('[data-action="aid"]')).toBeNull();
@@ -702,7 +702,7 @@ describe('smoke: Your Outpost through the interface', () => {
     const { app, root, click } = setup();
     app.start();
     click('[data-action="open-settings"]');
-    expect(root.querySelector('.settings__backup')?.textContent).toContain('Back up');
+    expect(root.querySelector('.settings__backup')?.textContent).toContain('Keep a copy');
     expect(root.querySelector('[data-action="import-save"]')).not.toBeNull();
   });
 

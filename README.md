@@ -1,6 +1,6 @@
-# Outpost Builder
+# Spacekeepers
 
-Outpost Builder is a browser base-building game for kids aged 7 to 12. The player grows a small Mars landing camp into a working outpost on an isometric tile grid. The space weather that tests the base is replayed from real NASA records. Each real period ends with a report, "This really happened", that links what NASA observed to what the player did.
+Spacekeepers is a browser base-building game for kids aged 7 to 12. The player grows a small Mars landing camp into a working outpost on an isometric tile grid. The space weather that tests the base is replayed from real NASA records. Each real period ends with a report, "This really happened", that links what NASA observed to what the player did.
 
 ## Run it
 

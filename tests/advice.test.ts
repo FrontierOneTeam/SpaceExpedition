@@ -87,7 +87,7 @@ describe('Mission Control (SPEC 10.4, 4.9)', () => {
     }
     const safe = missionControlMessage(run, stormChapter);
     expect(safe.mood).toBe('cheering');
-    expect(safe.text).toContain('safe under their soil shields');
+    expect(safe.text).toContain('safe under their soil shelters');
 
     // Solar flare day mentions exact flare class.
     const flareChapter = {

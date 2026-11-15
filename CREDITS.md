@@ -1,4 +1,4 @@
-# Credits
+# Spacekeepers credits
 
 NASA observations are archived inputs. Production, damage, equipment incidents, warnings, the map and crew outcomes are game models.
 

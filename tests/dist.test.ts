@@ -31,7 +31,7 @@ describe.skipIf(!built)('the built game in dist/', () => {
   it('has a manifest and a service worker that stays on this site', () => {
     expect(serviceWorkerProblems()).toEqual([]);
     const manifest = JSON.parse(readFileSync('dist/manifest.webmanifest', 'utf8'));
-    expect(manifest.name).toBe('Outpost Builder');
+    expect(manifest.name).toBe('Spacekeepers');
     expect(manifest.start_url).toBe('/SpaceExpedition/');
     expect(manifest.scope).toBe('/SpaceExpedition/');
     expect(['fullscreen', 'standalone']).toContain(manifest.display);

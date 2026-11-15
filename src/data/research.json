@@ -14,7 +14,7 @@
   {
     "id": "soil",
     "title": "Soil-covered habitats",
-    "effect": "Habitats count as sheltered.",
+    "effect": "Habitats count as if they are under a shelter.",
     "sourceId": "regolith-shield"
   },
   {
@@ -32,7 +32,7 @@
   {
     "id": "nuke",
     "title": "Small reactor",
-    "effect": "Unlock a reactor that makes six power.",
+    "effect": "Lets you build a reactor. It makes six power.",
     "sourceId": "kilopower"
   }
 ]
