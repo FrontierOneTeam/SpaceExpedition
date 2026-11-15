@@ -215,7 +215,8 @@ export function phaserSoundBackend(game: Phaser.Game): SoundBackend {
     load(names) {
       try {
         const loader = loaderOf(game);
-        if (!loader) return;
+        // No map scene yet: nothing was queued. Say so, so the caller asks again later.
+        if (!loader) return false;
         for (const name of names) if (!game.cache.audio.exists(name)) loader.audio(name, soundUrls(name));
         if (loader.isReady()) loader.start();
         else {
@@ -225,8 +226,10 @@ export function phaserSoundBackend(game: Phaser.Game): SoundBackend {
             if (loader.isReady() && loader.list.size > 0) loader.start();
           });
         }
+        return true;
       } catch {
-        // Nothing more to load.
+        // Could not queue it now; the caller may ask again.
+        return false;
       }
     },
     onLoadFailed(cb) {

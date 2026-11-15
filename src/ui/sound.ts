@@ -190,8 +190,8 @@ export interface SoundBackend {
   /** Start a sound, skipping `startAt` seconds at the start (and on every loop). `onEnd` runs when a sound that does not loop finishes. */
   play(name: string, volume: number, loop: boolean, onEnd: () => void, startAt?: number): SoundHandle | null;
   setMuted(muted: boolean): void;
-  /** Start loading more sounds. Each calls `has` true once loaded. */
-  load?(names: string[]): void;
+  /** Start loading more sounds. Each calls `has` true once loaded. Returns false when nothing could be queued yet. */
+  load?(names: string[]): boolean | void;
   /** Call `cb` with the name of every sound whose file failed to load (also ones that failed already). */
   onLoadFailed?(cb: (name: string) => void): void;
   /** Call `cb` whenever a stand-in way of playing a sound that failed to load becomes ready (`has` is now true). */
@@ -384,8 +384,10 @@ export class SoundBoard {
     const track = this.unlocked ? this.wantedTrack() : null;
     const b = this.backend;
     if (track && b && !this.musicAsked.has(track)) {
-      this.musicAsked.add(track);
-      this.safe(() => b.load?.([track]));
+      // Remember the request only when the backend took it. Before the map exists it cannot,
+      // and the next refresh must ask again, or the music would never load.
+      const taken = this.safe(() => b.load?.([track]));
+      if (taken !== false) this.musicAsked.add(track);
     }
     this.setLoop('music', track && this.canPlay(track) ? track : null);
   }

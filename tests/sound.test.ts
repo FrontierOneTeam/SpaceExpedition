@@ -76,6 +76,32 @@ function fakeBackend(loaded: string[] = AUDIO_ENTRIES.map((e) => e.name)) {
   return { backend, played, asked, startAts, loadCalls, fail: (name: string) => failCb?.(name), isMuted: () => muted };
 }
 
+describe('music is asked for again when the map was not ready', () => {
+  it('a request the backend could not take yet is repeated on the next refresh', () => {
+    // On a fresh start the first tap comes before the map scene exists, so the backend cannot queue the track.
+    const f = fakeBackend([]);
+    let ready = false;
+    const taken: string[][] = [];
+    f.backend.load = (names) => {
+      if (!ready) return false;
+      taken.push(names);
+      return true;
+    };
+    const board = new SoundBoard();
+    board.unlock();
+    board.setMusic('build');
+    board.attach(f.backend);
+    expect(taken).toEqual([]);
+    // The scene now exists; the map calls refresh as its files arrive.
+    ready = true;
+    board.refresh();
+    expect(taken).toEqual([[SOUND.habitat]]);
+    // Once taken, it is not asked for a second time.
+    board.refresh();
+    expect(taken).toHaveLength(1);
+  });
+});
+
 describe('approved sounds only (SPEC 11.3, 13.1)', () => {
   it('only approved entries are ever requested for loading, and never the nine', () => {
     const start = approvedSounds();
