@@ -6,7 +6,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 import { defineConfig } from 'vitest/config';
 import { filesToRemove, type AudioEntry } from './tools/approved-audio.ts';
 
-const BASE = '/SpaceExpedition/';
+const BASE = '/';
 
 function approvedNames(): string[] {
   const entries = JSON.parse(readFileSync('src/data/audio.json', 'utf8')) as AudioEntry[];
