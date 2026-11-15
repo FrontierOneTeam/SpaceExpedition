@@ -2357,35 +2357,26 @@ p {
     font-size: 14px;
   }
 
-  .play .map {
-    height: 38dvh;
+  /* SPEC 10.5: the whole play screen is one phone screen with no page scrolling. Every row keeps its own height,
+     the map takes what is left, and the End the day row is the last grid row (SPEC 16.4.1). */
+  .play {
+    --end-h: calc(64px + env(safe-area-inset-bottom, 0px));
+    grid-template-rows: auto auto auto auto minmax(30dvh, 1fr) auto auto auto var(--end-h);
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
   }
 
-  /* SPEC 10.5: End the day is always visible. The screen is split in two boxes: the play area scrolls
-     and ends exactly where the stock-and-End-the-day row begins, so the row never sits on the map or on any
-     other row (SPEC 16.4.1). */
-  .play {
-    --end-h: calc(72px + env(safe-area-inset-bottom, 0px));
-    /* Every row keeps its own height. The map keeps 38% of the screen (never less than 35%). */
-    grid-template-rows: repeat(4, max-content) 38dvh repeat(4, max-content);
-    height: calc(100dvh - var(--end-h));
+  .play .map {
     min-height: 0;
-    overflow-x: hidden;
-    overflow-y: auto;
-    overscroll-behavior: contain;
   }
 
   .play .endrow {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 10;
     box-sizing: border-box;
     height: var(--end-h);
     background: var(--panel);
     border-top: 1px solid var(--line);
-    padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px));
+    padding: 6px 10px calc(6px + env(safe-area-inset-bottom, 0px));
   }
 
   .record__text {
@@ -2951,4 +2942,380 @@ p {
 
 .settings__backup {
   margin-top: 24px;
+}
+
+/* ---- Phones (under 900 px): every row is compact so the whole play screen fits one screen (SPEC 10.5) ---- */
+
+@media (max-width: 899.98px) {
+  /* Top bar: the date and the fixed honesty line with the crew's health under them, the two icons beside
+     them, then the three meters in one row. */
+  .topbar {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: 'date tools' 'health tools' 'honesty honesty' 'meters meters';
+    gap: 1px 8px;
+    padding: 2px 10px;
+  }
+
+  .brand,
+  .date__line:not(.date__honesty),
+  .date__replay {
+    display: none;
+  }
+
+  .date {
+    display: contents;
+  }
+
+  .date__main {
+    grid-area: date;
+    align-self: end;
+  }
+
+  .date__honesty {
+    grid-area: honesty;
+  }
+
+  .tools {
+    align-self: center;
+    gap: 6px;
+  }
+
+  .date__main {
+    font-size: 1.125rem;
+    line-height: 1.15;
+  }
+
+  .date__line {
+    line-height: 1.2;
+  }
+
+  .health {
+    gap: 6px;
+    align-self: start;
+    white-space: nowrap;
+  }
+
+  .health__label {
+    line-height: 1.2;
+  }
+
+  .health__marks {
+    gap: 2px;
+  }
+
+  .mark {
+    width: 7px;
+    height: 12px;
+  }
+
+  .meters {
+    gap: 4px;
+    margin-top: 1px;
+  }
+
+  .meter {
+    gap: 5px;
+    padding: 2px 6px;
+  }
+
+  .meter__icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .meter__num {
+    font-size: 1.25rem;
+  }
+
+  .meter__line {
+    line-height: 1.15;
+    white-space: nowrap;
+  }
+
+  .meter__row {
+    flex-wrap: nowrap;
+  }
+
+  /* Tools: an icon over a small word, 44 px high, no extra padding. */
+  .run-tools {
+    padding: 0 8px;
+    gap: 2px;
+    overflow: hidden;
+  }
+
+  /* The research and notebook numbers sit beside the icon, never on it. */
+  .toolbtn {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-content: center;
+    justify-content: center;
+    column-gap: 2px;
+    min-width: 0;
+    min-height: 44px;
+    padding: 2px 0;
+    border-radius: 8px;
+  }
+
+  .toolbtn__icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  .toolbtn__num {
+    order: 1;
+    position: static;
+    font-size: 12px;
+  }
+
+  .toolbtn__name {
+    order: 2;
+    flex: 0 0 100%;
+    text-align: center;
+    font-size: 12px;
+    line-height: 1.15;
+  }
+
+  /* Goal: the goal on one or two lines with the thin stage bar under it. The stage's words are in the goal sheet. */
+  .goalrow {
+    padding: 4px 10px 2px;
+  }
+
+  .goalbar {
+    padding: 4px 10px 6px;
+    min-height: 44px;
+    gap: 0 8px;
+    align-content: center;
+  }
+
+  .goalbar__text {
+    font-size: 0.9375rem;
+    line-height: 1.2;
+    min-width: 0;
+  }
+
+  .goalbar .stage {
+    flex: 1 0 100%;
+    display: block;
+    margin-top: 3px;
+  }
+
+  .stage__name,
+  .stage__next {
+    display: none;
+  }
+
+  .stage__bar {
+    height: 4px;
+  }
+
+  /* NASA record: label and date, then one line of the record. The full text is in its sheet. */
+  .recordrow {
+    padding: 0 10px 4px;
+  }
+
+  .record {
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 8px;
+    row-gap: 0;
+    padding: 3px 24px 3px 10px;
+    min-height: 44px;
+    align-content: center;
+    line-height: 1.2;
+  }
+
+  .record__title {
+    grid-column: 1 / -1;
+    font-size: 14px;
+  }
+
+  .record__text,
+  .record__game {
+    display: block;
+    font-size: 14px;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .record__game {
+    grid-column: 2;
+    grid-row: 2;
+    max-width: 45vw;
+  }
+
+  .record__more {
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  /* Messages: at most 110 px; a long text scrolls inside this box and nowhere else. */
+  .msg {
+    padding: 4px 10px;
+    max-height: min(110px, 14dvh);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .msg .mc {
+    padding: 2px;
+    gap: 8px;
+  }
+
+  .msg .mc__portrait {
+    width: 40px;
+    height: 40px;
+  }
+
+  .msg .notice,
+  .msg .realcard,
+  .msg__item--card {
+    max-height: none;
+    overflow: visible;
+  }
+
+  .donow {
+    margin-top: 4px;
+    padding-top: 4px;
+  }
+
+  /* Build bar: one row of buildings that scrolls sideways. The chosen building's card shows in the message area. */
+  .play .build {
+    padding: 0;
+  }
+
+  .build__grid {
+    padding: 4px 10px;
+    gap: 6px;
+    overflow-y: hidden;
+  }
+
+  .bb {
+    flex-basis: 92px;
+    min-height: 0;
+    height: 76px;
+    padding: 1px 4px;
+    gap: 0;
+    justify-content: center;
+  }
+
+  .bb__img {
+    width: 36px;
+    height: 24px;
+  }
+
+  .bb__text {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .bb__name {
+    display: block;
+    line-height: 1.05;
+  }
+
+  .bb__cost,
+  .bb__lock {
+    line-height: 1.1;
+  }
+
+  .bb__costicon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .build__about,
+  .build__about--idle {
+    display: none;
+  }
+
+  /* Stocks and End the day: the last row. */
+  .endrow {
+    gap: 10px;
+  }
+
+  .counts--row {
+    line-height: 1.15;
+  }
+
+  .endday {
+    min-height: 48px;
+  }
+
+  /* Short phones: the rows shrink a little more so the map keeps at least 30% of the screen. */
+  .play .msg {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 899.98px) and (max-height: 700px) {
+  .play {
+    --end-h: calc(56px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .play .endrow {
+    padding-top: 6px;
+    padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .counts--row {
+    line-height: 1;
+  }
+
+  .endday {
+    min-height: 44px;
+  }
+
+  /* The goal on one line. */
+  .goalbar__text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1 1 0;
+  }
+
+  .goalrow {
+    padding: 2px 10px 1px;
+  }
+
+  .recordrow {
+    padding-bottom: 2px;
+  }
+
+  .bb {
+    height: 72px;
+  }
+
+  .bb__img {
+    height: 20px;
+  }
+
+  .build__grid {
+    padding: 3px 10px;
+  }
+
+  .play .msg {
+    max-height: min(110px, 14dvh);
+  }
+}
+
+/* A phone on its side is too short for every row: the screen scrolls and End the day stays at the bottom edge. */
+@media (max-width: 899.98px) and (max-height: 520px) {
+  .play {
+    height: auto;
+    min-height: 100dvh;
+    overflow-y: auto;
+    grid-template-rows: auto auto auto auto 70dvh auto auto auto auto;
+  }
+
+  .play .msg {
+    max-height: none;
+  }
+
+  .play .endrow {
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+  }
 }

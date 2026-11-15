@@ -139,7 +139,7 @@ export function topBarHtml(run: Run, chapter: Chapter, preview: DayPreview, mute
   <div class="date">
     <span class="date__main"><b class="date__sol">${glossText(t('top.sol', { n: day.sol }))}</b> · <span class="date__real">${esc(shortDate(date))}</span></span>
     <span class="date__line">${esc(t('top.chapterDay', { n: day.chapterDay, total: chapter.days.length }))}</span>
-    <span class="date__line">${esc(t('top.honesty'))}</span>
+    <span class="date__line date__honesty">${esc(t('top.honesty'))}</span>
     ${replay}
   </div>
   <div class="meters">
