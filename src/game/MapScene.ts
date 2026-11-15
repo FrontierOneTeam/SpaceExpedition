@@ -25,7 +25,7 @@ import {
 } from './camera.ts';
 import { soundUrls } from './phaserSound.ts';
 
-const { RENDER, SITE_SIZE, SHELTER_ALPHA, CAMERA, ASTRONAUT } = config;
+const { RENDER, SITE_SIZE, SHELTER_ALPHA, CAMERA, ASTRONAUT, VIEW } = config;
 const ART = import.meta.env.BASE_URL + 'assets/art/';
 
 const HALF_W = RENDER.tileWidth / 2;
@@ -54,10 +54,14 @@ function tieBreak(r: number, c: number): number {
 
 interface Gesture {
   start: { x: number; y: number };
+  last: { x: number; y: number };
   /** Moved further than a tap allows: a drag, never a tap. */
   moved: boolean;
   /** Two fingers were down at some point: a pinch, never a tap. */
   multi: boolean;
+  /** True while dragging across tiles to place buildings or shelters. */
+  dragPlaced: boolean;
+  lastDragTile: string | null;
 }
 
 export class MapScene extends Phaser.Scene {
@@ -68,6 +72,8 @@ export class MapScene extends Phaser.Scene {
   /** True once the player has panned or zoomed; until then the camera keeps fitting the revealed area. */
   private userMoved = false;
   private shownRing: number | null = null;
+  private redrawing=false;
+  private renderedView="";
   /** The "Survey expanded" moment in progress. */
   private survey: { from: Cam; start: number; prevRing: number } | null = null;
   private fadeTiles: Phaser.GameObjects.Image[] = [];
@@ -140,10 +146,30 @@ export class MapScene extends Phaser.Scene {
 
   // ---- Input: drag to pan, pinch or wheel to zoom, a short press is a tap ----
 
+  private isPlacing(): boolean {
+    if (!this.model) return false;
+    return this.model.placing ?? (this.model.highlight.length > 0 || this.model.outline !== null);
+  }
+
+  private dragAlongSegment(x0: number, y0: number, x1: number, y1: number, g: Gesture): void {
+    const steps = Math.max(1, Math.ceil(Math.hypot(x1 - x0, y1 - y0) / 12));
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps;
+      const tile = this.pick(x0 + (x1 - x0) * t, y0 + (y1 - y0) * t);
+      if (!tile) continue;
+      const key = `${tile.r},${tile.c}`;
+      if (key === g.lastDragTile) continue;
+      g.lastDragTile = key;
+      this.callbacks.onTileDrag?.(tile.r, tile.c);
+      // Placing the last affordable item clears placing mode mid-stroke; stop cleanly.
+      if (!this.isPlacing()) break;
+    }
+  }
+
   private onDown(p: Phaser.Input.Pointer): void {
     this.pointers.set(p.id, { x: p.x, y: p.y });
     if (this.pointers.size === 1) {
-      this.gesture = { start: { x: p.x, y: p.y }, moved: false, multi: false };
+      this.gesture = { start: { x: p.x, y: p.y }, last: { x: p.x, y: p.y }, moved: false, multi: false, dragPlaced: false, lastDragTile: null };
     } else {
       if (this.gesture) this.gesture.multi = true;
       this.pinchDist = this.pointerSpread();
@@ -175,7 +201,17 @@ export class MapScene extends Phaser.Scene {
       this.pinchDist = dist;
       return;
     }
-    if (!g.moved && Math.hypot(cur.x - g.start.x, cur.y - g.start.y) > RENDER.tapSlopPx * this.pixelRatio) g.moved = true;
+    const distFromStart = Math.hypot(cur.x - g.start.x, cur.y - g.start.y);
+    if (!g.multi && this.callbacks.onTileDrag && (g.dragPlaced || (this.isPlacing() && distFromStart > 6 * this.pixelRatio))) {
+      const firstDrag = !g.dragPlaced;
+      g.dragPlaced = true;
+      g.moved = true;
+      this.dragAlongSegment(firstDrag ? g.start.x : g.last.x, firstDrag ? g.start.y : g.last.y, cur.x, cur.y, g);
+      g.last = cur;
+      return;
+    }
+    if (!g.moved && distFromStart > RENDER.tapSlopPx * this.pixelRatio) g.moved = true;
+    g.last = cur;
     if (!g.moved || g.multi) return;
     this.userInput();
     this.cam = panBy(this.cam, cur.x - prev.x, cur.y - prev.y, this.bounds(), this.viewport());
@@ -189,8 +225,8 @@ export class MapScene extends Phaser.Scene {
     if (this.pointers.size > 0) return;
     const g = this.gesture;
     this.gesture = null;
-    // A drag or a pinch never counts as a tap on a tile.
-    if (!inside || !g || g.moved || g.multi) return;
+    // A drag, drag-place stroke, or a pinch never counts as a tap on a tile.
+    if (!inside || !g || g.moved || g.multi || g.dragPlaced) return;
     const tile = this.pick(p.x, p.y);
     if (tile) this.callbacks.onTileTap(tile.r, tile.c);
   }
@@ -221,6 +257,7 @@ export class MapScene extends Phaser.Scene {
 
   /** Redraw everything from the model. Turn-based, so a full redraw is cheap enough. */
   draw(model: MapModel): void {
+    this.redrawing=true;
     const ring = model.state.ring;
     if (this.shownRing !== null && ring > this.shownRing) {
       // "Survey expanded": ease out to the new area and fade the new tiles in (SPEC 5.3).
@@ -236,11 +273,14 @@ export class MapScene extends Phaser.Scene {
     this.astroSprites.clear();
     const state = model.state;
     this.crowd.sync(state);
+    if(!this.cam)this.cam=fitCamera(this.bounds(),this.viewport());
     this.drawTerrain(state);
     this.drawHighlights(model);
     this.drawThings(model);
     this.drawAstronauts(model, 0);
     this.layout();
+    this.renderedView=this.viewKey();
+    this.redrawing=false;
   }
 
   /** Every astronaut dances for a moment (SPEC 11.2). */
@@ -272,11 +312,19 @@ export class MapScene extends Phaser.Scene {
     this.apply();
   }
 
+  private visible(r:number,c:number):boolean {
+    if(!this.cam)return true;
+    const tile=tileCentre(r,c);
+    const p=worldToScreen(this.cam,this.viewport(),tile.x,tile.y);
+    return p.x>=-240&&p.y>=-240&&p.x<=this.scale.width+240&&p.y<=this.scale.height+240;
+  }
+  private viewKey():string {const c=this.cam;return c?`${Math.round(c.x/64)},${Math.round(c.y/32)},${c.zoom.toFixed(2)}`:'';}
   private drawTerrain(state: GameState): void {
     const s = this.survey;
     const progress = s ? Math.min(1, (this.time.now - s.start) / CAMERA.surveyMs) : 1;
-    for (let r = 0; r < SITE_SIZE; r++) {
-      for (let c = 0; c < SITE_SIZE; c++) {
+    for (let r = 0; r < state.terrain.length; r++) {
+      for (let c = 0; c < state.terrain.length; c++) {
+        if(!this.visible(r,c))continue;
         const { x, y } = tileCentre(r, c);
         const kind = state.terrain[r][c];
         const revealed = isRevealed(state.ring, r, c);
@@ -311,20 +359,30 @@ export class MapScene extends Phaser.Scene {
     ];
   }
 
+  /** The same diamond, shrunk towards its centre. */
+  private inset(pts: Phaser.Geom.Point[], k: number): Phaser.Geom.Point[] {
+    const cx = (pts[0].x + pts[2].x) / 2;
+    const cy = (pts[0].y + pts[2].y) / 2;
+    return pts.map((p) => new Phaser.Geom.Point(cx + (p.x - cx) * k, cy + (p.y - cy) * k));
+  }
+
   private drawHighlights(model: MapModel): void {
+    // Valid tiles glow: a strong amber fill, a thick amber edge and a light inner line (SPEC 16.4.2).
     const g = this.add.graphics().setDepth(DEPTH.highlight);
-    g.fillStyle(RENDER.highlightColour, RENDER.highlightAlpha);
-    g.lineStyle(RENDER.highlightLine, RENDER.highlightColour, 1);
     for (const t of model.highlight) {
       const pts = this.diamond(t.r, t.c);
+      g.fillStyle(VIEW.glowColour, VIEW.glowFillAlpha);
       g.fillPoints(pts, true);
+      g.lineStyle(VIEW.glowLine, VIEW.glowColour, 1);
       g.strokePoints(pts, true);
+      g.lineStyle(VIEW.glowInnerLine, VIEW.glowInnerColour, 1);
+      g.strokePoints(this.inset(pts, 0.82), true);
     }
     if (model.outline) {
-      const pts = this.diamond(model.outline.r, model.outline.c, 2, 2);
-      g.fillStyle(RENDER.outlineColour, RENDER.outlineFillAlpha);
+      const pts = this.diamond(model.outline.r, model.outline.c, config.SHELTER.size, config.SHELTER.size);
+      g.fillStyle(VIEW.shelterOutlineColour, VIEW.shelterOutlineFillAlpha);
       g.fillPoints(pts, true);
-      g.lineStyle(RENDER.outlineLine, RENDER.outlineColour, 1);
+      g.lineStyle(VIEW.shelterOutlineLine, VIEW.shelterOutlineColour, 1);
       g.strokePoints(pts, true);
     }
     if (model.hintTile) {
@@ -340,6 +398,7 @@ export class MapScene extends Phaser.Scene {
   private drawThings(model: MapModel): void {
     const state = model.state;
     for (const b of state.buildings) {
+      if(!this.visible(b.r,b.c))continue;
       const { x, y } = tileCentre(b.r, b.c);
       const sprite = this.add
         .image(x, y + HALF_H, ART_FILE[b.type])
@@ -357,14 +416,16 @@ export class MapScene extends Phaser.Scene {
       this.buildingSprites.push({ sprite, building: b });
     }
     for (const s of state.shelters) {
+      if(!this.visible(s.r,s.c))continue;
       // Placed at the bottom corner of the 2x2 block; depth from its bottom tile plus 0.5.
-      const br = s.r + 1;
-      const bc = s.c + 1;
+      const br = s.r + (s.size ?? 1) - 1;
+      const bc = s.c + (s.size ?? 1) - 1;
       const { x, y } = tileCentre(br, bc);
       this.add
         .image(x, y + HALF_H, ART_FILE.shelter)
         .setOrigin(0.5, 1)
         .setScale(RENDER.artScale)
+        .setScale(RENDER.artScale * (s.size ?? 1) / 2)
         .setAlpha(SHELTER_ALPHA)
         .setDepth(DEPTH.things + br + bc + 0.5 + tieBreak(br, bc));
     }
@@ -459,6 +520,7 @@ export class MapScene extends Phaser.Scene {
     cam.setZoom(c.zoom);
     cam.centerOn(mid.x, mid.y);
     this.callbacks.onLayout();
+    if(!this.redrawing&&this.model&&this.viewKey()!==this.renderedView)this.draw(this.model);
   }
 
   /** Re-place the camera after the canvas changed size. */
@@ -484,7 +546,7 @@ export class MapScene extends Phaser.Scene {
   /** A tap on a building's picture picks that building; otherwise the ground tile under it. */
   private pick(px: number, py: number): { r: number; c: number } | null {
     const w = this.toWorld(px, py);
-    const placing = this.model ? this.model.highlight.length > 0 || this.model.outline !== null : false;
+    const placing = this.isPlacing();
     if (!placing) {
       const astronaut = this.pickAstronaut(w.x, w.y);
       if (astronaut !== null) {
@@ -506,7 +568,7 @@ export class MapScene extends Phaser.Scene {
     const v = w.y / HALF_H;
     const c = Math.round((u + v) / 2);
     const r = Math.round((v - u) / 2);
-    if (r < 0 || c < 0 || r >= SITE_SIZE || c >= SITE_SIZE) return null;
+    if (r < 0 || c < 0 || r >= (this.model?.state.terrain.length ?? 12) || c >= (this.model?.state.terrain.length ?? 12)) return null;
     return { r, c };
   }
 }

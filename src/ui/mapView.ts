@@ -9,6 +9,8 @@ export interface MapModel {
   highlight: { r: number; c: number }[];
   /** The shelter footprint being previewed (its top tile), or null. */
   outline: { r: number; c: number } | null;
+  /** True while a placeable building or shelter is selected for tap or drag placement. */
+  placing?: boolean;
   /** A tile the guided start points at, or null. */
   hintTile: { r: number; c: number } | null;
   /** Buildings that get no power today (from the day preview). */
@@ -27,6 +29,8 @@ export interface MapInsets {
 export interface MapCallbacks {
   /** A tap on the map, resolved to a tile (a tap on a building picture gives that building's tile). */
   onTileTap(r: number, c: number): void;
+  /** Dragging across tiles while placing a building or shelter. */
+  onTileDrag?(r: number, c: number): void;
   /** The camera moved or the view resized: badges must be placed again. */
   onLayout(): void;
   /** An astronaut was tapped (it dances once). */

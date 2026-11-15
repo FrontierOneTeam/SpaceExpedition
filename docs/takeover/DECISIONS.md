@@ -1,0 +1,4 @@
+# Decisions
+User overrides older spec: difficulty 10-12, warnings and brief rescue chance; demolition returns half original parts; shelters 1x1 and removable; map keeps expanding with diverse objectives; >1000 days; move buildings; restart and save files; audio and emergencies.
+Defaults from reviewed plan: floor fractional part refunds; 2 soil per shield tile; every second repeating goal expands land; old 2x2 shields become four tiles; free ordinary moves preserve damage/crew and landing pad fixed. Aid initial proposal two free uses/run, 30-sol cooldown; later paid supplies high cost. Values remain in config.ts and balance tests decide viability.
+Historic NASA weather is separate from simulated base incidents. Unknown Mars surface radiation is unknown, never inferred from an Earth observation.

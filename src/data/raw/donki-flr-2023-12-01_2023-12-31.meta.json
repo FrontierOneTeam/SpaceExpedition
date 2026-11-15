@@ -1,0 +1,9 @@
+{
+  "sourceUrl": "https://ccmc.gsfc.nasa.gov/DONKI-API/get/FLR?startDate=2023-12-01&endDate=2023-12-31",
+  "fetchedAt": "2026-11-15T11:06:55.410338+00:00",
+  "query": {
+    "type": "FLR",
+    "startDate": "2023-12-01",
+    "endDate": "2023-12-31"
+  }
+}

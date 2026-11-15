@@ -1,25 +1,31 @@
 // Checks on the built game. They run when dist/ holds a build (after `npm run build`), and are
 // skipped otherwise. `npm run check:dist` runs the same checks from the command line.
 
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
   BUDGET_BYTES,
+  NEVER_SHIPPED,
   approvedAudioFiles,
   audioFiles,
   changedPngs,
   firstLoadBytes,
   foreignUrls,
   precacheList,
+  startAudioBytes,
   serviceWorkerProblems,
 } from '../tools/check-dist.ts';
 
 const built = existsSync('dist/sw.js') && existsSync('dist/index.html');
 
 describe.skipIf(!built)('the built game in dist/', () => {
-  it('holds only the approved sounds, 3 names in 2 formats', () => {
-    expect(approvedAudioFiles()).toHaveLength(6);
+  it('holds every approved sound file that is present, and never one of the nine', () => {
+    expect(approvedAudioFiles().length).toBeGreaterThan(40);
     expect(audioFiles()).toEqual(approvedAudioFiles());
+    for (const name of NEVER_SHIPPED) expect(audioFiles().some((f) => f.startsWith(`${name}.`)), name).toBe(false);
+    expect(audioFiles()).toContain('amb_mars_wind_real.ogg');
+    expect(audioFiles()).toContain('amb_mars_wind_real.mp3');
+    expect(audioFiles().some((f) => f.startsWith('mus_storm_intense'))).toBe(false);
   });
 
   it('has a manifest and a service worker that stays on this site', () => {
@@ -32,13 +38,15 @@ describe.skipIf(!built)('the built game in dist/', () => {
     expect(manifest.icons.length).toBeGreaterThan(0);
   });
 
-  it('precaches the app, art, fonts and approved audio, and nothing unapproved', () => {
+  it('precaches the app, art and fonts, and no sounds (they are cached when played)', () => {
     const urls = precacheList().map((p) => p.url);
     expect(urls).toContain('index.html');
     expect(urls.some((u) => u.startsWith('assets/art/'))).toBe(true);
     expect(urls.some((u) => u.endsWith('.woff2'))).toBe(true);
-    const audio = urls.filter((u) => u.startsWith('assets/audio/')).map((u) => u.slice('assets/audio/'.length)).sort();
-    expect(audio).toEqual(approvedAudioFiles());
+    expect(urls.filter((u) => u.startsWith('assets/audio/'))).toEqual([]);
+    const sw = readFileSync('dist/sw.js', 'utf8') + readdirSync('dist').filter((f) => /^workbox-.*.js$/.test(f)).map((f) => readFileSync(`dist/${f}`, 'utf8')).join('');
+    expect(sw).toContain('outpost-audio');
+    expect(sw).toContain('CacheFirst');
     expect(new Set(urls).size).toBe(urls.length);
   });
 
@@ -46,7 +54,8 @@ describe.skipIf(!built)('the built game in dist/', () => {
     expect(foreignUrls()).toEqual([]);
   });
 
-  it('keeps the first load under 6 MB', () => {
+  it('keeps the first load, with the sounds loaded before the first tap, under 6 MB', () => {
+    expect(startAudioBytes('mp3')).toBeGreaterThan(0);
     expect(firstLoadBytes()).toBeLessThan(BUDGET_BYTES);
   });
 

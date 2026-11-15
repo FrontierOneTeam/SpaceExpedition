@@ -1,0 +1,302 @@
+{
+  "id": "archive-2022-02",
+  "title": "February 2022 records",
+  "site": "mars",
+  "startDate": "2022-02-01",
+  "setup": "Here is what the Sun did this month.",
+  "days": [
+    {
+      "date": "2022-02-01",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "notes": "The fetched DONKI response holds no flare record for this date."
+    },
+    {
+      "date": "2022-02-02",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "notes": "The fetched DONKI response holds no flare record for this date."
+    },
+    {
+      "date": "2022-02-03",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "notes": "The fetched DONKI response holds no flare record for this date."
+    },
+    {
+      "date": "2022-02-04",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 3,
+      "strongest": {
+        "peakTime": "2022-02-04T15:51Z",
+        "classType": "C5.8"
+      }
+    },
+    {
+      "date": "2022-02-05",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "notes": "The fetched DONKI response holds no flare record for this date."
+    },
+    {
+      "date": "2022-02-06",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 1,
+      "strongest": {
+        "peakTime": "2022-02-06T13:41Z",
+        "classType": "C3.1"
+      }
+    },
+    {
+      "date": "2022-02-07",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "notes": "The fetched DONKI response holds no flare record for this date."
+    },
+    {
+      "date": "2022-02-08",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "notes": "The fetched DONKI response holds no flare record for this date."
+    },
+    {
+      "date": "2022-02-09",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "notes": "The fetched DONKI response holds no flare record for this date."
+    },
+    {
+      "date": "2022-02-10",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "notes": "The fetched DONKI response holds no flare record for this date."
+    },
+    {
+      "date": "2022-02-11",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "notes": "The fetched DONKI response holds no flare record for this date."
+    },
+    {
+      "date": "2022-02-12",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 2,
+      "strongest": {
+        "peakTime": "2022-02-12T08:44Z",
+        "classType": "M1.4"
+      }
+    },
+    {
+      "date": "2022-02-13",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 1,
+      "strongest": {
+        "peakTime": "2022-02-13T01:20Z",
+        "classType": "C3.2"
+      }
+    },
+    {
+      "date": "2022-02-14",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 1,
+      "strongest": {
+        "peakTime": "2022-02-14T17:31Z",
+        "classType": "M1.0"
+      }
+    },
+    {
+      "date": "2022-02-15",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 1,
+      "strongest": {
+        "peakTime": "2022-02-15T18:15Z",
+        "classType": "M1.3"
+      }
+    },
+    {
+      "date": "2022-02-16",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "notes": "The fetched DONKI response holds no flare record for this date."
+    },
+    {
+      "date": "2022-02-17",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 1,
+      "strongest": {
+        "peakTime": "2022-02-17T20:51Z",
+        "classType": "C1.4"
+      }
+    },
+    {
+      "date": "2022-02-18",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 1,
+      "strongest": {
+        "peakTime": "2022-02-18T16:27Z",
+        "classType": "B8.4"
+      }
+    },
+    {
+      "date": "2022-02-19",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 1,
+      "strongest": {
+        "peakTime": "2022-02-19T21:26Z",
+        "classType": "B7.2"
+      }
+    },
+    {
+      "date": "2022-02-20",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 1,
+      "strongest": {
+        "peakTime": "2022-02-20T04:07Z",
+        "classType": "C5.1"
+      }
+    },
+    {
+      "date": "2022-02-21",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "notes": "The fetched DONKI response holds no flare record for this date."
+    },
+    {
+      "date": "2022-02-22",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "notes": "The fetched DONKI response holds no flare record for this date."
+    },
+    {
+      "date": "2022-02-23",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "notes": "The fetched DONKI response holds no flare record for this date."
+    },
+    {
+      "date": "2022-02-24",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "notes": "The fetched DONKI response holds no flare record for this date."
+    },
+    {
+      "date": "2022-02-25",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "notes": "The fetched DONKI response holds no flare record for this date."
+    },
+    {
+      "date": "2022-02-26",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "notes": "The fetched DONKI response holds no flare record for this date."
+    },
+    {
+      "date": "2022-02-27",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "notes": "The fetched DONKI response holds no flare record for this date."
+    },
+    {
+      "date": "2022-02-28",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 2,
+      "strongest": {
+        "peakTime": "2022-02-28T09:17Z",
+        "classType": "C3.1"
+      }
+    }
+  ],
+  "simplified": [
+    "Storms this month are part of the game. A big flare is followed by a game storm the next day.",
+    "NASA's flare list does not say what happened at Mars.",
+    "What breaks and how much health is lost are part of the game.",
+    "Sunlight is steady in this chapter.",
+    "One sol is shown as one Earth date.",
+    "The outpost and its site are made up."
+  ]
+}

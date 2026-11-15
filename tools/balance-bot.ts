@@ -1,3 +1,6 @@
+import {pathToFileURL} from 'node:url';
+import {requestAid,repairBuilding} from '../src/sim/emergency.ts';
+import {buyResearch} from '../src/sim/research.ts';
 // Balance bot (SPEC 13.3, 16.1). Plays chapter one headless through the public sim API
 // and prints one table. Bots only do what a player could do: valid placements, real costs.
 //
@@ -8,6 +11,10 @@ import sep2017Json from '../src/data/chapters/sep2017.json';
 import {
   answerQuestion,
   buildingAt,
+  chosenProgress,
+  goalsCompleted,
+  isGoalDone,
+  stageOf,
   canPlace,
   config,
   createRng,
@@ -32,8 +39,8 @@ import {
   type Tile,
 } from '../src/sim/index.ts';
 
-const book: ChapterBook = {
-  archive: archive as string[],
+let book: ChapterBook = {
+  archive: ['sep2017'],
   chapters: { sep2017: sep2017Json as unknown as Chapter },
 };
 
@@ -53,16 +60,7 @@ function cost(type: PlaceableType): { parts: number; soil: number } {
 
 /** The only 2x2 block that can shelter the starting habitat (panels and pad block the rest). */
 function habitatShelterTiles(s: GameState): Tile[] {
-  const home = s.buildings.find((b) => b.type === 'home')!;
-  const spots: Tile[] = [];
-  for (let dr = -1; dr <= 0; dr++) {
-    for (let dc = -1; dc <= 0; dc++) {
-      const top = { r: home.r + dr, c: home.c + dc };
-      const tiles = shelterTiles(top);
-      if (tiles.every((t) => { const b = buildingAt(s, t.r, t.c); return !b || (b.type !== 'sun' && b.type !== 'pad'); })) spots.push(...tiles);
-    }
-  }
-  return spots;
+  const home=s.buildings.find(b=>b.type==='home')!;return [{r:home.r,c:home.c}];
 }
 
 /** Score a tile for a building; higher is better. */
@@ -153,7 +151,7 @@ function buildShelter(s: GameState, minScore: number): boolean {
   let bestScore = minScore;
   for (const t of validTiles(s, 'shelter')) {
     const sc = shelterScore(s, t);
-    if (sc >= bestScore) {
+    if (sc > bestScore || sc === bestScore && best === null) {
       bestScore = sc;
       best = t;
     }
@@ -201,29 +199,37 @@ function machineTargets(crew: number): { farm: number; o2: number; mine: number 
 /** A new habitat goes only on a free tile under a shelter, building that shelter first if needed. */
 function buildShelteredHome(s: GameState): boolean {
   const spot = () => validTiles(s, 'home').filter((t) => isSheltered(s, t.r, t.c) && !isDeposit(s, t));
-  if (spot().length === 0 && s.soil >= 4) buildShelter(s, 2);
+  if(spot().length===0&&s.soil>=2){const t=validTiles(s,'home').find(t=>!isDeposit(s,t)&&canPlace(s,'shelter',t.r,t.c).ok);if(t)place(s,'shelter',t.r,t.c);}
   const tiles = spot().sort((a, b) => tileScore(s, 'home', b) - tileScore(s, 'home', a));
   return tiles.length > 0 && place(s, 'home', tiles[0].r, tiles[0].c).ok;
 }
 
-const sensible: Bot = (run) => {
+export const sensible: Bot = (run) => {
   const s = run.state;
+  for(const b of s.buildings)if(b.manualRepair)repairBuilding(s,b.id);
+  if(s.air<s.crew||s.food<s.crew)requestAid(s);
   if (s.question) answerQuestion(s, 'break');
 
   // Starter goals, sheltering the habitat as soon as the shelter is unlocked.
   starterThree(run);
   const homesUnsheltered = () => s.buildings.some((b) => b.type === 'home' && !isSheltered(s, b.r, b.c));
-  if (s.unlocked.includes('shelter') && s.soil >= 4 && homesUnsheltered()) buildShelter(s, 10);
+  if (s.unlocked.includes('shelter') && s.soil >= 2 && homesUnsheltered()) buildShelter(s, 10);
 
   if (s.goals.starterDone >= 3) {
     // A storm is coming or here: cover machines.
-    if (stormComing(run)) while (s.soil >= 4 && buildShelter(s, 3));
+    if (stormComing(run)) while (s.soil >= 2 && buildShelter(s, 3));
     // A second digger, so soil builds up for shelters.
     if (count(s, 'dig') < 2 && s.parts >= 3) buildOnDeposit(s, 'dig');
 
-    // Grow toward the crew goal: machines first, then the habitat.
+    // Work on the chosen goal (SPEC 18.2).
     const g = currentGoal(s);
-    const wantCrew = g.id === 'house_crew' && s.unlocked.includes('home') ? s.crew + 2 : s.crew;
+    // Parts come first: a sensible player builds a parts factory once diggers can feed it, and more as the crew grows.
+    if (s.goals.starterDone >= 4 && count(s, 'dig') >= 1 && count(s, 'fab') < 1 + Math.floor(s.crew / BOT.crewPerFactory) && s.parts >= cost('fab').parts) build(s, 'fab');
+    pursueGoal(run);
+    // Grow toward the crew goal or the next stage's crew: machines first, then one habitat at a time.
+    const nextStage = config.STAGES[stageOf(s) + 1];
+    const stageCrew = nextStage && goalsCompleted(s) >= nextStage.goals - BOT.stageCrewLead ? nextStage.crew : 0;
+    const wantCrew = s.unlocked.includes('home') && (g.id === 'house_crew' || stageCrew > s.crew) ? s.crew + 2 : s.crew;
     const want = machineTargets(wantCrew);
     const order: ['mine' | 'farm' | 'o2', number][] = [
       ['mine', want.mine],
@@ -240,7 +246,7 @@ const sensible: Bot = (run) => {
         // Replace an unshelterable mine with one on another ice tile, if any is free.
         if (countSafe('mine') < n) buildOnDeposit(s, 'mine');
       } else if (countSafe(type) < n) {
-        if (!freeShelteredTile(type) && s.soil >= 4) buildShelter(s, 2);
+        if (!freeShelteredTile(type) && s.soil >= 2) buildShelter(s, 2);
         // Without a sheltered spot, only build when the plain count is short too.
         if (freeShelteredTile(type) || count(s, type) < n) build(s, type);
       }
@@ -258,13 +264,72 @@ const sensible: Bot = (run) => {
 
     // Shelters: new habitats first, then machines, then empty ground for future machines.
     if (s.goals.starterDone >= 4) {
-      if (s.soil >= 4 && homesUnsheltered()) buildShelter(s, 10);
-      while (s.soil >= 4 && buildShelter(s, 3));
-      if (s.soil >= 8) buildShelter(s, 2);
+      if (s.soil >= 2 && homesUnsheltered()) buildShelter(s, 10);
+      while (s.soil >= 2 && buildShelter(s, 3));
+      if (s.soil >= 4) buildShelter(s, 2);
     }
   }
   keepPowered(run);
 };
+
+/** How the sensible bot plays the chosen goals. */
+const BOT = {
+  /** Start growing the crew for the next stage when this few goals are left before it. */
+  stageCrewLead: 4,
+  /** One more parts factory for every this many crew. */
+  crewPerFactory: 12,
+} as const;
+
+/** Do what the chosen goal asks, the way a sensible player would. */
+function pursueGoal(run: Run): void {
+  const s = run.state;
+  const g = currentGoal(s);
+  if (g.kind !== 'repeating' || isGoalDone(s, g)) return;
+  switch (g.id) {
+    case 'more_air':
+      if (s.parts >= cost('o2').parts) buildMachine(s, 'o2');
+      break;
+    case 'more_food':
+      if (s.parts >= cost('farm').parts) buildMachine(s, 'farm');
+      break;
+    case 'new_mine':
+      buildOnDeposit(s, 'mine');
+      break;
+    case 'new_digger':
+      buildOnDeposit(s, 'dig');
+      break;
+    case 'more_power':
+      for (let i = 0; i < 3 && chosenProgress(s, 'more_power') < g.target; i++) if (!build(s, 'sun')) break;
+      break;
+    case 'more_storage':
+      build(s, 'batt');
+      break;
+    case 'research': {
+      if (count(s, 'lab') === 0) {
+        buildMachine(s, 'lab');
+        break;
+      }
+      const ids = Object.entries(config.RESEARCH_COSTS).sort((a, b) => a[1] - b[1]).map(([id]) => id);
+      for (const id of ids) if (buyResearch(s, id)) break;
+      break;
+    }
+    case 'storm_cover':
+    case 'shelter_machines':
+    case 'cover_homes':
+      while (s.soil >= cost('shelter').soil && chosenProgress(s, g.id) < g.target && buildShelter(s, 1));
+      break;
+  }
+}
+
+/** A machine goes under a shelter when it can, building the shelter first. */
+function buildMachine(s: GameState, type: 'o2' | 'farm' | 'lab'): boolean {
+  const shelteredSpot = () => validTiles(s, type).some((x) => isSheltered(s, x.r, x.c) && !isDeposit(s, x));
+  if (!shelteredSpot() && s.soil >= cost('shelter').soil) {
+    const t = validTiles(s, type).find((x) => !isDeposit(s, x) && canPlace(s, 'shelter', x.r, x.c).ok);
+    if (t) place(s, 'shelter', t.r, t.c);
+  }
+  return build(s, type);
+}
 
 const careless: Bot = (run, rng) => {
   const s = run.state;
@@ -385,7 +450,8 @@ function runBot(bot: Bot, botSeed: number): ChapterResult[] {
 function judge(name: string, results: ChapterResult[], s: Summary): string {
   switch (name) {
     case 'Idle':
-      return s.survival === 0 && results.every((r) => r.lossSol !== null && r.lossSol <= 7) ? 'MET' : 'MISSED';
+      // Air runs out on sol 6; the rescue window (SPEC 17) then gives LONG_RUN.rescueTurns more sols.
+      return s.survival === 0 && results.every((r) => r.lossSol !== null && r.lossSol <= 6 + config.LONG_RUN.rescueTurns) ? 'MET' : 'MISSED';
     case 'No shelter':
       return s.survival > 0.5 && (s.lowestHealth ?? 99) <= 5 && (s.stormBroken ?? 0) >= 2 ? 'MET' : 'MISSED';
     case 'Sensible': {
@@ -431,6 +497,8 @@ function trace(site: number, chapters: number): void {
   }
 }
 
+export function setBotBook(value:ChapterBook):void {book=value;}
+function main():void {
 const traceAt = process.argv.indexOf('--trace');
 if (traceAt >= 0) {
   const site = Number(process.argv[traceAt + 1]);
@@ -539,3 +607,37 @@ printTable(replayRows);
 console.log('');
 console.log('Stall check (a play that completes fewer than 2 goals):');
 for (const line of stallLines) console.log('  ' + line);
+
+// Pace on chapter one and its replays (SPEC 18.2): the sol each sensible outpost reaches the second stage.
+const secondStage: number[] = [];
+let neverSecond = 0;
+for (let site = 1; site <= RUNS; site++) {
+  const run = newRun(site, book);
+  const rng = createRng(site);
+  let found: number | null = null;
+  for (let i = 0; i < 60 && !run.state.lost && found === null; i++) {
+    if (run.pendingReport) keepBuilding(run, book);
+    sensible(run, rng);
+    endDay(run, book);
+    if (stageOf(run.state) >= 1) found = run.state.day - 1;
+  }
+  if (found === null) neverSecond++;
+  else secondStage.push(found);
+}
+const med2 = median(secondStage);
+const inRange = secondStage.filter((x) => x >= 10 && x <= 20).length;
+console.log('');
+console.log('Pace (sensible bot, chapter one and replays). The long-run tool checks the later stages:');
+console.log('');
+printTable([
+  ['Target', 'Aim', 'Result', 'Verdict'],
+  [
+    'Second stage',
+    'sol 10 to 20',
+    `median ${fmt(med2)}, ${inRange} of ${RUNS} runs in range, range ${Math.min(...secondStage)} to ${Math.max(...secondStage)}, never in 60 sols: ${neverSecond}`,
+    med2 !== null && med2 >= 10 && med2 <= 20 ? 'MET' : 'MISSED',
+  ],
+]);
+
+}
+if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href)main();

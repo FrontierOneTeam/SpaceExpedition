@@ -2,7 +2,8 @@
 // SPEC 13.2: play through the real interface code with Phaser replaced by a fake map.
 
 import { describe, expect, it } from 'vitest';
-import { SAVE_KEY, type SaveStorage } from '../src/save/save.ts';
+import { SAVE_KEY, loadSave, type SaveStorage } from '../src/save/save.ts';
+import { exportSave } from '../src/save/files.ts';
 import { App } from '../src/ui/app.ts';
 import type { CreateMap, MapCallbacks, MapModel, MapView } from '../src/ui/mapView.ts';
 import { book } from './helpers.ts';
@@ -10,6 +11,7 @@ import { book } from './helpers.ts';
 interface FakeMap {
   createMap: CreateMap;
   tap(r: number, c: number): void;
+  drag(r: number, c: number): void;
   renders: MapModel[];
 }
 
@@ -31,6 +33,7 @@ function fakeMap(): FakeMap {
       return Promise.resolve(view);
     },
     tap: (r, c) => callbacks!.onTileTap(r, c),
+    drag: (r, c) => callbacks!.onTileDrag?.(r, c),
   };
 }
 
@@ -56,6 +59,7 @@ function setup(storage: SaveStorage | null = memory()) {
     const el = root.querySelector<HTMLElement>(selector);
     if (!el) throw new Error(`missing ${selector}`);
     el.click();
+    if(selector==='[data-action="end-day"]' && !root.querySelector('[data-action="predict"]')) root.querySelector<HTMLElement>('[data-action="msg-next"]')?.click();
   };
   const advance = (ms: number) => {
     clock += ms;
@@ -83,7 +87,7 @@ describe('smoke: Your Outpost through the interface', () => {
     expect(map.renders.length).toBeGreaterThan(0);
 
     // The hint points at the oxygen maker; choose it and tap the hinted tile.
-    expect(root.querySelector('.bb.is-hint')?.getAttribute('data-type')).toBe('o2');
+    expect(root.querySelector('.bb.is-next')?.getAttribute('data-type')).toBe('o2');
     click('[data-type="o2"]');
     const last = map.renders[map.renders.length - 1];
     expect(last.highlight.length).toBeGreaterThan(0);
@@ -111,11 +115,13 @@ describe('smoke: Your Outpost through the interface', () => {
     s.unlocked.push('batt', 'dig', 'farm', 'mine', 'shelter', 'fab');
     s.soil = 4;
     click('[data-type="shelter"]');
-    expect(map.renders[map.renders.length - 1].outline).toEqual({ r: 4, c: 4 });
+    expect(map.renders[map.renders.length - 1].outline).toEqual({ r: 5, c: 5 });
     expect(root.querySelector('.badge--label')?.textContent).toBe('Tap to place the shelter here');
     map.tap(5, 5);
-    expect(s.shelters).toEqual([expect.objectContaining({ r: 4, c: 4 })]);
-    expect(root.querySelector('.badge--shelter')?.textContent).toContain('Sheltered');
+    expect(s.shelters).toEqual([expect.objectContaining({ r: 5, c: 5 })]);
+    // The shelter shows a small shield mark only, never the word "Sheltered" on the map.
+    expect(root.querySelector('.badge--shelter')).not.toBeNull();
+    expect(root.querySelector('.map__badges')!.textContent).not.toContain('Sheltered');
   });
 
   it('one tap on End the day cannot advance two days', async () => {
@@ -141,10 +147,10 @@ describe('smoke: Your Outpost through the interface', () => {
     click('[data-action="title-continue"]');
     click('[data-type="o2"]');
     map.tap(5, 5); // the habitat
-    expect(root.querySelector('.notice')?.textContent).toContain('Something is already here.');
+    expect(root.querySelector('.flash')?.textContent).toContain('Something is already here.');
     map.tap(0, 0);
-    expect(root.querySelectorAll('.notice').length).toBe(1);
-    expect(root.querySelector('.notice')?.textContent).toContain('That land is not surveyed yet.');
+    expect(root.querySelectorAll('.flash').length).toBe(1);
+    expect(root.querySelector('.flash')?.textContent).toContain('That land is not surveyed yet.');
   });
 
   it('saves after every change and reopens the chapter end without running a day', async () => {
@@ -299,9 +305,10 @@ describe('smoke: Your Outpost through the interface', () => {
     const run = app.current!;
     const shown: string[] = [];
     while (!run.pendingReport) {
+      if(!root.querySelector('.realcard'))root.querySelector<HTMLElement>('[data-action="msg-next"]')?.click();
       const card = root.querySelector('.realcard');
       if (card) {
-        expect(card.textContent).toContain('This was real');
+        expect(root.textContent).toContain('This was real');
         expect(card.querySelector('a')?.getAttribute('rel')).toBe('noopener noreferrer');
         shown.push(card.querySelector('.realcard__date')!.textContent!);
       }
@@ -329,8 +336,8 @@ describe('smoke: Your Outpost through the interface', () => {
       click('[data-action="end-day"]');
     }
     expect(root.querySelectorAll('.realcard').length).toBe(1);
+    click('[data-action="msg-next"]');
     expect(root.textContent).toContain('No message from Earth today');
-    click('[data-action="close-card"]');
     expect(root.querySelector('.realcard')).toBeNull();
     // Closing it used no day.
     expect(run.chapterDay).toBe(6);
@@ -367,7 +374,8 @@ describe('smoke: Your Outpost through the interface', () => {
     advance(1000);
     click('[data-action="end-day"]');
     // The morning after the storm: the result, kindly.
-    expect(root.querySelector('.notice')!.textContent).toContain('You were right. The storm broke your battery.');
+    expect(root.textContent).toContain('11 September 2017');
+    expect(run.state.log.at(-1)!.events).toContainEqual(expect.objectContaining({type:'prediction_scored',right:true}));
     expect(run.state.predictions).toEqual({ right: 1, answered: 1 });
   });
 
@@ -396,7 +404,7 @@ describe('smoke: Your Outpost through the interface', () => {
       advance(1000);
       click('[data-action="end-day"]');
     }
-    expect(root.querySelector('.notice')!.textContent).toContain('You saw it coming and fixed it.');
+    expect(run.state.log.at(-1)!.events).toContainEqual(expect.objectContaining({type:'prediction_scored',saved:true}));
   });
 
   it('Skip removes the question with no reward and no penalty', async () => {
@@ -515,11 +523,201 @@ describe('smoke: Your Outpost through the interface', () => {
     click('[data-action="lost-report-back"]');
     expect(root.textContent).toContain('Air ran out on sol');
     click('[data-action="new-site"]');
-    expect(root.textContent).toContain('Start on a new site?');
+    expect(root.textContent).toContain('Restart your outpost?');
     click('[data-action="new-site-no"]');
     click('[data-action="try-again"]');
     expect(app.current!.state.lost).toBeNull();
     expect(app.current!.siteNumber).toBe(4821);
     expect(app.current!.state.day).toBe(1);
+  });
+
+  it('drags to place 1-soil shelters across multiple valid tiles in one stroke', async () => {
+    const { app, map, click } = setup();
+    app.start();
+    click('[data-action="home-start"]');
+    await tick();
+    click('[data-action="title-continue"]');
+    const s = app.current!.state;
+    s.goals.starterDone = 4;
+    s.unlocked.push('batt', 'dig', 'farm', 'mine', 'shelter', 'fab');
+    s.soil = 3;
+    click('[data-type="shelter"]');
+    const firstRender = map.renders[map.renders.length - 1];
+    expect(firstRender.placing).toBe(true);
+    const valid = firstRender.highlight;
+    expect(valid.length).toBeGreaterThanOrEqual(3);
+
+    // Drag across a valid tile, an unsurveyed/invalid tile (0,0), and two more valid tiles.
+    map.drag(valid[0].r, valid[0].c);
+    map.drag(0, 0);
+    map.drag(valid[1].r, valid[1].c);
+    map.drag(valid[2].r, valid[2].c);
+
+    expect(s.shelters.length).toBe(3);
+    expect(s.soil).toBe(0);
+    expect(map.renders[map.renders.length - 1].placing).toBe(false);
+  });
+
+  it('each outpost tool has its own button and a sheet that says what it does; toggles and aid give feedback', async () => {
+    const { app, root, click } = setup();
+    app.start();
+    click('[data-action="home-start"]');
+    await tick();
+    click('[data-action="title-continue"]');
+    const s = app.current!.state;
+    // No catch-all "Outpost tools · ..." button any more: five named tools.
+    expect(root.textContent).not.toContain('Outpost tools ·');
+    const names = [...root.querySelectorAll<HTMLElement>('[data-action="tool"]')].map((b) => b.querySelector('.toolbtn__name')!.textContent);
+    expect(names).toEqual(['Sound', 'Research', 'Notebook', 'Help', 'Save', 'Load']);
+
+    click('[data-tool="sound"]');
+    expect(root.querySelector('.tools__about')?.textContent).toContain('It is free.');
+    const musicBtn = () => root.querySelector<HTMLButtonElement>('[data-action="music-toggle"]')!;
+    expect(musicBtn().getAttribute('aria-pressed')).toBe('true');
+    expect(musicBtn().textContent).toBe('Music: On');
+    click('[data-action="music-toggle"]');
+    expect(musicBtn().getAttribute('aria-pressed')).toBe('false');
+    expect(root.querySelector('.tools__status')?.textContent).toContain('Music turned off.');
+    click('[data-action="close-overlay"]');
+    expect(root.querySelector('[data-action="music-toggle"]')).toBeNull();
+
+    // Help when nothing is short: a clear warning, no call used.
+    click('[data-tool="aid"]');
+    expect(root.querySelector('.tools__about')?.textContent).toMatch(/costs \d+ parts/);
+    click('[data-action="aid"]');
+    expect(root.querySelector('.tools__status--warn')).not.toBeNull();
+    expect(s.aid?.used ?? 0).toBe(0);
+    s.air = 1;
+    click('[data-action="aid"]');
+    expect(s.aid?.used).toBe(1);
+    expect(root.querySelector('.tools__status')?.textContent).toContain('Aid arrived');
+    // Tapping the open tool again closes it.
+    click('[data-tool="aid"]');
+    expect(root.querySelector('[data-action="aid"]')).toBeNull();
+
+    click('[data-tool="save"]');
+    expect(root.querySelectorAll('[data-action="slot-save"]')).toHaveLength(3);
+    expect(root.querySelector('[data-action="restart"]')).not.toBeNull();
+    // Files are only a back up, in Settings.
+    expect(root.querySelector('[data-action="export-save"]')).toBeNull();
+  });
+
+  it('every control on the play screen has a visible name or a spoken label', async () => {
+    const { app, root, click } = setup();
+    app.start();
+    click('[data-action="home-start"]');
+    await tick();
+    click('[data-action="title-continue"]');
+    const check = () => {
+      for (const el of root.querySelectorAll<HTMLElement>('button, [role="button"], label.button, a')) {
+        const name = (el.getAttribute('aria-label') ?? el.textContent ?? '').trim();
+        expect(name.length, el.outerHTML.slice(0, 120)).toBeGreaterThan(0);
+      }
+    };
+    check();
+    for (const tool of ['sound', 'research', 'notebook', 'aid', 'save', 'load']) {
+      click(`[data-tool="${tool}"]`);
+      check();
+      click('[data-action="close-overlay"]');
+    }
+    click('[data-action="open-goal"]');
+    check();
+  });
+
+  it('Save and Load use three slots in the game: save, load back the same outpost, other slots untouched', async () => {
+    const storage = memory();
+    const { app, root, click, advance } = setup(storage);
+    app.start();
+    click('[data-action="home-start"]');
+    await tick();
+    click('[data-action="title-continue"]');
+    expect(root.querySelector('[data-tool="save"]')).not.toBeNull();
+    expect(root.querySelector('[data-tool="load"]')).not.toBeNull();
+
+    // Save into slot 2 (empty: no question), then slot 1.
+    click('[data-tool="save"]');
+    expect([...root.querySelectorAll('.slot__what')].map((e) => e.textContent)).toEqual(['Empty', 'Empty', 'Empty']);
+    click('[data-action="slot-save"][data-slot="1"]');
+    expect(root.querySelector('.tools__status')?.textContent).toBe('Saved in slot 2!');
+    expect(root.querySelectorAll('.slot__what')[1].textContent).toMatch(/^Site 4821 · Sol 1 · 2 Sep 2017 · Landing camp · 2 crew$/);
+    const saved = JSON.parse(JSON.stringify(app.current));
+    // Saving over a used slot asks first, inside the page.
+    click('[data-action="slot-save"][data-slot="1"]');
+    expect(root.querySelector('.slot__ask')?.textContent).toContain('Save over slot 2?');
+    click('[data-action="slot-no"]');
+    click('[data-action="close-overlay"]');
+
+    advance(1000);
+    click('[data-action="end-day"]');
+    expect(app.current!.state.day).toBe(2);
+    click('[data-tool="save"]');
+    click('[data-action="slot-save"][data-slot="0"]');
+    click('[data-action="close-overlay"]');
+    const slot1 = storage.data.get('outpost-builder-slot-1');
+
+    // Load slot 2: an empty slot cannot be picked; a used one asks first, then restores that outpost.
+    click('[data-tool="load"]');
+    expect(root.querySelector<HTMLButtonElement>('[data-action="slot-load"][data-slot="2"]')!.disabled).toBe(true);
+    click('[data-action="slot-load"][data-slot="1"]');
+    expect(root.querySelector('.slot__ask')?.textContent).toContain('Load slot 2?');
+    expect(app.current!.state.day).toBe(2);
+    click('[data-action="slot-load-yes"][data-slot="1"]');
+    expect(JSON.parse(JSON.stringify(app.current))).toEqual(saved);
+    expect(storage.data.get('outpost-builder-slot-1')).toBe(slot1);
+    expect(storage.data.has('outpost-builder-slot-3')).toBe(false);
+    // The automatic save now holds the loaded outpost, so Continue comes back to it.
+    expect(JSON.parse(storage.data.get(SAVE_KEY)!).outpost.state.day).toBe(1);
+  });
+
+  it('a damaged slot is reported and changes nothing; storage that throws does not crash', async () => {
+    const storage = memory();
+    const { app, root, click } = setup(storage);
+    app.start();
+    click('[data-action="home-start"]');
+    await tick();
+    click('[data-action="title-continue"]');
+    storage.data.set('outpost-builder-slot-1', '{"version":1,"outpost":{"state":{}}}');
+    click('[data-tool="load"]');
+    expect(root.querySelectorAll('.slot__what')[0].textContent).toContain('damaged');
+    expect(root.querySelector<HTMLButtonElement>('[data-action="slot-load"][data-slot="0"]')!.disabled).toBe(true);
+    const before = JSON.stringify(app.current);
+    expect(JSON.stringify(app.current)).toBe(before);
+    click('[data-action="close-overlay"]');
+
+    // Storage that throws: the slot sheets still open, and saving says so in plain words.
+    storage.getItem = () => {
+      throw new Error('blocked');
+    };
+    storage.setItem = () => {
+      throw new Error('full');
+    };
+    click('[data-tool="save"]');
+    expect(root.querySelectorAll('.slot__what')[0].textContent).toContain('not working');
+    click('[data-tool="save"]');
+    click('[data-tool="load"]');
+    expect(JSON.stringify(app.current)).toBe(before);
+  });
+
+  it('Settings keeps a Back up to a file, separate from the game slots', async () => {
+    const { app, root, click } = setup();
+    app.start();
+    click('[data-action="open-settings"]');
+    expect(root.querySelector('.settings__backup')?.textContent).toContain('Back up');
+    expect(root.querySelector('[data-action="import-save"]')).not.toBeNull();
+  });
+
+  it('shows the stage, the way to the next one, and the store limits', async () => {
+    const { app, root, click } = setup();
+    app.start();
+    click('[data-action="home-start"]');
+    await tick();
+    click('[data-action="title-continue"]');
+    expect(root.querySelector('.goalbar .stage')?.getAttribute('aria-label')).toMatch(/^Stage 1 of \d: Landing camp\. Next: Small base/);
+    const parts = root.querySelector('.count[aria-label^="Parts"]')!;
+    expect(parts.getAttribute('aria-label')).toBe('Parts 8 of 20.');
+    app.current!.state.parts = 20;
+    click('[data-action="open-goal"]');
+    expect(root.querySelector('.count[aria-label^="Parts"]')!.textContent).toContain('Full');
+    expect(root.querySelector('.stagebox')?.textContent).toContain('Goals done: 0 of');
   });
 });

@@ -1,7 +1,9 @@
 // Placing and removing buildings and soil shelters (SPEC 4.4, 4.5, 16.2).
 // place* and remove* change the state in place and return a result.
 
+import {hasResearch} from './research.ts';
 import { BUILDINGS, SHELTER, SITE_SIZE } from './config.ts';
+import { capStocks } from './storage.ts';
 import { inBounds, isRevealed, type Tile } from './terrain.ts';
 import type { Building, BuildingType, GameState, PlaceableType, Shelter } from './types.ts';
 
@@ -44,19 +46,19 @@ export function buildingAt(state: GameState, r: number, c: number): Building | n
 }
 
 /** The four tiles of a shelter footprint. */
-export function shelterTiles(s: { r: number; c: number }): Tile[] {
+export function shelterTiles(s: { r: number; c: number; size?: number }): Tile[] {
   const out: Tile[] = [];
-  for (let dr = 0; dr < SHELTER.size; dr++) for (let dc = 0; dc < SHELTER.size; dc++) out.push({ r: s.r + dr, c: s.c + dc });
+  for (let dr = 0; dr < (s.size ?? SHELTER.size); dr++) for (let dc = 0; dc < (s.size ?? SHELTER.size); dc++) out.push({ r: s.r + dr, c: s.c + dc });
   return out;
 }
 
 export function shelterAt(state: GameState, r: number, c: number): Shelter | null {
-  return state.shelters.find((s) => r >= s.r && r < s.r + SHELTER.size && c >= s.c && c < s.c + SHELTER.size) ?? null;
+  return state.shelters.find((s) => r >= s.r && r < s.r + (s.size ?? SHELTER.size) && c >= s.c && c < s.c + (s.size ?? SHELTER.size)) ?? null;
 }
 
 /** A tile is sheltered when it is inside a shelter footprint. */
 export function isSheltered(state: GameState, r: number, c: number): boolean {
-  return shelterAt(state, r, c) !== null;
+  return shelterAt(state, r, c) !== null || (hasResearch(state,'soil') && buildingAt(state,r,c)?.type==='home');
 }
 
 export function isUnlocked(state: GameState, type: PlaceableType): boolean {
@@ -85,7 +87,7 @@ export function canPlaceBuilding(state: GameState, type: BuildingType, r: number
   const spec = BUILDINGS[type];
   if (!spec || !spec.placeable) return { ok: false, reason: 'not_placeable' };
   if (!isUnlocked(state, type as PlaceableType)) return { ok: false, reason: 'locked' };
-  if (!inBounds(r, c)) return { ok: false, reason: 'out_of_bounds' };
+  if (!inBounds(r, c, state.terrain.length) || !state.terrain[r]?.[c]) return { ok: false, reason: 'out_of_bounds' };
   if (!isRevealed(state.ring, r, c)) return { ok: false, reason: 'not_revealed' };
   if (buildingAt(state, r, c)) return { ok: false, reason: 'occupied' };
   const terrain = state.terrain[r][c];
@@ -104,7 +106,7 @@ export function canPlaceShelter(state: GameState, r: number, c: number): PlaceCh
   if (state.lost) return { ok: false, reason: 'run_over' };
   if (!isUnlocked(state, 'shelter')) return { ok: false, reason: 'locked' };
   const tiles = shelterTiles({ r, c });
-  if (!tiles.every((t) => inBounds(t.r, t.c))) return { ok: false, reason: 'out_of_bounds' };
+  if (!tiles.every((t) => inBounds(t.r, t.c, state.terrain.length) && !!state.terrain[t.r]?.[t.c])) return { ok: false, reason: 'out_of_bounds' };
   if (!tiles.every((t) => isRevealed(state.ring, t.r, t.c))) return { ok: false, reason: 'not_revealed' };
   if (tiles.some((t) => isSheltered(state, t.r, t.c))) return { ok: false, reason: 'shelter_overlap' };
   if (tiles.some((t) => {
@@ -113,7 +115,7 @@ export function canPlaceShelter(state: GameState, r: number, c: number): PlaceCh
   })) {
     return { ok: false, reason: 'cannot_cover' };
   }
-  const touches = tiles.some((t) => buildingAt(state, t.r, t.c) !== null || hasAdjacentBuilding(state, t.r, t.c));
+  const touches = tiles.some((t) => buildingAt(state, t.r, t.c) !== null || hasAdjacentBuilding(state, t.r, t.c) || NEIGHBOURS.some(([dr,dc])=>shelterAt(state,t.r+dr,t.c+dc)!==null));
   if (!touches) return { ok: false, reason: 'not_adjacent' };
   const costFail = checkCost(state, 'shelter');
   if (costFail) return { ok: false, reason: costFail };
@@ -134,7 +136,7 @@ export function place(state: GameState, type: PlaceableType, r: number, c: numbe
   state.soil -= cost.soil;
   const id = state.nextId++;
   if (type === 'shelter') {
-    state.shelters.push({ id, r, c });
+    state.shelters.push({ id, r, c, size: 1 });
   } else {
     state.buildings.push({ id, type, r, c, brokenDays: 0, damagedDays: 0 });
     state.crew += BUILDINGS[type].crewOnBuild;
@@ -145,9 +147,12 @@ export function place(state: GameState, type: PlaceableType, r: number, c: numbe
 /** Every tile where this choice can go now (for a shelter: its top tiles). */
 export function validTiles(state: GameState, type: PlaceableType): Tile[] {
   const out: Tile[] = [];
-  for (let r = 0; r < SITE_SIZE; r++) {
-    for (let c = 0; c < SITE_SIZE; c++) if (canPlace(state, type, r, c).ok) out.push({ r, c });
-  }
+  const candidates=new Map<string,{r:number;c:number}>();
+  const add=(r:number,c:number)=>candidates.set(`${r},${c}`,{r,c});
+  for(const b of state.buildings){if(type==='shelter')add(b.r,b.c);for(const [dr,dc]of NEIGHBOURS)add(b.r+dr,b.c+dc);}
+  if(type==='shelter')for(const shield of state.shelters)for(const tile of shelterTiles(shield))for(const [dr,dc]of NEIGHBOURS)add(tile.r+dr,tile.c+dc);
+  for(const {r,c}of candidates.values())if(canPlace(state,type,r,c).ok)out.push({r,c});
+  out.sort((a,b)=>a.r-b.r||a.c-b.c);
   return out;
 }
 
@@ -157,7 +162,9 @@ export function removeBuilding(state: GameState, buildingId: number): RemoveResu
   const i = state.buildings.findIndex((b) => b.id === buildingId);
   if (i < 0) return { ok: false, reason: 'not_found' };
   if (!BUILDINGS[state.buildings[i].type].removable) return { ok: false, reason: 'cannot_remove' };
+  state.parts += Math.floor(BUILDINGS[state.buildings[i].type].cost.parts / 2);
   state.buildings.splice(i, 1);
+  capStocks(state);
   return { ok: true };
 }
 
@@ -166,9 +173,7 @@ export function removeShelter(state: GameState, shelterId: number): RemoveResult
   if (state.lost) return { ok: false, reason: 'run_over' };
   const i = state.shelters.findIndex((s) => s.id === shelterId);
   if (i < 0) return { ok: false, reason: 'not_found' };
-  if (shelterTiles(state.shelters[i]).some((t) => buildingAt(state, t.r, t.c))) {
-    return { ok: false, reason: 'shelter_not_empty' };
-  }
+
   state.shelters.splice(i, 1);
   return { ok: true };
 }

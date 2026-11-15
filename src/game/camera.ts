@@ -1,3 +1,4 @@
+import {revealBounds} from '../sim/terrain.ts';
 // Pan and zoom maths for the map camera (SPEC 5.6). Pure: no Phaser, no DOM, so it can be tested.
 // Screen values are canvas (device) pixels. World values are the units of SPEC 5.1.
 
@@ -34,7 +35,7 @@ export interface Cam {
 
 /** The world box of the revealed area, with room above the top row for building pictures. */
 export function revealedBounds(ring: number): Bounds {
-  const r = REVEAL_RINGS[Math.max(0, Math.min(ring, REVEAL_RINGS.length - 1))];
+  const r = revealBounds(ring);
   const span = r.max - r.min;
   return {
     left: -span * HALF_W - HALF_W,

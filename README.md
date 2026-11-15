@@ -42,4 +42,14 @@ After the game has loaded once, it works without an internet connection. To put 
 
 ## Status
 
-Phase 4: life. Astronauts walk around the base and react to storms, cold habitats and finished goals. Sound plays only for the three sounds the team approved (Mars wind and the two radio clicks), with a mute button. The game installs to a home screen and plays offline after the first visit. Reduced-motion settings stop all animation. Phases 0 to 3 (rules, real NASA data, the playable outpost, the report) are done.
+Local takeover implementation is under verification; nothing has been pushed or deployed by Codex. Read HANDOFF.md for task status and exact limitations.
+
+The archive contains 1,110 distinct dates: September 2017 and all of 2022–2024. Raw NASA DONKI response bodies and query/fetch metadata are in src/data/raw. Most dates have no Mars surface-radiation measurement in those inputs; those days use explicitly labelled game baselines. May 20, 2024 uses a documented Mars-specific mapping. Simulated equipment incidents are separate from historical records.
+
+Soil shields cover one tile for 2 soil and can be removed. Removing ordinary buildings refunds half their parts cost, rounded down. Buildings can move without changing crew or damage. Goals continue and surveys add 16 tiles after the initial 12×12 region. Research, a field notebook, limited aid, manual repairs and a two-turn critical-supply rescue period are available.
+
+Outpost tools contains music/effects controls, aid, restart, save export/import, backup restoration, research and notebook. Local persistence uses IndexedDB with a localStorage fallback; portable JSON files move progress between browsers. Save before replacing a run.
+
+To refresh data: `python tools/import-archive.py`, then `python tools/build-archive.py`. Existing raw responses are preserved. Run `npx tsx tools/long-run.ts` for the long-run check. NASA raw data is not bundled into the browser.
+
+29 audio entries are approved by the team, including two music tracks and the sourced Perseverance wind. The nine Factorio-derived entries remain excluded. See CREDITS.md and CONTENT_TODO.md for remaining provenance/listening work.

@@ -1,0 +1,344 @@
+{
+  "id": "archive-2022-03",
+  "title": "March 2022 records",
+  "site": "mars",
+  "startDate": "2022-03-01",
+  "setup": "Here is what the Sun did this month.",
+  "days": [
+    {
+      "date": "2022-03-01",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "notes": "The fetched DONKI response holds no flare record for this date."
+    },
+    {
+      "date": "2022-03-02",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 2,
+      "strongest": {
+        "peakTime": "2022-03-02T17:39Z",
+        "classType": "M2.0"
+      }
+    },
+    {
+      "date": "2022-03-03",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "notes": "The fetched DONKI response holds no flare record for this date."
+    },
+    {
+      "date": "2022-03-04",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 1,
+      "strongest": {
+        "peakTime": "2022-03-04T19:36Z",
+        "classType": "B7.5"
+      }
+    },
+    {
+      "date": "2022-03-05",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "notes": "The fetched DONKI response holds no flare record for this date."
+    },
+    {
+      "date": "2022-03-06",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "notes": "The fetched DONKI response holds no flare record for this date."
+    },
+    {
+      "date": "2022-03-07",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "notes": "The fetched DONKI response holds no flare record for this date."
+    },
+    {
+      "date": "2022-03-08",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "notes": "The fetched DONKI response holds no flare record for this date."
+    },
+    {
+      "date": "2022-03-09",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "notes": "The fetched DONKI response holds no flare record for this date."
+    },
+    {
+      "date": "2022-03-10",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 1,
+      "strongest": {
+        "peakTime": "2022-03-10T20:32Z",
+        "classType": "C2.8"
+      }
+    },
+    {
+      "date": "2022-03-11",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 1,
+      "strongest": {
+        "peakTime": "2022-03-11T22:32Z",
+        "classType": "M2.2"
+      }
+    },
+    {
+      "date": "2022-03-12",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "notes": "The fetched DONKI response holds no flare record for this date."
+    },
+    {
+      "date": "2022-03-13",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "notes": "The fetched DONKI response holds no flare record for this date."
+    },
+    {
+      "date": "2022-03-14",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 2,
+      "strongest": {
+        "peakTime": "2022-03-14T08:40Z",
+        "classType": "M2.0"
+      }
+    },
+    {
+      "date": "2022-03-15",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 2,
+      "strongest": {
+        "peakTime": "2022-03-15T22:45Z",
+        "classType": "M1.5"
+      }
+    },
+    {
+      "date": "2022-03-16",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "notes": "The fetched DONKI response holds no flare record for this date."
+    },
+    {
+      "date": "2022-03-17",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "notes": "The fetched DONKI response holds no flare record for this date."
+    },
+    {
+      "date": "2022-03-18",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "notes": "The fetched DONKI response holds no flare record for this date."
+    },
+    {
+      "date": "2022-03-19",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "notes": "The fetched DONKI response holds no flare record for this date."
+    },
+    {
+      "date": "2022-03-20",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 1,
+      "strongest": {
+        "peakTime": "2022-03-20T07:45Z",
+        "classType": "C4.6"
+      }
+    },
+    {
+      "date": "2022-03-21",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "notes": "The fetched DONKI response holds no flare record for this date."
+    },
+    {
+      "date": "2022-03-22",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "notes": "The fetched DONKI response holds no flare record for this date."
+    },
+    {
+      "date": "2022-03-23",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "notes": "The fetched DONKI response holds no flare record for this date."
+    },
+    {
+      "date": "2022-03-24",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "notes": "The fetched DONKI response holds no flare record for this date."
+    },
+    {
+      "date": "2022-03-25",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 1,
+      "strongest": {
+        "peakTime": "2022-03-25T05:26Z",
+        "classType": "M1.4"
+      }
+    },
+    {
+      "date": "2022-03-26",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "notes": "The fetched DONKI response holds no flare record for this date."
+    },
+    {
+      "date": "2022-03-27",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "notes": "The fetched DONKI response holds no flare record for this date."
+    },
+    {
+      "date": "2022-03-28",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 4,
+      "strongest": {
+        "peakTime": "2022-03-28T11:29Z",
+        "classType": "M4.0"
+      }
+    },
+    {
+      "date": "2022-03-29",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 4,
+      "strongest": {
+        "peakTime": "2022-03-29T01:11Z",
+        "classType": "M2.2"
+      }
+    },
+    {
+      "date": "2022-03-30",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "major",
+      "flares": [
+        {
+          "peakTime": "2022-03-30T17:37Z",
+          "classType": "X1.3"
+        }
+      ],
+      "flareCount": 1,
+      "strongest": {
+        "peakTime": "2022-03-30T17:37Z",
+        "classType": "X1.3"
+      }
+    },
+    {
+      "date": "2022-03-31",
+      "sunlight": 1,
+      "radiation": 2,
+      "flare": "strong",
+      "flares": [
+        {
+          "peakTime": "2022-03-31T18:35Z",
+          "classType": "M9.6"
+        }
+      ],
+      "flareCount": 1,
+      "stormSource": "game-rule",
+      "strongest": {
+        "peakTime": "2022-03-31T18:35Z",
+        "classType": "M9.6"
+      },
+      "notes": "Game storm. In the game, a big flare is followed by a storm at your base the next day. NASA's flare list does not say what happened at Mars on this date."
+    }
+  ],
+  "simplified": [
+    "Storms this month are part of the game. A big flare is followed by a game storm the next day.",
+    "NASA's flare list does not say what happened at Mars.",
+    "What breaks and how much health is lost are part of the game.",
+    "Sunlight is steady in this chapter.",
+    "One sol is shown as one Earth date.",
+    "The outpost and its site are made up."
+  ]
+}

@@ -11,8 +11,11 @@ import {
   type Chapter,
   type DayLog,
   type Run,
+  type StormSource,
 } from '../sim/index.ts';
+import {BUILDINGS} from '../sim/config.ts';
 import { cardById, cardSources, usedSources, type SourceRow } from './content.ts';
+import { recordSource, recordText } from './record.ts';
 import { dateRange, longDate, replayLine, shortDate } from './format.ts';
 import { buildingLower } from './info.ts';
 import { t, type StringKey } from './strings.ts';
@@ -21,6 +24,8 @@ import { t, type StringKey } from './strings.ts';
 export interface BaseFacts {
   /** Radiation level that hit that day, 0 when none. */
   storm: number;
+  /** Where that storm came from (SPEC 18.1). Missing in older reports. */
+  stormSource?: StormSource;
   /** When a storm hit: was every habitat under a shelter. Null on a day with no storm. */
   habitatSheltered: boolean | null;
   /** Buildings the storm broke that day (they were working before it hit). */
@@ -39,6 +44,7 @@ export interface BaseFacts {
 
 export interface TimelineRow {
   date: string;
+  /** The "This was real" card of the day, or '' for a row that shows the day's NASA flare record. */
   cardId: string;
   sol: number;
   base: BaseFacts;
@@ -78,6 +84,7 @@ export function baseFacts(log: DayLog): BaseFacts {
   for (const e of log.events) {
     if (e.type === 'storm') {
       facts.storm = e.level;
+      if (e.source) facts.stormSource = e.source;
       facts.habitatSheltered = e.allHabitatsSheltered;
     } else if (e.type === 'broken') {
       // More days left than this storm added: it was still broken from an earlier hit.
@@ -123,11 +130,14 @@ export function buildReport(run: Run, chapter: Chapter, partial: boolean): Repor
   const logs = chapterLogs(run);
   const start = state.chapterStart;
   const rows: TimelineRow[] = [];
+  // A chapter with "This was real" cards shows its card days. An archive month without cards shows
+  // the days whose NASA flare record has a flare of M5.0 or above (SPEC 18.1).
+  const withCards = chapter.days.some((d) => d.cardId);
   chapter.days.forEach((day, i) => {
-    if (!day.cardId) return;
+    if (withCards ? !day.cardId : day.flare === 'none') return;
     const log = logs.find((l) => l.chapterDay === i + 1);
     if (!log) return;
-    rows.push({ date: day.date, cardId: day.cardId, sol: log.sol, base: baseFacts(log) });
+    rows.push({ date: day.date, cardId: day.cardId ?? '', sol: log.sol, base: baseFacts(log) });
   });
   const first = logs[0];
   const last = logs[logs.length - 1];
@@ -175,7 +185,10 @@ export function looksLikeReport(v: unknown): v is ReportEntry {
     Array.isArray(v.rows) &&
     v.rows.every((r) => isObj(r) && typeof r.date === 'string' && typeof r.cardId === 'string' && typeof r.sol === 'number' && isObj(r.base)) &&
     isObj(grew) &&
-    Array.isArray(v.traded)
+    ['crew','buildings','land'].every(key=>isObj(grew[key])&&typeof grew[key].from==='number'&&typeof grew[key].to==='number') &&
+    isObj(grew.predictions)&&typeof grew.predictions.right==='number'&&typeof grew.predictions.answered==='number'&&
+    v.rows.every(r=>isObj(r)&&isObj(r.base)&&Array.isArray(r.base.broken)&&r.base.broken.every(t=>typeof t==='string'&&Object.hasOwn(BUILDINGS,t))&&(!r.base.keptBroken||Array.isArray(r.base.keptBroken))&&typeof r.base.healthLost==='number')&&
+    Array.isArray(v.traded)&&v.traded.every(x=>isObj(x)&&typeof x.key==='string'&&x.key in TRADED&&typeof x.n==='number')
   );
 }
 
@@ -205,6 +218,7 @@ export interface ReportView {
 }
 
 const STORM_LINE: StringKey[] = ['base.storm1', 'base.storm1', 'base.storm2', 'base.storm3'];
+const GAME_STORM_LINE: StringKey[] = ['base.gameStorm1', 'base.gameStorm1', 'base.gameStorm2', 'base.gameStorm3'];
 
 function names(types: BuildingType[]): string {
   return [...new Set(types)].map((b) => buildingLower(b)).join(t('list.separator'));
@@ -214,7 +228,7 @@ function names(types: BuildingType[]): string {
 export function baseLines(f: BaseFacts): string[] {
   const lines: string[] = [];
   if (f.storm > 0) {
-    lines.push(t(STORM_LINE[f.storm]));
+    lines.push(t((f.stormSource === 'game-rule' ? GAME_STORM_LINE : STORM_LINE)[f.storm]));
     if (f.habitatSheltered !== null) lines.push(t(f.habitatSheltered ? 'base.habitatSheltered' : 'base.habitatOpen'));
     const kept = Array.isArray(f.keptBroken) ? f.keptBroken : [];
     if (f.broken.length > 0) lines.push(t('base.broke', { names: names(f.broken) }));
@@ -248,20 +262,36 @@ export function realLines(chapter: Chapter, first: string, last: string): string
   const lines = days.flatMap((d) =>
     d.flares.map((f) => t('real.flare', { date: shortDate(d.date), time: f.peakTime.slice(11, 16), cls: f.classType })),
   );
-  // ASSUMPTION: the radiation storm at Mars is the chapter's first day with storm-level radiation (11 September 2017).
-  const storm = days.find((d) => d.radiation >= 2);
+  // Only a storm that a NASA report places at Mars is real (SPEC 18.1 point 5): the first such day.
+  const storm = days.find((d) => d.radiation >= 2 && d.stormSource === 'nasa-report');
   if (storm) lines.push(t('real.storm', { date: longDate(storm.date) }));
   return lines;
+}
+
+/** A clearly labelled game line for the period's game storms, or null when there were none. */
+export function gameStormLine(chapter: Chapter, first: string, last: string): string | null {
+  const n = chapter.days.filter((d) => d.date >= first && d.date <= last && d.radiation > 0 && d.stormSource !== 'nasa-report').length;
+  if (n === 0) return null;
+  return t(n === 1 ? 'report.gameStormOne' : 'report.gameStorms', { n });
 }
 
 export function reportView(entry: ReportEntry, chapter: Chapter): ReportView {
   const rows: ReportRowView[] = [];
   for (const r of entry.rows) {
+    const baseTitle = t('report.baseSol', { n: r.sol });
+    if (r.cardId === '') {
+      // An archive day: what NASA observed is that day's flare record, from the chapter file.
+      const day = chapter.days.find((d) => d.date === r.date);
+      const src = recordSource();
+      if (!day || !src) continue;
+      rows.push({ date: longDate(r.date), nasa: recordText(day), sources: [src], baseTitle, base: baseLines(r.base) });
+      continue;
+    }
     const card = cardById(r.cardId);
     const sources = card ? cardSources(card) : null;
     // A row whose card or sources do not resolve is left out rather than shown unsourced.
     if (!card || !sources) continue;
-    rows.push({ date: longDate(r.date), nasa: card.text, sources, baseTitle: t('report.baseSol', { n: r.sol }), base: baseLines(r.base) });
+    rows.push({ date: longDate(r.date), nasa: card.text, sources, baseTitle, base: baseLines(r.base) });
   }
   const g = entry.grew;
   const land = (n: number) => t('report.landSize', { n });
@@ -283,7 +313,7 @@ export function reportView(entry: ReportEntry, chapter: Chapter): ReportView {
     ],
     traded: entry.traded.slice(0, 2).map((x) => t(TRADED[x.key], { n: x.n })),
     real: realLines(chapter, entry.dates.first, entry.dates.last),
-    simplified: chapter.simplified.slice(),
+    simplified: [...chapter.simplified, ...[gameStormLine(chapter, entry.dates.first, entry.dates.last)].filter((x): x is string => x !== null)],
     sources: usedSources(),
   };
 }

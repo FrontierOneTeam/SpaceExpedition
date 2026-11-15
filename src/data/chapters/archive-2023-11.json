@@ -1,0 +1,347 @@
+{
+  "id": "archive-2023-11",
+  "title": "November 2023 records",
+  "site": "mars",
+  "startDate": "2023-11-01",
+  "setup": "Here is what the Sun did this month.",
+  "days": [
+    {
+      "date": "2023-11-01",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 2,
+      "strongest": {
+        "peakTime": "2023-11-01T12:26Z",
+        "classType": "M1.4"
+      }
+    },
+    {
+      "date": "2023-11-02",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 3,
+      "strongest": {
+        "peakTime": "2023-11-02T12:22Z",
+        "classType": "M1.6"
+      }
+    },
+    {
+      "date": "2023-11-03",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 1,
+      "strongest": {
+        "peakTime": "2023-11-03T06:17Z",
+        "classType": "C3.2"
+      }
+    },
+    {
+      "date": "2023-11-04",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "notes": "The fetched DONKI response holds no flare record for this date."
+    },
+    {
+      "date": "2023-11-05",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 2,
+      "strongest": {
+        "peakTime": "2023-11-05T11:43Z",
+        "classType": "M1.8"
+      }
+    },
+    {
+      "date": "2023-11-06",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "notes": "The fetched DONKI response holds no flare record for this date."
+    },
+    {
+      "date": "2023-11-07",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "notes": "The fetched DONKI response holds no flare record for this date."
+    },
+    {
+      "date": "2023-11-08",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "notes": "The fetched DONKI response holds no flare record for this date."
+    },
+    {
+      "date": "2023-11-09",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 1,
+      "strongest": {
+        "peakTime": "2023-11-09T11:18Z",
+        "classType": "C2.6"
+      }
+    },
+    {
+      "date": "2023-11-10",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "notes": "The fetched DONKI response holds no flare record for this date."
+    },
+    {
+      "date": "2023-11-11",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 1,
+      "strongest": {
+        "peakTime": "2023-11-11T17:29Z",
+        "classType": "M1.2"
+      }
+    },
+    {
+      "date": "2023-11-12",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "notes": "The fetched DONKI response holds no flare record for this date."
+    },
+    {
+      "date": "2023-11-13",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "notes": "The fetched DONKI response holds no flare record for this date."
+    },
+    {
+      "date": "2023-11-14",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 2,
+      "strongest": {
+        "peakTime": "2023-11-14T23:05Z",
+        "classType": "M1.0"
+      }
+    },
+    {
+      "date": "2023-11-15",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 2,
+      "strongest": {
+        "peakTime": "2023-11-15T04:01Z",
+        "classType": "C8.3"
+      }
+    },
+    {
+      "date": "2023-11-16",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 1,
+      "strongest": {
+        "peakTime": "2023-11-16T20:22Z",
+        "classType": "C4.8"
+      }
+    },
+    {
+      "date": "2023-11-17",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "notes": "The fetched DONKI response holds no flare record for this date."
+    },
+    {
+      "date": "2023-11-18",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 3,
+      "strongest": {
+        "peakTime": "2023-11-18T05:42Z",
+        "classType": "M1.2"
+      }
+    },
+    {
+      "date": "2023-11-19",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "notes": "The fetched DONKI response holds no flare record for this date."
+    },
+    {
+      "date": "2023-11-20",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 1,
+      "strongest": {
+        "peakTime": "2023-11-20T09:03Z",
+        "classType": "M1.2"
+      }
+    },
+    {
+      "date": "2023-11-21",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "notes": "The fetched DONKI response holds no flare record for this date."
+    },
+    {
+      "date": "2023-11-22",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 1,
+      "strongest": {
+        "peakTime": "2023-11-22T19:02Z",
+        "classType": "C4.1"
+      }
+    },
+    {
+      "date": "2023-11-23",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 2,
+      "strongest": {
+        "peakTime": "2023-11-23T03:38Z",
+        "classType": "M1.4"
+      }
+    },
+    {
+      "date": "2023-11-24",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 1,
+      "strongest": {
+        "peakTime": "2023-11-24T09:33Z",
+        "classType": "M1.1"
+      }
+    },
+    {
+      "date": "2023-11-25",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "notes": "The fetched DONKI response holds no flare record for this date."
+    },
+    {
+      "date": "2023-11-26",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 1,
+      "strongest": {
+        "peakTime": "2023-11-26T07:43Z",
+        "classType": "C3.6"
+      }
+    },
+    {
+      "date": "2023-11-27",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 2,
+      "strongest": {
+        "peakTime": "2023-11-27T23:40Z",
+        "classType": "C5.5"
+      }
+    },
+    {
+      "date": "2023-11-28",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "strong",
+      "flares": [
+        {
+          "peakTime": "2023-11-28T19:50Z",
+          "classType": "M9.8"
+        }
+      ],
+      "flareCount": 2,
+      "strongest": {
+        "peakTime": "2023-11-28T19:50Z",
+        "classType": "M9.8"
+      }
+    },
+    {
+      "date": "2023-11-29",
+      "sunlight": 1,
+      "radiation": 1,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "stormSource": "game-rule",
+      "notes": "Game storm. In the game, a big flare is followed by a storm at your base the next day. NASA's flare list does not say what happened at Mars on this date."
+    },
+    {
+      "date": "2023-11-30",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 1,
+      "strongest": {
+        "peakTime": "2023-11-30T22:48Z",
+        "classType": "C3.6"
+      }
+    }
+  ],
+  "simplified": [
+    "Storms this month are part of the game. A big flare is followed by a game storm the next day.",
+    "NASA's flare list does not say what happened at Mars.",
+    "What breaks and how much health is lost are part of the game.",
+    "Sunlight is steady in this chapter.",
+    "One sol is shown as one Earth date.",
+    "The outpost and its site are made up."
+  ]
+}

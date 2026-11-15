@@ -19,7 +19,7 @@ export interface PowerResult {
 }
 
 export function isWorking(b: Building): boolean {
-  return b.brokenDays <= 0;
+  return b.brokenDays <= 0 && !b.manualRepair;
 }
 
 /** Power a working panel makes under this sunlight. */
@@ -42,7 +42,7 @@ export function resolvePower(state: GameState, sunlight: number): PowerResult {
   const working = state.buildings.filter(isWorking);
   const supply = working
     .filter((b) => BUILDINGS[b.type].solarOutput > 0)
-    .reduce((sum, b) => sum + panelOutput(b, sunlight), 0);
+    .reduce((sum, b) => sum + (b.type==='nuke'?6:panelOutput(b, sunlight)+(state.research?.includes('pan')&&b.type==='sun'?Math.round(sunlight):0)), 0);
 
   // Habitats first, then oldest first.
   const consumers = working

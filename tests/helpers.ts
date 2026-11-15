@@ -8,7 +8,7 @@ import { answerQuestion } from '../src/sim/predict.ts';
 import type { BuildingType, Chapter, ChapterBook, ChapterDay, GameState, PlaceableType, RadiationLevel, Run } from '../src/sim/types.ts';
 
 export const sep2017 = sep2017Json as unknown as Chapter;
-export const book: ChapterBook = { archive: archive as string[], chapters: { sep2017 } };
+export const book: ChapterBook = { archive: ['sep2017'], chapters: { sep2017 } };
 
 export const ALL_PLACEABLE: PlaceableType[] = ['sun', 'batt', 'o2', 'farm', 'home', 'mine', 'dig', 'fab', 'shelter'];
 
@@ -53,7 +53,7 @@ export function addBuilding(state: GameState, type: BuildingType, r: number, c: 
 /** Insert a shelter directly. Returns its id. */
 export function addShelter(state: GameState, r: number, c: number): number {
   const id = state.nextId++;
-  state.shelters.push({ id, r, c });
+  state.shelters.push({ id, r, c, size: 2 });
   return id;
 }
 

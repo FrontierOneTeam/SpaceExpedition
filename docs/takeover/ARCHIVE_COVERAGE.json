@@ -1,0 +1,9 @@
+{
+  "unique2022to2024Dates": 1096,
+  "totalUniqueDates": 1110,
+  "months": 36,
+  "rawFiles": 36,
+  "start": "2022-01-01",
+  "end": "2024-12-31",
+  "missingImports": []
+}

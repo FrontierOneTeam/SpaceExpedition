@@ -24,6 +24,11 @@
           "classType": "M8.8"
         }
       ],
+      "flareCount": 13,
+      "strongest": {
+        "peakTime": "2024-05-11T01:23Z",
+        "classType": "X5.8"
+      },
       "cardId": "may2024-11"
     },
     {
@@ -36,7 +41,12 @@
           "peakTime": "2024-05-12T16:26Z",
           "classType": "X1.0"
         }
-      ]
+      ],
+      "flareCount": 10,
+      "strongest": {
+        "peakTime": "2024-05-12T16:26Z",
+        "classType": "X1.0"
+      }
     },
     {
       "date": "2024-05-13",
@@ -48,7 +58,12 @@
           "peakTime": "2024-05-13T09:44Z",
           "classType": "M6.6"
         }
-      ]
+      ],
+      "flareCount": 11,
+      "strongest": {
+        "peakTime": "2024-05-13T09:44Z",
+        "classType": "M6.6"
+      }
     },
     {
       "date": "2024-05-14",
@@ -69,6 +84,11 @@
           "classType": "X8.7"
         }
       ],
+      "flareCount": 6,
+      "strongest": {
+        "peakTime": "2024-05-14T16:51Z",
+        "classType": "X8.7"
+      },
       "cardId": "may2024-14"
     },
     {
@@ -85,14 +105,24 @@
           "peakTime": "2024-05-15T14:38Z",
           "classType": "X2.9"
         }
-      ]
+      ],
+      "flareCount": 5,
+      "strongest": {
+        "peakTime": "2024-05-15T08:37Z",
+        "classType": "X3.4"
+      }
     },
     {
       "date": "2024-05-16",
       "sunlight": 1,
       "radiation": 0,
       "flare": "none",
-      "flares": []
+      "flares": [],
+      "flareCount": 1,
+      "strongest": {
+        "peakTime": "2024-05-16T08:04Z",
+        "classType": "M1.0"
+      }
     },
     {
       "date": "2024-05-17",
@@ -104,7 +134,12 @@
           "peakTime": "2024-05-17T21:08Z",
           "classType": "M7.2"
         }
-      ]
+      ],
+      "flareCount": 1,
+      "strongest": {
+        "peakTime": "2024-05-17T21:08Z",
+        "classType": "M7.2"
+      }
     },
     {
       "date": "2024-05-18",
@@ -112,6 +147,7 @@
       "radiation": 0,
       "flare": "none",
       "flares": [],
+      "flareCount": 0,
       "notes": "The fetched DONKI response holds no flare record for this date."
     },
     {
@@ -120,6 +156,11 @@
       "radiation": 0,
       "flare": "none",
       "flares": [],
+      "flareCount": 3,
+      "strongest": {
+        "peakTime": "2024-05-19T17:56Z",
+        "classType": "M2.5"
+      },
       "cardId": "may2024-19"
     },
     {
@@ -128,6 +169,8 @@
       "radiation": 3,
       "flare": "none",
       "flares": [],
+      "flareCount": 0,
+      "stormSource": "nasa-report",
       "cardId": "may2024-20",
       "notes": "The fetched DONKI response holds no flare record for this date. NASA later estimated a class X12 flare on 20 May 2024 from Solar Orbiter data. Radiation level 3 is a game mapping of NASA's report that Curiosity measured its biggest radiation surge since landing. No source says how long it lasted, so the game marks this one day only."
     },
@@ -136,28 +179,48 @@
       "sunlight": 1,
       "radiation": 0,
       "flare": "none",
-      "flares": []
+      "flares": [],
+      "flareCount": 3,
+      "strongest": {
+        "peakTime": "2024-05-21T19:31Z",
+        "classType": "M1.9"
+      }
     },
     {
       "date": "2024-05-22",
       "sunlight": 1,
       "radiation": 0,
       "flare": "none",
-      "flares": []
+      "flares": [],
+      "flareCount": 3,
+      "strongest": {
+        "peakTime": "2024-05-22T04:04Z",
+        "classType": "M2.3"
+      }
     },
     {
       "date": "2024-05-23",
       "sunlight": 1,
       "radiation": 0,
       "flare": "none",
-      "flares": []
+      "flares": [],
+      "flareCount": 5,
+      "strongest": {
+        "peakTime": "2024-05-23T02:16Z",
+        "classType": "M4.2"
+      }
     },
     {
       "date": "2024-05-24",
       "sunlight": 1,
       "radiation": 0,
       "flare": "none",
-      "flares": []
+      "flares": [],
+      "flareCount": 4,
+      "strongest": {
+        "peakTime": "2024-05-24T07:06Z",
+        "classType": "M1.4"
+      }
     }
   ],
   "simplified": [

@@ -34,8 +34,25 @@ export {
   radioBlocked,
   validateChapter,
   applyRadiation,
+  stormSourceOf,
 } from './weather.ts';
-export { currentGoal, isGoalDone, checkGoals, goalsCompleted } from './goals.ts';
+export {
+  currentGoal,
+  isGoalDone,
+  checkGoals,
+  goalsCompleted,
+  chooseGoal,
+  chosenProgress,
+  airRate,
+  foodRate,
+  powerRate,
+  powerNeed,
+  storageRate,
+  shelteredMachines,
+  openMachines,
+  type GoalWeather,
+} from './goals.ts';
+export { stageOf, stageReached, meetsStage, storageLimit, capStocks, checkStage, type StoredResource } from './storage.ts';
 export { dueQuestion, answerQuestion, scorePrediction } from './predict.ts';
 export {
   newRun,
@@ -43,6 +60,7 @@ export {
   canEndDay,
   previewDay,
   keepBuilding,
+  nextArchiveChapterId,
   cloneRun,
   stocksOf,
   chapterSnapshot,

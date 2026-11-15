@@ -30,6 +30,7 @@ describe('building table (SPEC 4.3)', () => {
       dig: [2, 0, 1, 1],
       fab: [3, 0, 2, 2],
       pad: [0, 0, 0, 0],
+      lab:[3,0,2,2],nuke:[5,0,0,0],
     });
   });
 
@@ -44,7 +45,7 @@ describe('building table (SPEC 4.3)', () => {
     expect(s.parts).toBe(5);
     expect(place(s, 'shelter', 2, 3).ok).toBe(false); // not revealed
     expect(place(s, 'shelter', 3, 3).ok).toBe(true);
-    expect(s.soil).toBe(0);
+    expect(s.soil).toBe(3);
     expect(s.parts).toBe(5);
   });
 
@@ -169,6 +170,7 @@ describe('building table (SPEC 4.3)', () => {
     const { run } = lab();
     const s = run.state;
     expect(removeBuilding(s, 5)).toEqual({ ok: false, reason: 'cannot_remove' });
+    s.parts = 5;
     const parts = s.parts;
     expect(removeBuilding(s, 2).ok).toBe(true);
     expect(s.parts).toBe(parts);

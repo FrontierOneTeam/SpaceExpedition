@@ -42,6 +42,132 @@
     "group": "additional",
     "kind": "reading",
     "usedFor": "The Mars radiation storm of 20 May 2024, and the MAVEN auroras",
-    "status": "planned"
+    "status": "used"
+  },
+  {
+    "id": "perseverance-wind",
+    "name": "Perseverance Rover's SuperCam Records Wind on Mars, NASA Science, 10 March 2021",
+    "url": "https://science.nasa.gov/resource/perseverance-rovers-supercam-records-wind-on-mars/",
+    "group": "additional",
+    "kind": "sound",
+    "usedFor": "The sound of wind on Mars",
+    "status": "used"
+  },
+  {
+    "id": "moxie",
+    "name": "NASA: Perseverance makes oxygen on Mars (MOXIE)",
+    "url": "https://www.nasa.gov/news-release/nasas-perseverance-mars-rover-extracts-first-oxygen-from-red-planet/",
+    "group": "additional",
+    "kind": "reading",
+    "usedFor": "Sourced building and research explanations",
+    "status": "used"
+  },
+  {
+    "id": "iss-oxygen",
+    "name": "NASA: How the space station makes oxygen (ECLSS)",
+    "url": "https://www.nasa.gov/reference/environmental-control-and-life-support-systems-eclss/",
+    "group": "additional",
+    "kind": "reading",
+    "usedFor": "Sourced building and research explanations",
+    "status": "used"
+  },
+  {
+    "id": "iss-water",
+    "name": "NASA: How the space station reuses water (ECLSS)",
+    "url": "https://www.nasa.gov/reference/environmental-control-and-life-support-systems-eclss/",
+    "group": "additional",
+    "kind": "reading",
+    "usedFor": "Sourced building and research explanations",
+    "status": "used"
+  },
+  {
+    "id": "osdr-plants",
+    "name": "NASA OSDR study OSD-745: lettuce grown on the space station",
+    "url": "https://osdr.nasa.gov/osdr/data/osd/meta/745",
+    "group": "listed",
+    "kind": "reading",
+    "usedFor": "Sourced building and research explanations",
+    "status": "used"
+  },
+  {
+    "id": "csa-food",
+    "name": "Canadian Space Agency: Growing healthy food in space and in remote areas",
+    "url": "https://www.asc-csa.gc.ca/eng/sciences/food-production/growing-healthy-food-in-space-and-remote-areas.asp",
+    "group": "listed",
+    "kind": "reading",
+    "usedFor": "Sourced building and research explanations",
+    "status": "used"
+  },
+  {
+    "id": "mars-ice",
+    "name": "NASA: Mapping buried water ice on Mars (SWIM)",
+    "url": "https://www.nasa.gov/solar-system/planets/mars/nasa-is-locating-ice-on-mars-with-this-new-map/",
+    "group": "additional",
+    "kind": "reading",
+    "usedFor": "Sourced building and research explanations",
+    "status": "used"
+  },
+  {
+    "id": "regolith-shield",
+    "name": "NASA: How NASA will protect astronauts from space radiation at the Moon",
+    "url": "https://science.nasa.gov/science-research/heliophysics/how-nasa-will-protect-astronauts-from-space-radiation-at-the-moon/",
+    "group": "additional",
+    "kind": "reading",
+    "usedFor": "Sourced building and research explanations",
+    "status": "used"
+  },
+  {
+    "id": "mmpact",
+    "name": "NASA: Construction technology for Moon and Mars exploration (MMPACT)",
+    "url": "https://www.nasa.gov/directorates/stmd/nasa-enables-construction-technology-for-moon-and-mars-exploration/",
+    "group": "additional",
+    "kind": "reading",
+    "usedFor": "Sourced building and research explanations",
+    "status": "used"
+  },
+  {
+    "id": "solar-arrays",
+    "name": "NASA Space Place: What powers a spacecraft?",
+    "url": "https://spaceplace.nasa.gov/what-powers-a-spacecraft/en/",
+    "group": "additional",
+    "kind": "reading",
+    "usedFor": "Sourced building and research explanations",
+    "status": "used"
+  },
+  {
+    "id": "insight-power",
+    "name": "NASA: InSight's power after a Mars dust storm",
+    "url": "https://www.nasa.gov/solar-system/nasas-insight-sees-power-levels-stabilize-after-dust-storm/",
+    "group": "additional",
+    "kind": "reading",
+    "usedFor": "Sourced building and research explanations",
+    "status": "used"
+  },
+  {
+    "id": "kilopower",
+    "name": "NASA: Kilopower small reactor test",
+    "url": "https://www.nasa.gov/news-release/demonstration-proves-nuclear-fission-system-can-provide-space-exploration-power/",
+    "group": "additional",
+    "kind": "reading",
+    "usedFor": "Sourced building and research explanations",
+    "status": "used"
+  },
+  {
+    "id": "mars-comms",
+    "name": "NASA: How far is a light-day? (Earth to Mars light time)",
+    "url": "https://science.nasa.gov/mission/voyager/voyager-1/voyager-1-what-is-a-light-day/",
+    "group": "additional",
+    "kind": "reading",
+    "usedFor": "Sourced building and research explanations",
+    "status": "used"
+  },
+  {
+    "id": "radlab",
+    "name": "NASA OSDR RadLab portal",
+    "url": "https://visualization.osdr.nasa.gov/radlab/gui/overview/",
+    "group": "listed",
+    "kind": "reading",
+    "usedFor": "Sourced building and research explanations",
+    "status": "used"
   }
 ]

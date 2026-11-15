@@ -1,7 +1,7 @@
 [
   {
     "name": "ui_tap",
-    "approved": false,
+    "approved": true,
     "realRecording": false,
     "source": "",
     "sourceUrl": "",
@@ -9,7 +9,7 @@
   },
   {
     "name": "ui_select",
-    "approved": false,
+    "approved": true,
     "realRecording": false,
     "source": "",
     "sourceUrl": "",
@@ -17,7 +17,7 @@
   },
   {
     "name": "ui_cant",
-    "approved": false,
+    "approved": true,
     "realRecording": false,
     "source": "",
     "sourceUrl": "",
@@ -33,7 +33,7 @@
   },
   {
     "name": "ui_end_day",
-    "approved": false,
+    "approved": true,
     "realRecording": false,
     "source": "",
     "sourceUrl": "",
@@ -41,7 +41,7 @@
   },
   {
     "name": "bld_place",
-    "approved": false,
+    "approved": true,
     "realRecording": false,
     "source": "",
     "sourceUrl": "",
@@ -49,7 +49,7 @@
   },
   {
     "name": "bld_remove",
-    "approved": false,
+    "approved": true,
     "realRecording": false,
     "source": "",
     "sourceUrl": "",
@@ -57,7 +57,7 @@
   },
   {
     "name": "bld_power_down",
-    "approved": false,
+    "approved": true,
     "realRecording": false,
     "source": "",
     "sourceUrl": "",
@@ -73,7 +73,7 @@
   },
   {
     "name": "bld_broken",
-    "approved": false,
+    "approved": true,
     "realRecording": false,
     "source": "",
     "sourceUrl": "",
@@ -97,7 +97,7 @@
   },
   {
     "name": "evt_storm_hit",
-    "approved": false,
+    "approved": true,
     "realRecording": false,
     "source": "",
     "sourceUrl": "",
@@ -121,7 +121,7 @@
   },
   {
     "name": "evt_request_done",
-    "approved": false,
+    "approved": true,
     "realRecording": false,
     "source": "",
     "sourceUrl": "",
@@ -129,7 +129,7 @@
   },
   {
     "name": "evt_chapter_complete",
-    "approved": false,
+    "approved": true,
     "realRecording": false,
     "source": "",
     "sourceUrl": "",
@@ -137,7 +137,7 @@
   },
   {
     "name": "evt_run_over",
-    "approved": false,
+    "approved": true,
     "realRecording": false,
     "source": "",
     "sourceUrl": "",
@@ -153,7 +153,7 @@
   },
   {
     "name": "prd_right",
-    "approved": false,
+    "approved": true,
     "realRecording": false,
     "source": "",
     "sourceUrl": "",
@@ -161,7 +161,7 @@
   },
   {
     "name": "prd_wrong",
-    "approved": false,
+    "approved": true,
     "realRecording": false,
     "source": "",
     "sourceUrl": "",
@@ -185,7 +185,7 @@
   },
   {
     "name": "mc_typing",
-    "approved": false,
+    "approved": true,
     "realRecording": false,
     "source": "",
     "sourceUrl": "",
@@ -193,7 +193,7 @@
   },
   {
     "name": "mc_real_event",
-    "approved": false,
+    "approved": true,
     "realRecording": false,
     "source": "",
     "sourceUrl": "",
@@ -209,7 +209,7 @@
   },
   {
     "name": "astro_shiver",
-    "approved": false,
+    "approved": true,
     "realRecording": false,
     "source": "",
     "sourceUrl": "",
@@ -224,8 +224,16 @@
     "edits": ""
   },
   {
+    "name": "amb_mars_wind_real",
+    "approved": true,
+    "realRecording": true,
+    "source": "NASA/JPL-Caltech/LANL/CNES/CNRS/ISAE-Supaero",
+    "sourceUrl": "https://assets.science.nasa.gov/content/dam/science/psd/mars/downloadable_items/4/5/45828_SCAM_MIC_SOL004_RUN001.mp3",
+    "edits": "Downloaded from NASA as a 40 s stereo MP3 (256 kbit/s). Re-encoded with ffmpeg to mono at 64 kbit/s, once as MP3 and once as Ogg Vorbis, to keep the files small. The recording was not cut, filtered or otherwise changed."
+  },
+  {
     "name": "amb_solar_storm",
-    "approved": false,
+    "approved": true,
     "realRecording": false,
     "source": "",
     "sourceUrl": "",
@@ -233,23 +241,25 @@
   },
   {
     "name": "mus_calm_loop",
-    "approved": false,
+    "approved": true,
     "realRecording": false,
     "source": "",
     "sourceUrl": "",
-    "edits": ""
+    "edits": "Playback skips the first 5.4 s, which SPEC 11.3 measured as silent, and loops from there. The audio file itself is not changed.",
+    "startAt": 5.4
   },
   {
     "name": "mus_report",
-    "approved": false,
+    "approved": true,
     "realRecording": false,
     "source": "",
     "sourceUrl": "",
-    "edits": ""
+    "edits": "Playback skips the first 2.0 s, which SPEC 11.3 measured as silent, and loops from there. The audio file itself is not changed.",
+    "startAt": 2
   },
   {
     "name": "evt_dust_arrive",
-    "approved": false,
+    "approved": true,
     "realRecording": false,
     "source": "",
     "sourceUrl": "",
@@ -257,7 +267,7 @@
   },
   {
     "name": "evt_night_fall",
-    "approved": false,
+    "approved": true,
     "realRecording": false,
     "source": "",
     "sourceUrl": "",
@@ -265,7 +275,7 @@
   },
   {
     "name": "evt_research_done",
-    "approved": false,
+    "approved": true,
     "realRecording": false,
     "source": "",
     "sourceUrl": "",
@@ -273,7 +283,7 @@
   },
   {
     "name": "evt_notebook_page",
-    "approved": false,
+    "approved": true,
     "realRecording": false,
     "source": "",
     "sourceUrl": "",
@@ -281,11 +291,12 @@
   },
   {
     "name": "amb_mars_dust_storm",
-    "approved": false,
+    "approved": true,
     "realRecording": false,
     "source": "",
     "sourceUrl": "",
-    "edits": ""
+    "edits": "Playback skips the first 6.0 s, which SPEC 11.3 measured as silent, and loops from there. The audio file itself is not changed.",
+    "startAt": 6
   },
   {
     "name": "amb_moon_base",

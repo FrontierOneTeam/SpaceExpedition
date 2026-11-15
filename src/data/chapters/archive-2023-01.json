@@ -1,0 +1,391 @@
+{
+  "id": "archive-2023-01",
+  "title": "January 2023 records",
+  "site": "mars",
+  "startDate": "2023-01-01",
+  "setup": "Here is what the Sun did this month.",
+  "days": [
+    {
+      "date": "2023-01-01",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "notes": "The fetched DONKI response holds no flare record for this date."
+    },
+    {
+      "date": "2023-01-02",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "notes": "The fetched DONKI response holds no flare record for this date."
+    },
+    {
+      "date": "2023-01-03",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 1,
+      "strongest": {
+        "peakTime": "2023-01-03T06:46Z",
+        "classType": "C3.2"
+      }
+    },
+    {
+      "date": "2023-01-04",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "notes": "The fetched DONKI response holds no flare record for this date."
+    },
+    {
+      "date": "2023-01-05",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "notes": "The fetched DONKI response holds no flare record for this date."
+    },
+    {
+      "date": "2023-01-06",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "major",
+      "flares": [
+        {
+          "peakTime": "2023-01-06T00:57Z",
+          "classType": "X1.2"
+        }
+      ],
+      "flareCount": 1,
+      "strongest": {
+        "peakTime": "2023-01-06T00:57Z",
+        "classType": "X1.2"
+      }
+    },
+    {
+      "date": "2023-01-07",
+      "sunlight": 1,
+      "radiation": 2,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 1,
+      "stormSource": "game-rule",
+      "strongest": {
+        "peakTime": "2023-01-07T00:52Z",
+        "classType": "M1.6"
+      },
+      "notes": "Game storm. In the game, a big flare is followed by a storm at your base the next day. NASA's flare list does not say what happened at Mars on this date."
+    },
+    {
+      "date": "2023-01-08",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 4,
+      "strongest": {
+        "peakTime": "2023-01-08T09:48Z",
+        "classType": "M1.4"
+      }
+    },
+    {
+      "date": "2023-01-09",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "major",
+      "flares": [
+        {
+          "peakTime": "2023-01-09T18:50Z",
+          "classType": "X1.9"
+        }
+      ],
+      "flareCount": 4,
+      "strongest": {
+        "peakTime": "2023-01-09T18:50Z",
+        "classType": "X1.9"
+      }
+    },
+    {
+      "date": "2023-01-10",
+      "sunlight": 1,
+      "radiation": 2,
+      "flare": "major",
+      "flares": [
+        {
+          "peakTime": "2023-01-10T00:16Z",
+          "classType": "M5.1"
+        },
+        {
+          "peakTime": "2023-01-10T22:47Z",
+          "classType": "X1.0"
+        }
+      ],
+      "flareCount": 7,
+      "stormSource": "game-rule",
+      "strongest": {
+        "peakTime": "2023-01-10T22:47Z",
+        "classType": "X1.0"
+      },
+      "notes": "Game storm. In the game, a big flare is followed by a storm at your base the next day. NASA's flare list does not say what happened at Mars on this date."
+    },
+    {
+      "date": "2023-01-11",
+      "sunlight": 1,
+      "radiation": 2,
+      "flare": "strong",
+      "flares": [
+        {
+          "peakTime": "2023-01-11T01:56Z",
+          "classType": "M5.6"
+        }
+      ],
+      "flareCount": 4,
+      "stormSource": "game-rule",
+      "strongest": {
+        "peakTime": "2023-01-11T01:56Z",
+        "classType": "M5.6"
+      },
+      "notes": "Game storm. In the game, a big flare is followed by a storm at your base the next day. NASA's flare list does not say what happened at Mars on this date."
+    },
+    {
+      "date": "2023-01-12",
+      "sunlight": 1,
+      "radiation": 1,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 5,
+      "stormSource": "game-rule",
+      "strongest": {
+        "peakTime": "2023-01-12T06:46Z",
+        "classType": "M1.5"
+      },
+      "notes": "Game storm. In the game, a big flare is followed by a storm at your base the next day. NASA's flare list does not say what happened at Mars on this date."
+    },
+    {
+      "date": "2023-01-13",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 2,
+      "strongest": {
+        "peakTime": "2023-01-13T10:15Z",
+        "classType": "M3.9"
+      }
+    },
+    {
+      "date": "2023-01-14",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 3,
+      "strongest": {
+        "peakTime": "2023-01-14T21:00Z",
+        "classType": "M4.6"
+      }
+    },
+    {
+      "date": "2023-01-15",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "strong",
+      "flares": [
+        {
+          "peakTime": "2023-01-15T03:42Z",
+          "classType": "M6.0"
+        }
+      ],
+      "flareCount": 2,
+      "strongest": {
+        "peakTime": "2023-01-15T03:42Z",
+        "classType": "M6.0"
+      }
+    },
+    {
+      "date": "2023-01-16",
+      "sunlight": 1,
+      "radiation": 1,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "stormSource": "game-rule",
+      "notes": "Game storm. In the game, a big flare is followed by a storm at your base the next day. NASA's flare list does not say what happened at Mars on this date."
+    },
+    {
+      "date": "2023-01-17",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 1,
+      "strongest": {
+        "peakTime": "2023-01-17T23:29Z",
+        "classType": "M1.8"
+      }
+    },
+    {
+      "date": "2023-01-18",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 2,
+      "strongest": {
+        "peakTime": "2023-01-18T10:35Z",
+        "classType": "M1.8"
+      }
+    },
+    {
+      "date": "2023-01-19",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 3,
+      "strongest": {
+        "peakTime": "2023-01-19T10:12Z",
+        "classType": "M1.7"
+      }
+    },
+    {
+      "date": "2023-01-20",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 1,
+      "strongest": {
+        "peakTime": "2023-01-20T14:07Z",
+        "classType": "C5.3"
+      }
+    },
+    {
+      "date": "2023-01-21",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "notes": "The fetched DONKI response holds no flare record for this date."
+    },
+    {
+      "date": "2023-01-22",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 2,
+      "strongest": {
+        "peakTime": "2023-01-22T17:02Z",
+        "classType": "M1.6"
+      }
+    },
+    {
+      "date": "2023-01-23",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "notes": "The fetched DONKI response holds no flare record for this date."
+    },
+    {
+      "date": "2023-01-24",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 1,
+      "strongest": {
+        "peakTime": "2023-01-24T14:35Z",
+        "classType": "C9.4"
+      }
+    },
+    {
+      "date": "2023-01-25",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 3,
+      "strongest": {
+        "peakTime": "2023-01-25T10:11Z",
+        "classType": "M4.6"
+      }
+    },
+    {
+      "date": "2023-01-26",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 1,
+      "strongest": {
+        "peakTime": "2023-01-26T13:06Z",
+        "classType": "M2.8"
+      }
+    },
+    {
+      "date": "2023-01-27",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "notes": "The fetched DONKI response holds no flare record for this date."
+    },
+    {
+      "date": "2023-01-28",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "notes": "The fetched DONKI response holds no flare record for this date."
+    },
+    {
+      "date": "2023-01-29",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "notes": "The fetched DONKI response holds no flare record for this date."
+    },
+    {
+      "date": "2023-01-30",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "notes": "The fetched DONKI response holds no flare record for this date."
+    },
+    {
+      "date": "2023-01-31",
+      "sunlight": 1,
+      "radiation": 0,
+      "flare": "none",
+      "flares": [],
+      "flareCount": 0,
+      "notes": "The fetched DONKI response holds no flare record for this date."
+    }
+  ],
+  "simplified": [
+    "Storms this month are part of the game. A big flare is followed by a game storm the next day.",
+    "NASA's flare list does not say what happened at Mars.",
+    "What breaks and how much health is lost are part of the game.",
+    "Sunlight is steady in this chapter.",
+    "One sol is shown as one Earth date.",
+    "The outpost and its site are made up."
+  ]
+}

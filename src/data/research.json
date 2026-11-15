@@ -1,0 +1,38 @@
+[
+  {
+    "id": "fore",
+    "title": "Storm forecasting",
+    "effect": "See three days ahead.",
+    "sourceId": "donki"
+  },
+  {
+    "id": "rec",
+    "title": "Water recycling",
+    "effect": "Greenhouses use half as much water.",
+    "sourceId": "iss-water"
+  },
+  {
+    "id": "soil",
+    "title": "Soil-covered habitats",
+    "effect": "Habitats count as sheltered.",
+    "sourceId": "regolith-shield"
+  },
+  {
+    "id": "pan",
+    "title": "Better solar panels",
+    "effect": "Each panel makes one more power in full sunlight.",
+    "sourceId": "solar-arrays"
+  },
+  {
+    "id": "split",
+    "title": "Water splitting",
+    "effect": "Each powered ice mine also makes one air.",
+    "sourceId": "iss-oxygen"
+  },
+  {
+    "id": "nuke",
+    "title": "Small reactor",
+    "effect": "Unlock a reactor that makes six power.",
+    "sourceId": "kilopower"
+  }
+]

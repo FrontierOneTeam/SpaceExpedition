@@ -10,7 +10,12 @@
       "sunlight": 1,
       "radiation": 0,
       "flare": "none",
-      "flares": []
+      "flares": [],
+      "flareCount": 1,
+      "strongest": {
+        "peakTime": "2017-09-02T15:41Z",
+        "classType": "C7.7"
+      }
     },
     {
       "date": "2017-09-03",
@@ -18,6 +23,7 @@
       "radiation": 0,
       "flare": "none",
       "flares": [],
+      "flareCount": 0,
       "notes": "The fetched DONKI response holds no flare record for this date."
     },
     {
@@ -30,14 +36,24 @@
           "peakTime": "2017-09-04T20:33Z",
           "classType": "M5.5"
         }
-      ]
+      ],
+      "flareCount": 7,
+      "strongest": {
+        "peakTime": "2017-09-04T20:33Z",
+        "classType": "M5.5"
+      }
     },
     {
       "date": "2017-09-05",
       "sunlight": 1,
       "radiation": 0,
       "flare": "none",
-      "flares": []
+      "flares": [],
+      "flareCount": 5,
+      "strongest": {
+        "peakTime": "2017-09-05T01:08Z",
+        "classType": "M4.2"
+      }
     },
     {
       "date": "2017-09-06",
@@ -54,6 +70,11 @@
           "classType": "X9.3"
         }
       ],
+      "flareCount": 5,
+      "strongest": {
+        "peakTime": "2017-09-06T12:02Z",
+        "classType": "X9.3"
+      },
       "cardId": "sep2017-06"
     },
     {
@@ -71,6 +92,11 @@
           "classType": "X1.3"
         }
       ],
+      "flareCount": 5,
+      "strongest": {
+        "peakTime": "2017-09-07T14:36Z",
+        "classType": "X1.3"
+      },
       "cardId": "sep2017-07"
     },
     {
@@ -83,14 +109,24 @@
           "peakTime": "2017-09-08T07:49Z",
           "classType": "M8.1"
         }
-      ]
+      ],
+      "flareCount": 5,
+      "strongest": {
+        "peakTime": "2017-09-08T07:49Z",
+        "classType": "M8.1"
+      }
     },
     {
       "date": "2017-09-09",
       "sunlight": 1,
       "radiation": 0,
       "flare": "none",
-      "flares": []
+      "flares": [],
+      "flareCount": 3,
+      "strongest": {
+        "peakTime": "2017-09-09T11:04Z",
+        "classType": "M3.7"
+      }
     },
     {
       "date": "2017-09-10",
@@ -103,6 +139,11 @@
           "classType": "X8.2"
         }
       ],
+      "flareCount": 2,
+      "strongest": {
+        "peakTime": "2017-09-10T16:06Z",
+        "classType": "X8.2"
+      },
       "cardId": "sep2017-10"
     },
     {
@@ -111,6 +152,12 @@
       "radiation": 3,
       "flare": "none",
       "flares": [],
+      "flareCount": 1,
+      "strongest": {
+        "peakTime": "2017-09-11T10:10Z",
+        "classType": "B9.8"
+      },
+      "stormSource": "nasa-report",
       "cardId": "sep2017-11"
     },
     {
@@ -119,6 +166,12 @@
       "radiation": 2,
       "flare": "none",
       "flares": [],
+      "flareCount": 2,
+      "strongest": {
+        "peakTime": "2017-09-12T07:29Z",
+        "classType": "C3.0"
+      },
+      "stormSource": "nasa-report",
       "cardId": "sep2017-12"
     },
     {
@@ -126,7 +179,13 @@
       "sunlight": 1,
       "radiation": 1,
       "flare": "none",
-      "flares": []
+      "flares": [],
+      "flareCount": 1,
+      "strongest": {
+        "peakTime": "2017-09-13T07:48Z",
+        "classType": "B1.4"
+      },
+      "stormSource": "nasa-report"
     },
     {
       "date": "2017-09-14",
@@ -134,6 +193,7 @@
       "radiation": 0,
       "flare": "none",
       "flares": [],
+      "flareCount": 0,
       "notes": "The fetched DONKI response holds no flare record for this date."
     },
     {
@@ -142,6 +202,7 @@
       "radiation": 0,
       "flare": "none",
       "flares": [],
+      "flareCount": 0,
       "notes": "The fetched DONKI response holds no flare record for this date."
     }
   ],

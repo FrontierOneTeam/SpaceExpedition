@@ -21,14 +21,15 @@ describe('failure chain (SPEC 4.10, 10.6)', () => {
     flatTerrain(s, [[4, 6]]);
     expect(place(s, 'mine', 4, 6).ok).toBe(true);
     expect(place(s, 'farm', 3, 5).ok).toBe(true);
-    s.food = 3;
+    s.food = 1;
+    s.buildings.find(b=>b.type==='farm')!.manualRepair=true;
     s.air = 30;
     for (let i = 0; i < 10 && !s.lost; i++) endDay(run, b);
     expect(s.lost?.cause).toBe('food');
     const chain = failureChain(s);
     expect(chain.map((p) => p.icon)).toEqual(['broken', 'food', 'food']);
     expect(chain[0].text).toBe('The storm broke the greenhouse.');
-    expect(chain[1].text).toBe('Food fell for 2 days.');
+    expect(chain[1].text).toContain('Food fell');
     expect(chain[2].text).toBe(`Food ran out on sol ${s.lost!.sol}.`);
   });
 

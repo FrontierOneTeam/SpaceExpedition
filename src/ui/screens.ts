@@ -38,7 +38,7 @@ export function sourcesBodyHtml(): string {
 
 /**
  * "Now playing" (SPEC 9.4, 11.3): shown only for a checked real recording with its exact clip link.
- * `playing` comes from nowPlaying() in sound.ts, which returns null for every sound today.
+ * `playing` comes from nowPlaying() in sound.ts: set only while the real Mars wind recording plays.
  */
 export function nowPlayingHtml(playing: { text: string; url: string } | null): string {
   if (!playing) return '';
@@ -81,6 +81,31 @@ export function settingsBodyHtml(hasOutpost: boolean, confirm: boolean, cleared:
       <div class="modal__buttons"><button type="button" class="button button--quiet" data-action="toggle-mute" aria-pressed="${muted}">${esc(t(muted ? 'sound.turnOn' : 'sound.turnOff'))}</button></div>
     </section>`;
   return sound + startOverHtml(hasOutpost, confirm, cleared);
+}
+
+/** "Back up" in Settings: keep a copy of the outpost in a file, or load one. Secondary to the in-game slots. */
+export function backupHtml(hasOutpost: boolean, pending: { site: number; sol: number } | null, notice: string | null): string {
+  const note = notice ? `<p class="tools__status" role="status">${esc(notice)}</p>` : '';
+  const ask = pending
+    ? `<div class="confirm" role="group" aria-label="${esc(t('save.replace'))}">
+        <p class="confirm__ask">${esc(t('save.replace'))} ${esc(t('save.preview', pending))}</p>
+        <div class="modal__buttons">
+          <button type="button" class="button button--danger" data-action="import-yes">${esc(t('save.accept'))}</button>
+          <button type="button" class="button button--quiet" data-action="import-no">${esc(t('confirm.back'))}</button>
+        </div>
+      </div>`
+    : '';
+  const save = hasOutpost ? `<button type="button" class="button button--quiet" data-action="export-save">${esc(t('save.export'))}</button>` : '';
+  return `<section class="settings__backup">
+      <h2 class="section__title">${esc(t('backup.title'))}</h2>
+      <p>${esc(t('backup.about'))}</p>
+      ${note}${ask}
+      <div class="modal__buttons">
+        ${save}
+        <label class="button button--quiet">${esc(t('save.import'))}<input type="file" accept="application/json,.json" data-action="import-save" class="save-file"></label>
+        <button type="button" class="button button--quiet" data-action="restore-save">${esc(t('save.restore'))}</button>
+      </div>
+    </section>`;
 }
 
 function startOverHtml(hasOutpost: boolean, confirm: boolean, cleared: boolean): string {

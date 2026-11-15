@@ -56,6 +56,19 @@ describe('chapter may2024', () => {
     }
   });
 
+  it('carries each day\'s flare count and strongest record from the raw file (SPEC 16.4.5)', () => {
+    const rank = (c: string) => 'ABCMX'.indexOf(c[0]) * 1000 + Number(c.slice(1));
+    for (const d of chapter.days) {
+      const onDay = raw.filter((f) => f.peakTime.slice(0, 10) === d.date);
+      expect(d.flareCount, d.date).toBe(onDay.length);
+      if (onDay.length === 0) expect(d.strongest, d.date).toBeUndefined();
+      else expect(d.strongest.classType, d.date).toBe(onDay.reduce((a, b) => (rank(b.classType) > rank(a.classType) ? b : a)).classType);
+    }
+    // 20 May has no DONKI record at all.
+    expect(byDate('2024-05-20').flareCount).toBe(0);
+    expect(byDate('2024-05-20').strongest).toBeUndefined();
+  });
+
   it('gives 20 May no flare and a note', () => {
     const d = byDate('2024-05-20');
     expect(d.flare).toBe('none');

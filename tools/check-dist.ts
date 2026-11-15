@@ -1,18 +1,35 @@
 // Check the built game in dist/ (phase 4). Run after `npm run build`: npm run check:dist
 //
-// - dist/assets/audio holds only the approved sounds, each as .ogg and .mp3;
+// - dist/assets/audio holds every approved sound whose file is in public/, as .ogg and .mp3, and
+//   never one of the nine sounds that stay unapproved (SPEC 16.1, 16.4);
+// - the service worker does not precache sounds (they are cached when played);
 // - a web app manifest and a service worker exist, and the service worker precaches only files
 //   of this site (no other origin);
 // - no built file asks another origin for anything at runtime;
 // - every PNG in dist has the same pixels, size and transparency as its source in public/;
-// - the first-load and precache sizes stay inside the 6 MB budget (SPEC 2).
+// - the first-visit download (precache plus the sounds loaded before the first tap, in the larger
+//   of the two formats) stays inside the 6 MB budget (SPEC 2).
 
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import sharp from 'sharp';
+import { approvedSounds, type AudioEntry } from '../src/ui/sound.ts';
 
 export const DIST = 'dist';
 export const BUDGET_BYTES = 6 * 1024 * 1024;
+
+/** Never loaded and never in dist: their files are not in the repository (SPEC 16.1). */
+export const NEVER_SHIPPED = [
+  'amb_moon_base',
+  'ui_open_panel',
+  'bld_power_up',
+  'bld_repaired',
+  'evt_storm_warning',
+  'evt_rocket_land',
+  'evt_survey_expand',
+  'prd_question',
+  'astro_dance',
+] as const;
 
 /**
  * URLs that may appear in built files because nothing ever requests them:
@@ -87,12 +104,34 @@ export function audioFiles(dist = DIST): string[] {
   return existsSync(dir) ? readdirSync(dir).sort() : [];
 }
 
+function audioEntries(): AudioEntry[] {
+  return JSON.parse(readFileSync(join('src', 'data', 'audio.json'), 'utf8')) as AudioEntry[];
+}
+
+/** Every approved sound file that exists in public/assets/audio: what dist must hold. */
 export function approvedAudioFiles(): string[] {
-  const entries = JSON.parse(readFileSync(join('src', 'data', 'audio.json'), 'utf8')) as { name: string; approved: boolean }[];
-  return entries
+  const source = join('public', 'assets', 'audio');
+  return audioEntries()
     .filter((e) => e.approved)
     .flatMap((e) => [`${e.name}.mp3`, `${e.name}.ogg`])
+    .filter((f) => existsSync(join(source, f)))
     .sort();
+}
+
+/** What one browser downloads before the first tap: the sounds the map loads at the start, in one format. */
+export function startAudioBytes(format: 'ogg' | 'mp3', dist = DIST): number {
+  return approvedSounds(audioEntries()).reduce((n, name) => {
+    const path = join(dist, 'assets', 'audio', `${name}.${format}`);
+    return n + (existsSync(path) ? statSync(path).size : 0);
+  }, 0);
+}
+
+/** Music, loaded after the first tap, in one format. */
+export function musicBytes(format: 'ogg' | 'mp3', dist = DIST): number {
+  const start = new Set(approvedSounds(audioEntries()));
+  return audioEntries()
+    .filter((e) => e.approved && e.name.startsWith('mus_') && !start.has(e.name))
+    .reduce((n, e) => n + (existsSync(join(dist, 'assets', 'audio', `${e.name}.${format}`)) ? statSync(join(dist, 'assets', 'audio', `${e.name}.${format}`)).size : 0), 0);
 }
 
 /** PNGs whose pixels, size or transparency differ from the source in public/. */
@@ -109,11 +148,16 @@ export async function changedPngs(dist = DIST): Promise<string[]> {
   return out;
 }
 
-/** What one first visit downloads: the precache, plus the service worker files and manifest. */
+/**
+ * What one first visit downloads before the first tap: the precache, the service worker files and
+ * manifest, and the sounds the map loads at the start. A browser fetches one format of each
+ * sound, so the larger of the two formats is counted.
+ */
 export function firstLoadBytes(dist = DIST): number {
   const extra = files(dist).filter((f) => /(^|[\\/])(sw\.js|workbox-[^\\/]+\.js|manifest\.webmanifest)$/.test(f));
   const pre = precacheList(dist).reduce((n, p) => n + p.bytes, 0);
-  return pre + extra.reduce((n, f) => n + statSync(f).size, 0);
+  const audio = Math.max(startAudioBytes('ogg', dist), startAudioBytes('mp3', dist));
+  return pre + audio + extra.reduce((n, f) => n + statSync(f).size, 0);
 }
 
 const kb = (n: number) => `${(n / 1024).toFixed(0)} KB`;
@@ -127,6 +171,8 @@ async function main(): Promise<void> {
   const audio = audioFiles();
   const want = approvedAudioFiles();
   if (JSON.stringify(audio) !== JSON.stringify(want)) problems.push(`audio in dist: ${audio.join(', ')}; expected ${want.join(', ')}`);
+  for (const name of NEVER_SHIPPED) if (audio.some((f) => f.startsWith(`${name}.`))) problems.push(`${name} must not be in dist`);
+  for (const u of precacheList()) if (u.url.startsWith('assets/audio/')) problems.push(`sound precached: ${u.url}`);
   problems.push(...serviceWorkerProblems());
   for (const f of foreignUrls()) problems.push(`other origin in ${f.file}: ${f.url}`);
   for (const f of await changedPngs()) problems.push(`PNG pixels changed: ${f}`);
@@ -134,7 +180,8 @@ async function main(): Promise<void> {
   const preBytes = pre.reduce((n, p) => n + p.bytes, 0);
   const first = firstLoadBytes();
   if (first > BUDGET_BYTES) problems.push(`first load ${kb(first)} is over the 6 MB budget`);
-  console.log(`Audio in dist: ${audio.join(', ')}`);
+  console.log(`Audio in dist: ${audio.length} files`);
+  console.log(`Sounds loaded before the first tap: ogg ${kb(startAudioBytes('ogg'))}, mp3 ${kb(startAudioBytes('mp3'))}; music after the first tap: ogg ${kb(musicBytes('ogg'))}, mp3 ${kb(musicBytes('mp3'))}`);
   console.log(`Precache: ${pre.length} files, ${kb(preBytes)}`);
   console.log(`First visit downloads: ${kb(first)} (budget ${kb(BUDGET_BYTES)})`);
   if (problems.length > 0) {

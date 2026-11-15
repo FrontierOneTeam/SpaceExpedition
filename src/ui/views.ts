@@ -12,8 +12,11 @@ import {
   type GameState,
   type PlaceableType,
   type Run,
+  storageLimit,
 } from '../sim/index.ts';
-import type { McMessage, Mood } from './advice.ts';
+import type { McMessage, Mood, NextAction } from './advice.ts';
+import type { RecordView, TimelineCell } from './record.ts';
+import type { SummaryIcon, SummaryLine } from './summary.ts';
 import type { Card, SourceRow } from './content.ts';
 import type { ChainPanel } from './failureChain.ts';
 import { changeLine, chapterRange, datePair, esc, longDate, replayLine, shortDate } from './format.ts';
@@ -30,6 +33,7 @@ import {
   goalReward,
   goalText,
   powerLevel,
+  stageView,
   unlockGoalNumber,
   weatherTile,
   type MeterLevel,
@@ -157,7 +161,7 @@ export function goalCardHtml(state: GameState): string {
   const pct = Math.round((Math.min(goal.progress, goal.target) / Math.max(1, goal.target)) * 100);
   const status = done ? t('goal.ready') : t('goal.progress', { n: goal.progress, target: goal.target });
   const have = goalHave(goal, state);
-  const line = have ? `${have} ${goalReward(goal)}` : goalReward(goal);
+  const line = have ? `${have} ${goalReward(goal, state)}` : goalReward(goal, state);
   return `<div class="goal">
     <span class="goal__top"><span class="goal__label">${esc(t('goal.label'))}</span><span class="goal__status">${esc(status)}</span></span>
     <span class="goal__text">${esc(goalText(goal))}</span>
@@ -173,15 +177,19 @@ export function sourceLink(row: SourceRow): string {
   return `<a class="extlink" href="${esc(row.url)}" target="_blank" rel="noopener noreferrer">${esc(row.name)}<span class="sr-only"> ${esc(t('link.newTab'))}</span></a>`;
 }
 
-export function realCardHtml(card: Card, sources: SourceRow[]): string {
-  return `<aside class="realcard" aria-labelledby="realcard-title">
-    <div class="realcard__body">
-      <p class="realcard__head"><b id="realcard-title" class="realcard__title">${esc(t('card.title'))}</b> <span class="realcard__date">${esc(longDate(card.date))}</span></p>
+/**
+ * The "This was real" card (SPEC 8.1, 16.4.4): the real date large, the card text exactly as in
+ * cards.json, its sources, and apart from it, one line about the player's own base that game day.
+ */
+export function realCardBodyHtml(card: Card, sources: SourceRow[], base: { title: string; line: string } | null): string {
+  const baseHtml = base
+    ? `<div class="realcard__base"><span class="realcard__baselabel">${esc(base.title)}</span><p>${glossText(base.line)}</p></div>`
+    : '';
+  return `<div class="realcard">
+      <p class="realcard__date">${esc(longDate(card.date))}</p>
       <p class="realcard__text">${glossText(card.text)}</p>
       <p class="realcard__src">${esc(t('card.sources'))} ${sources.map(sourceLink).join(t('list.separator'))}</p>
-    </div>
-    <button type="button" class="notice__close" data-action="close-card" aria-label="${esc(t('notice.close'))}">×</button>
-  </aside>`;
+    </div>${baseHtml}`;
 }
 
 // ---- Space weather ----
@@ -208,7 +216,7 @@ function endTileHtml(): string {
   </div>`;
 }
 
-export function weatherHtml(today: ChapterDay | null, tomorrow: ChapterDay | null, compact: boolean): string {
+export function weatherHtml(today: ChapterDay | null, tomorrow: ChapterDay | null, compact: boolean, chapterDay = 1): string {
   if (!today) return '';
   const tiles =
     tileHtml(t('weather.today'), weatherTile(today, false), compact) +
@@ -216,18 +224,31 @@ export function weatherHtml(today: ChapterDay | null, tomorrow: ChapterDay | nul
   if (compact) return `<div class="wx-row">${tiles}</div>`;
   return `<h2 class="panel__title">${esc(t('weather.title'))}</h2>
     <div class="wx-row">${tiles}</div>
-    <p class="panel__note">${esc(t('weather.source', { dates: datePair(today.date, tomorrow ? tomorrow.date : null) }))}</p>`;
+    <button type="button" class="panel__note panel__note--btn" data-action="open-record" data-day="${chapterDay}">${esc(t('weather.source', { dates: datePair(today.date, tomorrow ? tomorrow.date : null) }))}</button>`;
 }
 
 // ---- Build ----
 
+/** One stock with its store limit ("Parts 12 of 20"), marked full in words and colour when no more fits. */
+function storedCount(state: GameState, res: 'parts' | 'soil', iconName: string, label: string): string {
+  const limit = storageLimit(state, res);
+  const full = state[res] >= limit;
+  const tag = full ? ` <span class="count__full">${esc(t('count.full'))}</span>` : '';
+  return `<span class="count${full ? ' is-full' : ''}" aria-label="${esc(t('count.ofAria', { name: label, n: state[res], max: limit }))}${full ? ` ${esc(t('count.full'))}` : ''}">${icon(iconName, 'count__icon')}<span aria-hidden="true">${esc(label)}</span> <b aria-hidden="true">${state[res]}</b><span class="count__max" aria-hidden="true">${esc(t('count.of', { max: limit }))}</span>${tag}</span>`;
+}
+
 export function countsHtml(state: GameState): string {
-  return `<span class="count">${icon('icon_parts', 'count__icon')}<span>${esc(t('count.parts'))}</span> <b>${state.parts}</b></span>
-    <span class="count">${icon('icon_soil', 'count__icon')}<span>${esc(t('count.soil'))}</span> <b>${state.soil}</b></span>
+  return `${storedCount(state, 'parts', 'icon_parts', t('count.parts'))}
+    ${storedCount(state, 'soil', 'icon_soil', t('count.soil'))}
     <span class="count">${icon('icon_water', 'count__icon')}<span>${esc(t('count.water'))}</span> <b>${state.water}</b></span>`;
 }
 
-export function buildHtml(state: GameState, selected: PlaceableType | null, hintType: PlaceableType | null, disabled: boolean): string {
+/** The amber ring that marks the control to use next (SPEC 16.4.2). Also named in words for screen readers. */
+function nextMark(): string {
+  return `<span class="sr-only"> (${esc(t('next.label'))})</span>`;
+}
+
+export function buildHtml(state: GameState, selected: PlaceableType | null, nextType: PlaceableType | null, disabled: boolean): string {
   const buttons = BUILD_MENU.map((type) => {
     const unlocked = isUnlocked(state, type);
     const cost = costOf(type);
@@ -235,18 +256,17 @@ export function buildHtml(state: GameState, selected: PlaceableType | null, hint
     const costNum = cost.soil > 0 ? cost.soil : cost.parts;
     const goalN = unlockGoalNumber(type);
     const lockLine = !unlocked && goalN !== null ? `<span class="bb__lock">${esc(t('build.lockedAfter', { n: goalN }))}</span>` : '';
-    const classes = ['bb', selected === type ? 'is-selected' : '', unlocked ? '' : 'is-locked', hintType === type ? 'is-hint' : ''].filter(Boolean).join(' ');
-    const hint = hintType === type ? `<span class="bb__hint">${esc(t('hint.start'))}</span>` : '';
+    const classes = ['bb', selected === type ? 'is-selected' : '', unlocked ? '' : 'is-locked', nextType === type ? 'is-next' : ''].filter(Boolean).join(' ');
     return `<button type="button" class="${classes}" data-action="select" data-type="${type}" aria-pressed="${selected === type}"${disabled ? ' disabled' : ''}>
-      ${hint}
       <img class="bb__img" src="${ART}${ART_FILE[type]}.png" alt="" aria-hidden="true">
-      <span class="bb__name">${esc(buildingName(type))}</span>
-      ${unlocked ? `<span class="bb__cost">${icon(costIcon, 'bb__costicon')}<span>${costNum}</span></span>` : lockLine}
+      <span class="bb__text">
+        <span class="bb__name">${esc(buildingName(type))}</span>
+        ${unlocked ? `<span class="bb__cost">${icon(costIcon, 'bb__costicon')}<span>${costNum}</span></span>` : lockLine}
+      </span>${nextType === type ? nextMark() : ''}
     </button>`;
   }).join('');
   const about = selected
-    ? `<p class="build__about"><b>${esc(buildingName(selected))}.</b> ${glossText(buildingAbout(selected))}
-        <button type="button" class="link" data-action="cancel">${esc(t('build.cancel'))}</button></p>`
+    ? `<p class="build__about"><b>${esc(buildingName(selected))}.</b> ${glossText(buildingAbout(selected))}</p>`
     : `<p class="build__about build__about--idle">${esc(t('build.howTo'))}</p>`;
   return `<div class="build__head">
       <h2 class="panel__title">${esc(t('build.title'))}</h2>
@@ -256,9 +276,194 @@ export function buildHtml(state: GameState, selected: PlaceableType | null, hint
     ${about}`;
 }
 
-export function endRowHtml(state: GameState, disabled: boolean): string {
+export function endRowHtml(state: GameState, disabled: boolean, isNext = false): string {
   return `<div class="counts counts--row">${countsHtml(state)}</div>
-    <button type="button" class="button endday" data-action="end-day"${disabled ? ' disabled' : ''}>${esc(t('endDay.button'))}</button>`;
+    <button type="button" class="button endday${isNext ? ' is-next' : ''}" data-action="end-day"${disabled ? ' disabled' : ''}>${esc(t('endDay.button'))}${isNext ? nextMark() : ''}</button>`;
+}
+
+// ---- Goal bar (SPEC 16.4.1): one line; tap opens the full goal card ----
+
+export function goalBarHtml(state: GameState, disabled: boolean): string {
+  const goal = currentGoal(state);
+  const done = isGoalDone(state, goal);
+  const pct = Math.round((Math.min(goal.progress, goal.target) / Math.max(1, goal.target)) * 100);
+  const status = done ? t('goal.ready') : t('goal.progress', { n: goal.progress, target: goal.target });
+  const have = goalHave(goal, state);
+  const line = have ? `${have} ${goalReward(goal, state)}` : goalReward(goal, state);
+  return `<button type="button" class="goalbar goal${done ? ' is-done' : ''}" data-action="open-goal" aria-label="${esc(t('goalbar.open'))}: ${esc(goalText(goal))} ${esc(status)}"${disabled ? ' disabled' : ''}>
+    <span class="goal__top">
+      <span class="goalbar__label goal__label"><span class="narrow-only">${esc(t('goalbar.label'))}</span><span class="wide-only">${esc(t('goal.label'))}</span></span>
+      <span class="goalbar__status goal__status">${esc(status)}</span>
+    </span>
+    <span class="goalbar__text goal__text">${esc(goalText(goal))}</span>
+    <span class="goalbar__bar goal__bar" aria-hidden="true"><span style="width:${pct}%"></span></span>
+    <span class="goal__line wide-only">${esc(line)}</span>
+    ${stageLineHtml(state)}
+  </button>`;
+}
+
+/** "Stage 2 of 6 · Small base" and a small bar toward the next stage (SPEC 18.2 point 3). */
+export function stageLineHtml(state: GameState): string {
+  const v = stageView(state);
+  const name = t('stage.line', { n: v.n, total: v.total, name: v.name });
+  const pct = v.next ? Math.round(v.next.share * 100) : 100;
+  const next = v.next ? t('stage.nextShort', { name: v.next.name, pct }) : t('stage.freePlay');
+  return `<span class="stage" role="img" aria-label="${esc(`${name}. ${next}`)}">
+      <span class="stage__name" aria-hidden="true">${esc(name)}</span>
+      <span class="stage__bar" aria-hidden="true"><span style="width:${pct}%"></span></span>
+      <span class="stage__next" aria-hidden="true">${esc(next)}</span>
+    </span>`;
+}
+
+/** The stage section of the goal sheet: where the outpost is and exactly what the next stage needs. */
+export function stageSheetHtml(state: GameState): string {
+  const v = stageView(state);
+  const head = `<h3 class="sheet__cardtitle">${esc(t('stage.line', { n: v.n, total: v.total, name: v.name }))}</h3>`;
+  if (!v.next) return `<section class="stagebox">${head}<p>${esc(t('stage.freePlayLong'))}</p></section>`;
+  const pct = Math.round(v.next.share * 100);
+  return `<section class="stagebox">${head}
+      <p>${esc(t('stage.needs', { name: v.next.name }))}</p>
+      <ul class="stagebox__list">
+        <li>${esc(t('stage.needGoals', { have: v.next.goals.have, need: v.next.goals.need }))}</li>
+        <li>${esc(t('stage.needCrew', { have: v.next.crew.have, need: v.next.crew.need }))}</li>
+      </ul>
+      <span class="stage__bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}" aria-label="${esc(t('stage.nextShort', { name: v.next.name, pct }))}"><span style="width:${pct}%"></span></span>
+      <p class="panel__note">${esc(t('stage.gift'))}</p>
+    </section>`;
+}
+
+// ---- The NASA record strip and the real timeline (SPEC 16.4.4) ----
+
+/** The strip under the goal bar: the real record of today, apart from the game's storm. */
+export function recordStripHtml(rec: RecordView, disabled: boolean): string {
+  const storm = rec.storm ? `<span class="record__game"><span class="record__tag record__tag--game">${esc(t('record.gameTag'))}</span> ${esc(rec.storm)}</span>` : '';
+  return `<button type="button" class="record" data-action="open-record" data-day="${rec.chapterDay}" aria-label="${esc(rec.title)}. ${esc(rec.text)} ${esc(t('record.open'))}"${disabled ? ' disabled' : ''}>
+    <span class="record__title"><span class="record__tag">${esc(t('record.realTag'))}</span> ${esc(rec.title)}</span>
+    <span class="record__text">${esc(rec.text)}</span>
+    ${storm}
+    <span class="record__more" aria-hidden="true">›</span>
+  </button>`;
+}
+
+export function timelineHtml(cells: TimelineCell[], selectedDay: number | null): string {
+  const items = cells
+    .map((c) => {
+      const date = shortDate(c.date);
+      const d = Number(c.date.slice(8, 10));
+      const tag = c.state === 'today' ? t('timeline.today') : c.state === 'tomorrow' ? t('timeline.tomorrow') : '';
+      const cls = `tlc tlc--${c.state} tlc--${c.mark}${selectedDay === c.chapterDay ? ' is-selected' : ''}`;
+      const mark = c.mark === 'storm' ? icon('icon_storm', 'tlc__icon') : `<span class="tlc__dot" aria-hidden="true"></span>`;
+      const inner = `<span class="tlc__day">${d}</span>${mark}<span class="tlc__word">${esc(c.word)}</span>`;
+      if (c.open) {
+        const aria = c.mark === 'none' ? t('timeline.ariaNone', { date }) : t('timeline.ariaPast', { date, word: c.word });
+        return `<li><button type="button" class="${cls}" data-action="open-day" data-day="${c.chapterDay}" aria-label="${esc(tag ? `${tag}, ${aria}` : aria)}"${selectedDay === c.chapterDay ? ' aria-current="true"' : ''}>${inner}</button></li>`;
+      }
+      const aria = c.state === 'tomorrow' ? t('timeline.ariaTomorrow', { date, word: c.word }) : t('timeline.ariaHidden', { date });
+      return `<li><span class="${cls}" role="img" aria-label="${esc(aria)}">${inner}</span></li>`;
+    })
+    .join('');
+  return `<h2 class="panel__title">${esc(t('timeline.title'))}</h2>
+    <ol class="timeline-row">${items}</ol>
+    <p class="panel__note">${esc(t('timeline.note'))}</p>`;
+}
+
+/** The sheet that opens from the record strip or a timeline day. */
+export function recordSheetHtml(rec: RecordView, source: SourceRow | null, cells: TimelineCell[], dayLine: string): string {
+  const storm = rec.storm ? `<p class="sheet__game"><span class="record__tag record__tag--game">${esc(t('record.gameTag'))}</span> ${esc(rec.storm)}</p>` : '';
+  const notes = rec.notes ? `<p class="sheet__notes">${esc(rec.notes)}</p>` : '';
+  const src = source ? `<p class="sheet__src">${esc(t('record.source'))} ${sourceLink(source)}</p>` : '';
+  const card = rec.card
+    ? `<section class="sheet__card"><h3 class="sheet__cardtitle">${esc(t('record.card'))}</h3><p>${glossText(rec.card.card.text)}</p>
+        <p class="realcard__src">${esc(t('card.sources'))} ${rec.card.sources.map(sourceLink).join(t('list.separator'))}</p></section>`
+    : '';
+  return `<div class="modal modal--sheet">
+    <div class="modal__panel sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+      <div class="sheet__head">
+        <h2 id="sheet-title" class="modal__title"><span class="record__tag">${esc(t('record.realTag'))}</span> ${esc(rec.title)}</h2>
+        <button type="button" class="notice__close" data-action="close-overlay" aria-label="${esc(t('sheet.close'))}">×</button>
+      </div>
+      <p class="sheet__text">${glossText(rec.text)}</p>
+      <p class="sheet__small">${esc(t('record.timesNote'))}</p>
+      ${notes}
+      ${src}
+      ${storm}
+      ${card}
+      <section class="sheet__timeline">${timelineHtml(cells, rec.chapterDay)}<p class="panel__note">${esc(dayLine)}</p></section>
+      <div class="modal__buttons">
+        <button type="button" class="button button--small" data-action="close-overlay">${esc(t('sheet.close'))}</button>
+        <button type="button" class="button button--small button--quiet" data-action="open-sources">${esc(t('record.allSources'))}</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+export function goalSheetHtml(state: GameState): string {
+  return `<div class="modal modal--sheet">
+    <div class="modal__panel sheet" role="dialog" aria-modal="true" aria-label="${esc(t('goal.label'))}">
+      ${goalCardHtml(state)}
+      ${stageSheetHtml(state)}
+      <div class="modal__buttons"><button type="button" class="button button--small" data-action="close-overlay">${esc(t('sheet.close'))}</button></div>
+    </div>
+  </div>`;
+}
+
+// ---- The message area (SPEC 16.4.1): one item at a time ----
+
+const SUMMARY_ICON: Record<SummaryIcon, string | null> = {
+  storm: 'icon_storm',
+  broken: 'icon_broken',
+  no_power: 'icon_no_power',
+  air: 'icon_air',
+  food: 'icon_food',
+  parts: 'icon_parts',
+  water: 'icon_water',
+  soil: 'icon_soil',
+  power: 'icon_power',
+  mark: null,
+};
+
+export function summaryBodyHtml(lines: SummaryLine[]): string {
+  const items = lines
+    .map((l) => {
+      const img = SUMMARY_ICON[l.icon];
+      return `<li class="daysum__line">${img ? icon(img, 'daysum__icon') : '<span class="daysum__dot" aria-hidden="true"></span>'}<span>${glossText(l.text)}</span></li>`;
+    })
+    .join('');
+  return `<ul class="daysum">${items}</ul>`;
+}
+
+/** The head of a queue item: its title, "1 of 3" while more wait, and Next. */
+export function msgHeadHtml(title: string, pos: { n: number; total: number }, nextKey: StringKey | null, disabled: boolean): string {
+  const count = pos.total > 1 && pos.n < pos.total ? `<span class="msg__count">${esc(t('msg.count', pos))}</span>` : '';
+  const next = nextKey ? `<button type="button" class="button button--small msg__next" data-action="msg-next"${disabled ? ' disabled' : ''}>${esc(t(nextKey))}</button>` : '';
+  return `<div class="msg__head"><span class="msg__title">${esc(title)}</span>${count}${next}</div>`;
+}
+
+/** The last item of the queue: the predict question or Mission Control's message. */
+export function missionControlItemHtml(msg: McMessage, disabled: boolean): string {
+  return `<div class="msg__item msg__item--mc mc">${missionControlHtml(msg, disabled)}</div>`;
+}
+
+export function stepsHtml(done: [boolean, boolean, boolean]): string {
+  const current = done.indexOf(false);
+  const keys: StringKey[] = ['steps.1', 'steps.2', 'steps.3'];
+  const items = keys
+    .map((k, i) => {
+      const state = done[i] ? 'is-done' : i === current ? 'is-now' : '';
+      const word = done[i] ? t('steps.done') : i === current ? t('steps.now') : '';
+      return `<li class="steps__step ${state}"><span class="steps__num" aria-hidden="true">${done[i] ? '✓' : i + 1}</span>${esc(t(k))}${word ? `<span class="sr-only"> (${esc(word)})</span>` : ''}</li>`;
+    })
+    .join('');
+  return `<ol class="steps" aria-label="${esc(t('steps.label'))}">${items}</ol>`;
+}
+
+/** The fixed "Do this now" line, with Cancel while a building is picked. */
+export function nextLineHtml(next: NextAction | null, flash: { text: string; tone: 'info' | 'warn' } | null): string {
+  const flashHtml = flash ? `<p class="flash flash--${flash.tone}" role="status">${glossText(flash.text)}</p>` : '';
+  if (!next) return flashHtml;
+  const cancel = next.cancel ? `<button type="button" class="button button--small button--quiet donow__cancel" data-action="cancel">${esc(t('build.cancel'))}</button>` : '';
+  const rowCls = next.cancel ? 'donow__row donow__row--active' : 'donow__row donow__row--idle';
+  return `${flashHtml}<div class="${rowCls}"><p class="donow__line"><span class="donow__label">${esc(t('next.label'))}</span> <span class="donow__text">${glossText(next.text)}</span></p>${cancel}</div>`;
 }
 
 // ---- Mission Control ----

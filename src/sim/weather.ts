@@ -2,7 +2,7 @@
 
 import { BUILDINGS, LIMITS, RADIATION } from './config.ts';
 import { isSheltered } from './placement.ts';
-import type { Chapter, ChapterBook, ChapterDay, GameState, RadiationLevel, SimEvent } from './types.ts';
+import type { Chapter, ChapterBook, ChapterDay, GameState, RadiationLevel, SimEvent, StormSource } from './types.ts';
 
 const MS_PER_DAY = 86_400_000;
 
@@ -68,6 +68,11 @@ export function validateChapter(chapter: Chapter): string[] {
   return problems;
 }
 
+/** Where a day's storm comes from. A storm without a recorded source counts as a game storm (SPEC 18.1). */
+export function stormSourceOf(day: ChapterDay): StormSource {
+  return day.stormSource === 'nasa-report' ? 'nasa-report' : 'game-rule';
+}
+
 export function clampHealth(value: number): number {
   return Math.min(Math.max(value, LIMITS.health.min), LIMITS.health.max);
 }
@@ -76,7 +81,7 @@ export function clampHealth(value: number): number {
  * Step 6: today's radiation hits the base. Changes the state.
  * Returns the events and the health lost.
  */
-export function applyRadiation(state: GameState, level: RadiationLevel): { events: SimEvent[]; healthLost: number } {
+export function applyRadiation(state: GameState, level: RadiationLevel, source: StormSource = 'game-rule'): { events: SimEvent[]; healthLost: number } {
   const events: SimEvent[] = [];
   const effect = RADIATION[level];
   if (level > 0) {
@@ -87,6 +92,7 @@ export function applyRadiation(state: GameState, level: RadiationLevel): { event
       sheltered,
       unsheltered: state.buildings.length - sheltered,
       allHabitatsSheltered: state.buildings.every((b) => b.type !== 'home' || isSheltered(state, b.r, b.c)),
+      source,
     });
   }
 

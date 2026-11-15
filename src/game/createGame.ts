@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { config } from '../sim/index.ts';
 import type { MapCallbacks, MapView } from '../ui/mapView.ts';
+import { sharedAudioContext } from '../ui/sound.ts';
 import { MapScene } from './MapScene.ts';
 import { phaserSoundBackend } from './phaserSound.ts';
 
@@ -52,12 +53,14 @@ export function createMap(container: HTMLElement, callbacks: MapCallbacks): Prom
       resolve(view);
     });
 
+    const audioCtx = sharedAudioContext();
     const game = new Phaser.Game({
       type: Phaser.AUTO,
       parent: container,
       backgroundColor: config.RENDER.backgroundColour,
       scale: { mode: Phaser.Scale.NONE, width: w * pr, height: h * pr, zoom: 1 / pr },
       // Sound plays through Phaser (SPEC 2, 11.3); only approved files are ever loaded.
+      audio: audioCtx ? { context: audioCtx } : undefined,
       banner: false,
       scene: [scene],
     });

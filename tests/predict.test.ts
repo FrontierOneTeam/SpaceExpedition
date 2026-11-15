@@ -63,7 +63,7 @@ describe('predict question (SPEC 8.2, 16.2)', () => {
     const { r, farm } = base();
     toChapterDay(r, 9);
     answerQuestion(r.state, 'break');
-    expect(place(r.state, 'shelter', 3, 5).ok).toBe(true); // (3,5) (3,6) (4,5) (4,6): covers the farm
+    expect(place(r.state, 'shelter', 3, 6).ok).toBe(true); // (3,5) (3,6) (4,5) (4,6): covers the farm
     endDay(r, book);
     const ev = endDay(r, book).events;
     expect(ev).toContainEqual({ type: 'prediction_scored', buildingId: farm, building: 'farm', answer: 'break', broke: false, right: true, saved: true });

@@ -9,8 +9,8 @@ export interface Tile {
   c: number;
 }
 
-export function inBounds(r: number, c: number): boolean {
-  return Number.isInteger(r) && Number.isInteger(c) && r >= 0 && c >= 0 && r < SITE_SIZE && c < SITE_SIZE;
+export function inBounds(r: number, c: number, size=SITE_SIZE): boolean {
+  return Number.isInteger(r) && Number.isInteger(c) && r >= 0 && c >= 0 && r < size && c < size;
 }
 
 /** The ring a tile first appears in: 0 for the starting area, up to REVEAL_RINGS.length - 1. */
@@ -24,12 +24,20 @@ export function ringOf(r: number, c: number): number {
 
 /** True when the tile is inside the revealed area for this ring index. */
 export function isRevealed(ring: number, r: number, c: number): boolean {
-  return inBounds(r, c) && ringOf(r, c) <= ring;
+  if (ring < REVEAL_RINGS.length) {
+    const bounds = REVEAL_RINGS[Math.max(0, ring)];
+    return inBounds(r, c, bounds.max + 1) && r >= bounds.min && c >= bounds.min && r <= bounds.max && c <= bounds.max;
+  }
+  const bounds = revealBounds(ring);
+  if (!inBounds(r, c, bounds.max + 1)) return false;
+  const m = r > c ? r : c;
+  const order = m * m + (r === m ? c : m + 1 + r);
+  return order < SITE_SIZE * SITE_SIZE + 16 * (ring - REVEAL_RINGS.length + 1);
 }
 
 /** Width and height of the revealed area for a ring index. */
 export function revealedSize(ring: number): number {
-  return REVEAL_RINGS[Math.min(ring, REVEAL_RINGS.length - 1)].size;
+  return revealBounds(ring).size;
 }
 
 export function manhattan(a: Tile, b: Tile): number {
@@ -83,4 +91,24 @@ export function generateTerrain(siteNumber: number): TerrainKind[][] {
   for (let i = 0; i < TERRAIN.craters; i++) placeOne('crater', tiles);
 
   return grid;
+}
+
+/** Initial rings stay fixed; later surveys add land to the east and south. */
+export function revealBounds(ring:number):{min:number;max:number;size:number} {
+ if(ring<REVEAL_RINGS.length) return REVEAL_RINGS[Math.max(0,ring)];
+ const size=Math.ceil(Math.sqrt(SITE_SIZE*SITE_SIZE+16*(ring-REVEAL_RINGS.length+1)));return {min:0,max:size-1,size};
+}
+/** Coordinate-derived deposits: extending a save never regenerates existing ground. */
+export function expandTerrain(state:import('./types.ts').GameState):void {
+ const size=revealedSize(state.ring);const previous=state.terrain.length;
+ if(size<=previous)return;
+ for(let r=0;r<size;r++){
+  state.terrain[r] ??=[];
+  for(let c=0;c<size;c++) if(r>=previous||c>=previous){
+   const value=((r*73856093)^(c*19349663)^(state.terrainSeed??1))>>>0;
+   state.terrain[r][c]=value%9===0?'ice':value%9===1?'rock':'ground';
+  }
+ }
+ // Each added edge has accessible deposits even for unlucky coordinate hashes.
+ state.terrain[previous][previous]='ice';state.terrain[previous][previous-1]='rock';
 }

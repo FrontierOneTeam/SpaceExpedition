@@ -1,11 +1,14 @@
+import {stockCapacity,resolveIncident} from './emergency.ts';
+import {LONG_RUN} from './config.ts';
 // A run: start, the 12-step end of day (SPEC 4.7), today's preview, and Keep building (9.6).
 
 import { BUILDINGS, CREW_USE, HEALTH_RECOVERY, LIMITS, PRODUCTION_ORDER, ROCKET, START_RING, START_STOCKS, START_UNLOCKED } from './config.ts';
 import { checkGoals } from './goals.ts';
+import { capStocks, storageLimit } from './storage.ts';
 import { resolvePower, isWorking, type PowerResult } from './power.ts';
 import { dueQuestion, scorePrediction } from './predict.ts';
 import { generateTerrain, revealedSize, startingBase } from './terrain.ts';
-import { applyRadiation, chapterDate, chapterDayData, clampHealth, getChapter, isLastChapterDay } from './weather.ts';
+import { applyRadiation, chapterDate, chapterDayData, clampHealth, getChapter, isLastChapterDay, stormSourceOf } from './weather.ts';
 import type { Building, BuildingType, ChapterBook, ChapterStart, GameState, ResourceId, Run, SimEvent, Stocks } from './types.ts';
 
 export function stocksOf(state: GameState): Stocks {
@@ -40,12 +43,14 @@ export function newRun(siteNumber: number, book: ChapterBook, chapterId: string 
     day: 1,
     ...START_STOCKS,
     terrain: generateTerrain(siteNumber),
+    terrainSeed: siteNumber,
     ring: START_RING,
     buildings,
     shelters: [],
     nextId: buildings.length + 1,
     unlocked: START_UNLOCKED.slice(),
     goals: { starterDone: 0, repeatingDone: 0 },
+    stage: 0,
     question: null,
     prediction: null,
     predictions: { right: 0, answered: 0 },
@@ -81,11 +86,15 @@ function produce(state: GameState, powered: number[]): SimEvent[] {
     state.buildings.filter((b) => b.type === type && isWorking(b) && powered.includes(b.id)).sort((a, b) => a.id - b.id);
   for (const type of PRODUCTION_ORDER) {
     const spec = BUILDINGS[type];
-    const uses = Object.entries(spec.uses) as [ResourceId, number][];
+    const adjustedUses=type==='farm'&&state.research?.includes('rec')?{water:0.5}:spec.uses;
+    const uses = Object.entries(adjustedUses) as [ResourceId, number][];
     const makes = Object.entries(spec.makes) as [ResourceId, number][];
     for (const b of byType(type)) {
       let runs = spec.maxRuns;
       for (const [res, n] of uses) runs = Math.min(runs, Math.floor(state[res] / n));
+      // A machine only makes parts or soil that fit in the store: a full store stops it (SPEC 18.2).
+      for (const [res, n] of makes) if (res === 'parts' || res === 'soil') runs = Math.min(runs, Math.floor(Math.max(0, storageLimit(state, res) - state[res]) / n));
+      if (runs <= 0 && makes.some(([res]) => (res === 'parts' || res === 'soil') && state[res] >= storageLimit(state, res))) continue;
       if (runs <= 0) {
         const missing = uses.find(([res, n]) => state[res] < n);
         if (missing) events.push({ type: 'missing_input', buildingId: b.id, building: b.type, resource: missing[0] });
@@ -101,6 +110,10 @@ function produce(state: GameState, powered: number[]): SimEvent[] {
       }
     }
   }
+  state.researchPoints=(state.researchPoints??0)+state.buildings.filter(b=>b.type==='lab'&&isWorking(b)&&powered.includes(b.id)).length;
+  if(state.research?.includes('split')) for(const b of byType('mine')) {state.air++;events.push({type:'produced',buildingId:b.id,building:b.type,resource:'air',amount:1});}
+  const discoveries=[...state.buildings.map(b=>b.type),...(state.shelters.length?['shelter']:[])];
+  state.notebook=[...new Set([...(state.notebook??[]),...discoveries])];
   return events;
 }
 
@@ -112,10 +125,33 @@ function clamp(value: number, min: number, max: number): number {
 function crewUse(state: GameState): SimEvent {
   const air = state.crew * CREW_USE.air;
   const food = state.crew * CREW_USE.food;
-  state.air = clamp(state.air - air, LIMITS.air.min, LIMITS.air.max);
-  state.food = clamp(state.food - food, LIMITS.food.min, LIMITS.food.max);
+  state.air = clamp(state.air - air, LIMITS.air.min, stockCapacity(state));
+  state.food = clamp(state.food - food, LIMITS.food.min, stockCapacity(state));
   state.water = clamp(state.water, LIMITS.water.min, LIMITS.water.max);
   return { type: 'crew_used', crew: state.crew, air, food };
+}
+
+/**
+ * The day's events as kept in the save. What each building made and used is summed by building
+ * type and resource, keeping the first building's id, so a big outpost's save stays small.
+ * Every other event is kept as it is. The day's full list is still returned by endDay.
+ */
+export function compactLog(events: SimEvent[]): SimEvent[] {
+  const out: SimEvent[] = [];
+  const merged = new Map<string, Extract<SimEvent, { type: 'produced' | 'consumed' }>>();
+  for (const e of events) {
+    if (e.type === 'produced' || e.type === 'consumed') {
+      const key = `${e.type}:${e.building}:${e.resource}`;
+      const m = merged.get(key);
+      if (m) m.amount += e.amount;
+      else {
+        const copy = { ...e };
+        merged.set(key, copy);
+        out.push(copy);
+      }
+    } else out.push(e);
+  }
+  return out;
 }
 
 export interface DayPreview {
@@ -196,7 +232,7 @@ export function endDay(run: Run, book: ChapterBook): EndDayResult {
 
   // 5. Repairs.
   for (const b of state.buildings) {
-    if (b.brokenDays > 0) {
+    if (b.brokenDays > 0 && !b.manualRepair) {
       b.brokenDays--;
       if (b.brokenDays === 0) events.push({ type: 'repaired', buildingId: b.id, building: b.type });
     }
@@ -207,7 +243,7 @@ export function endDay(run: Run, book: ChapterBook): EndDayResult {
   }
 
   // 6. Weather.
-  const weather = applyRadiation(state, today.radiation);
+  const weather = applyRadiation(state, today.radiation, stormSourceOf(today));
   events.push(...weather.events);
   healthLost += weather.healthLost;
   const brokenToday = weather.events.flatMap((e) => (e.type === 'broken' ? [e.buildingId] : []));
@@ -223,8 +259,11 @@ export function endDay(run: Run, book: ChapterBook): EndDayResult {
     }
   }
 
-  // 8. Goals and map growth.
-  events.push(...checkGoals(state));
+  // 8. Goals, map growth and stages. The next goal sees the weather of the next morning: that day and the one after.
+  const ahead = (n: number) => chapterDayData(chapter, run.chapterDay + n)?.radiation ?? 0;
+  events.push(...checkGoals(state, { today: ahead(1), tomorrow: ahead(2) }));
+  // What does not fit in the stores is not kept (SPEC 18.2).
+  events.push(...capStocks(state));
 
   // 9. Yesterday's prediction.
   events.push(...scorePrediction(state, brokenToday));
@@ -236,8 +275,10 @@ export function endDay(run: Run, book: ChapterBook): EndDayResult {
     events.push({ type: 'health', amount: state.health - before, cause: 'recovery', buildingId: null, level: 0 });
   }
 
-  // 11. Loss check, then chapter end.
-  const cause = state.air <= 0 ? 'air' : state.food <= 0 ? 'food' : state.health <= 0 ? 'health' : null;
+  resolveIncident(state);
+  state.criticalDays = state.air <= 0 || state.food <= 0 ? (state.criticalDays ?? 0) + 1 : 0;
+  // 11. Two-turn rescue period before a supply shortage ends the run.
+  const cause = state.health <= 0 ? 'health' : (state.criticalDays ?? 0) > LONG_RUN.rescueTurns ? (state.air <= 0 ? 'air' : 'food') : null;
   if (cause) {
     state.lost = { cause, sol: state.day };
     events.push({ type: 'lost', cause, sol: state.day });
@@ -252,9 +293,10 @@ export function endDay(run: Run, book: ChapterBook): EndDayResult {
     chapterDay: run.chapterDay,
     replay: run.replay,
     date: chapterDate(chapter, run.chapterDay),
-    events,
+    events: compactLog(events),
     after: stocksOf(state),
   });
+  if(state.log.length>LONG_RUN.logDays)state.log.splice(0,state.log.length-LONG_RUN.logDays);
   state.question = null;
 
   // 12. Advance. A lost run does not advance.
@@ -273,16 +315,46 @@ export function endDay(run: Run, book: ChapterBook): EndDayResult {
  * A chapter id missing from the archive counts as the last chapter.
  * Returns false when there is no report pending.
  */
+function gcd(a: number, b: number): number {
+  let x = Math.abs(a);
+  let y = Math.abs(b);
+  while (y !== 0) {
+    const t = x % y;
+    x = y;
+    y = t;
+  }
+  return x || 1;
+}
+
+export function nextArchiveChapterId(run: Run, book: ChapterBook): { chapterId: string; replayDelta: number } {
+  const archive = book.archive;
+  const i = archive.indexOf(run.chapterId);
+  if (archive.length <= 2 || i < 0) {
+    const next = i + 1;
+    if (i < 0 || next >= archive.length) return { chapterId: archive[0], replayDelta: 1 };
+    return { chapterId: archive[next], replayDelta: 0 };
+  }
+  const pool = archive.slice(1);
+  const m = pool.length;
+  const site = Math.abs(run.siteNumber || 1);
+  const topSpan = Math.min(m, Math.max(1, Math.ceil(m / 3)));
+  const firstIdx = site % topSpan;
+  if (i === 0) return { chapterId: pool[firstIdx], replayDelta: 0 };
+  let step = m <= 2 ? 1 : Math.max(2, Math.floor(m / 3) + (site % Math.max(2, Math.floor(m / 2))));
+  if (step >= m) step = (step % (m - 1)) + 1;
+  while (gcd(step, m) !== 1) {
+    step = step + 1 >= m ? 1 : step + 1;
+  }
+  const nextP = (i - 1 + step) % m;
+  if (nextP === firstIdx) return { chapterId: archive[0], replayDelta: 1 };
+  return { chapterId: pool[nextP], replayDelta: 0 };
+}
+
 export function keepBuilding(run: Run, book: ChapterBook): boolean {
   if (!run.pendingReport || run.state.lost) return false;
-  const i = book.archive.indexOf(run.chapterId);
-  const next = i + 1;
-  if (i < 0 || next >= book.archive.length) {
-    run.chapterId = book.archive[0];
-    run.replay += 1;
-  } else {
-    run.chapterId = book.archive[next];
-  }
+  const next = nextArchiveChapterId(run, book);
+  run.chapterId = next.chapterId;
+  run.replay += next.replayDelta;
   run.chapterDay = 1;
   run.pendingReport = false;
   run.state.chapterStart = chapterSnapshot(run.state);

@@ -122,6 +122,8 @@ function spec(partial: Partial<BuildingSpec> & Pick<BuildingSpec, 'cost' | 'powe
 }
 
 export const BUILDINGS: Readonly<Record<BuildingType, BuildingSpec>> = {
+  lab: spec({cost:{parts:3,soil:0},power:2,stormBreakable:true}),
+  nuke: spec({cost:{parts:5,soil:0},power:0,solarOutput:6,canBeSheltered:false}),
   sun: spec({ cost: { parts: 1, soil: 0 }, power: 0, solarOutput: 3, canBeSheltered: false, stormDamageable: true }),
   batt: spec({ cost: { parts: 2, soil: 0 }, power: 0, storage: 4, stormBreakable: true }),
   o2: spec({ cost: { parts: 2, soil: 0 }, power: 2, makes: { air: 3 }, maxRuns: 1, stormBreakable: true }),
@@ -146,7 +148,7 @@ export const BUILDINGS: Readonly<Record<BuildingType, BuildingSpec>> = {
 export const PRODUCTION_ORDER: readonly BuildingType[] = ['mine', 'farm', 'o2', 'dig', 'fab'];
 
 /** Soil shelter (SPEC 4.5). */
-export const SHELTER = { cost: { parts: 0, soil: 4 }, size: 2 } as const;
+export const SHELTER = { cost: { parts: 0, soil: 1 }, size: 1 } as const;
 
 /** A damaged panel makes this much less power, minimum 0 (SPEC 4.6). */
 export const DAMAGED_PANEL_PENALTY = 1;
@@ -168,29 +170,73 @@ export const HEALTH_RECOVERY = 1;
 
 export const ROCKET = { interval: 6, parts: 3 } as const;
 
-// ---- Goals (SPEC 7) ----
+// ---- Goals (SPEC 7, 18.2) ----
 
+/** Parts for each of the four starter goals (SPEC 7.1, unchanged). */
 export const GOAL_REWARD_PARTS = 3;
-export const MAX_GOALS_PER_DAY = 3;
-/** Every this many completed repeating goals, the map grows one ring. */
+/** At most one goal completes per day (SPEC 18.2). */
+export const MAX_GOALS_PER_DAY = 1;
+/** Every this many completed chosen goals, the map grows one ring. */
 export const REPEATING_GOALS_PER_RING = 2;
 
 export const STARTER_GOALS: readonly { id: 'starter_air' | 'starter_food' | 'starter_soil' | 'starter_cover'; unlocks: PlaceableType[] }[] = [
   { id: 'starter_air', unlocks: ['farm', 'mine'] },
   { id: 'starter_food', unlocks: ['batt', 'dig'] },
   { id: 'starter_soil', unlocks: ['shelter', 'fab'] },
-  { id: 'starter_cover', unlocks: ['home'] },
+  { id: 'starter_cover', unlocks: ['home','lab'] },
 ];
 
-export const REPEATING_GOALS = {
-  cycle: 3,
-  crewBase: 4,
-  crewPerLevel: 2,
-  storesAir: 20,
-  storesFood: 20,
-  partsBase: 8,
-  partsPerLevel: 4,
+/** The goal chooser that follows the starter goals (SPEC 18.2). */
+export const GOAL_CHOOSER = {
+  /**
+   * Growth goals, tried in this order starting at (chosen goals completed) mod its length, after the
+   * urgent ones (a storm, a fault, a habitat without a shelter). Each is offered only when needed.
+   */
+  rotation: ['house_crew', 'more_air', 'more_food', 'new_mine', 'more_power', 'shelter_machines', 'research', 'new_digger'] as const,
+  /**
+   * Offered only when no other goal is, in this order: batteries to keep power for later, then
+   * spare panels for storm days. Two kinds, so one is always offered after the other.
+   */
+  fillers: ['more_storage', 'more_power'] as const,
+  /** Filler goals grow with the outpost: one more step for every this many crew. */
+  crewPerScale: 8,
+  /** House this many more crew (one habitat). Offered only while the crew is below the room for it (see crewRoom). */
+  crewStep: 2,
+  /** After the last stage, the crew may grow by one habitat for every this many goals. */
+  freePlayGoalsPerHabitat: 25,
+  /** Shelter this many more machines (or as many as stand outside, if fewer). */
+  shelterStep: 2,
+  /** Air and food goals ask for this much more a day than the crew uses. */
+  airFoodMargin: 2,
+  /** A power goal asks for this much more than every building needs (a filler power goal: this much per step). */
+  powerMargin: 2,
+  /** An ice mine goal comes when the mines make less than this much more water than the greenhouses use. */
+  waterMargin: 1,
+  /** A soil digger goal comes when soil is under this share of its store. */
+  soilShare: 0.5,
+  /** A filler storage goal asks for this much more spare power per step (one battery). */
+  storageStep: 4,
+  /** A storm goal is offered when today's or tomorrow's radiation is at least this. */
+  stormLevel: 2,
+  /** Research goals are offered from this stage (0 is the first). */
+  researchStage: 1,
 } as const;
+
+/**
+ * Named stages (SPEC 18.2 point 3). A stage is reached when the outpost has finished `goals` goals
+ * in all (starter goals included) and houses `crew` crew. Each stage stores more parts and soil.
+ */
+export const STAGES: readonly { id: 'camp' | 'base' | 'outpost' | 'hamlet' | 'village' | 'town'; goals: number; crew: number; parts: number; soil: number }[] = [
+  { id: 'camp', goals: 0, crew: 0, parts: 20, soil: 10 },
+  { id: 'base', goals: 12, crew: 4, parts: 30, soil: 15 },
+  { id: 'outpost', goals: 42, crew: 8, parts: 40, soil: 20 },
+  { id: 'hamlet', goals: 82, crew: 14, parts: 50, soil: 25 },
+  { id: 'village', goals: 115, crew: 18, parts: 60, soil: 30 },
+  { id: 'town', goals: 150, crew: 24, parts: 70, soil: 35 },
+]
+
+/** Air and food can be stored up to this many days per crew member, and never less than LIMITS. */
+export const AIR_FOOD_DAYS_PER_CREW = 8;
 
 // ---- Predict question (SPEC 8.2, 16.2) ----
 
@@ -320,3 +366,25 @@ export const ASTRONAUT = {
   /** Feet sit this far below the tile centre, in world units, so they stand on the ground. */
   footOffset: 6,
 } as const;
+
+// ---- View only (phone rework, SPEC 16.4). Interface and map drawing; never read by the rules. ----
+
+export const VIEW = {
+  /** The day summary shows at most this many lines (SPEC 16.4.3). */
+  summaryMaxLines: 6,
+  /** Valid tiles while a building is picked: a strong fill and outline that read in daylight. */
+  glowColour: 0xf2a53a,
+  glowFillAlpha: 0.62,
+  glowLine: 6,
+  /** A thin light inner line, so the glow is not only a colour. */
+  glowInnerColour: 0xfff4dd,
+  glowInnerLine: 2,
+  /** The 2x2 shelter outline. */
+  shelterOutlineColour: 0xffffff,
+  shelterOutlineFillAlpha: 0.35,
+  shelterOutlineLine: 7,
+} as const;
+
+export const LONG_RUN = { expansionStep: 2, depositEvery: 9, rescueTurns: 2, freeAid: 2, aidCooldown: 30, paidAidCost: 20, aidParts: 6, repairParts: 2, incidentInterval: 23, incidentStart: 20, logDays: 32 } as const;
+
+export const RESEARCH_COSTS:Readonly<Record<string,number>>={fore:2,rec:3,soil:3,pan:4,split:4,nuke:6};

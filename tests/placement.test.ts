@@ -62,8 +62,8 @@ describe('building placement (SPEC 4.4, 16.2)', () => {
     expect(canPlace(s, 'o2', 4, 4)).toEqual({ ok: false, reason: 'need_parts' });
     expect(place(s, 'o2', 4, 4)).toEqual({ ok: false, reason: 'need_parts' });
     expect(s.parts).toBe(1);
-    s.soil = 3;
-    expect(canPlace(s, 'shelter', 3, 3)).toEqual({ ok: false, reason: 'need_soil' });
+    s.soil = 0;
+    expect(canPlace(s, 'shelter', 5, 5)).toEqual({ ok: false, reason: 'need_soil' });
   });
 
   it('removing needs no connection check', () => {
@@ -86,69 +86,11 @@ describe('building placement (SPEC 4.4, 16.2)', () => {
   });
 });
 
-describe('soil shelter (SPEC 4.5)', () => {
-  it('covers a 2x2 block from its top tile; a tile inside is sheltered', () => {
-    const { run: r } = lab();
-    const s = r.state;
-    const res = place(s, 'shelter', 4, 4); // (4,4) (4,5) batt (5,4) (5,5) home
-    expect(res.ok).toBe(true);
-    for (const [rr, cc] of [[4, 4], [4, 5], [5, 4], [5, 5]]) expect(isSheltered(s, rr, cc)).toBe(true);
-    for (const [rr, cc] of [[3, 4], [4, 3], [5, 6], [6, 5], [6, 6]]) expect(isSheltered(s, rr, cc)).toBe(false);
-    expect(s.soil).toBe(96);
-  });
-
-  it('never covers a solar panel or the pad', () => {
-    const { run: r } = lab();
-    const s = r.state;
-    expect(canPlace(s, 'shelter', 4, 5)).toEqual({ ok: false, reason: 'cannot_cover' }); // (5,6) sun
-    expect(canPlace(s, 'shelter', 5, 4)).toEqual({ ok: false, reason: 'cannot_cover' }); // (6,5) sun
-    expect(canPlace(s, 'shelter', 6, 6)).toEqual({ ok: false, reason: 'cannot_cover' }); // pad
-  });
-
-  it('may not overlap another shelter', () => {
-    const { run: r } = lab();
-    const s = r.state;
-    expect(place(s, 'shelter', 4, 4).ok).toBe(true);
-    expect(canPlace(s, 'shelter', 3, 3)).toEqual({ ok: false, reason: 'shelter_overlap' });
-    expect(canPlace(s, 'shelter', 3, 4)).toEqual({ ok: false, reason: 'shelter_overlap' });
-    expect(canPlace(s, 'shelter', 2, 4)).toEqual({ ok: false, reason: 'not_revealed' });
-    expect(canPlace(s, 'shelter', 3, 6).ok).toBe(true); // beside it, no overlap
-  });
-
-  it('needs one of its tiles to hold or touch a building', () => {
-    const { run: r } = lab();
-    const s = r.state;
-    expect(canPlace(s, 'shelter', 7, 3)).toEqual({ ok: false, reason: 'not_adjacent' });
-    expect(canPlace(s, 'shelter', 6, 3).ok).toBe(true); // (6,4) touches the panel at (6,5)
-    expect(canPlace(s, 'shelter', 8, 8)).toEqual({ ok: false, reason: 'not_revealed' });
-  });
-
-  it('buildings may go under an existing shelter later, except panels', () => {
-    const { run: r } = lab();
-    const s = r.state;
-    expect(place(s, 'shelter', 3, 4).ok).toBe(true); // (3,4) (3,5) (4,4) (4,5) batt
-    expect(canPlace(s, 'o2', 4, 4).ok).toBe(true);
-    expect(canPlace(s, 'sun', 4, 4)).toEqual({ ok: false, reason: 'cannot_be_sheltered' });
-    expect(canPlace(s, 'sun', 3, 4)).toEqual({ ok: false, reason: 'cannot_be_sheltered' });
-  });
-
-  it('a shelter with a building under it cannot be removed; an empty one can', () => {
-    const { run: r } = lab();
-    const s = r.state;
-    const full = place(s, 'shelter', 4, 4);
-    const other = place(s, 'shelter', 6, 3); // (6,3) (6,4) (7,3) (7,4), empty, touches panel
-    expect(full.ok && other.ok).toBe(true);
-    if (full.ok) expect(removeShelter(s, full.id)).toEqual({ ok: false, reason: 'shelter_not_empty' });
-    if (other.ok) expect(removeShelter(s, other.id)).toEqual({ ok: true });
-    expect(isSheltered(s, 6, 3)).toBe(false);
-  });
-
-  it('a building under a shelter still counts for adjacency', () => {
-    const { run: r } = lab();
-    const s = r.state;
-    addShelter(s, 3, 3);
-    addBuilding(s, 'o2', 4, 4);
-    expect(canPlace(s, 'o2', 3, 4).ok).toBe(true); // next to the o2
-    expect(canPlace(s, 'o2', 3, 3).ok).toBe(false); // diagonal only
-  });
+describe('single tile shelter (user revision)',()=>{
+ it('covers only the selected tile for 1 soil',()=>{const s=lab().run.state;expect(place(s,'shelter',5,5).ok).toBe(true);expect(isSheltered(s,5,5)).toBe(true);expect(isSheltered(s,4,5)).toBe(false);expect(s.soil).toBe(99);});
+ it('cannot cover panels or the pad',()=>{const s=lab().run.state;for(const [r,c] of [[5,6],[6,5],[6,6]])expect(canPlace(s,'shelter',r,c)).toEqual({ok:false,reason:'cannot_cover'});});
+ it('rejects duplicate cover but allows an adjacent tile',()=>{const s=lab().run.state;place(s,'shelter',5,5);expect(canPlace(s,'shelter',5,5)).toEqual({ok:false,reason:'shelter_overlap'});expect(place(s,'shelter',4,5).ok).toBe(true);});
+ it('needs a building or an adjoining shelter',()=>{const s=lab().run.state;expect(canPlace(s,'shelter',8,8)).toEqual({ok:false,reason:'not_adjacent'});expect(place(s,'shelter',5,4).ok).toBe(true);});
+ it('can be removed without removing the occupant',()=>{const s=lab().run.state;const shield=place(s,'shelter',5,5);expect(shield.ok).toBe(true);if(shield.ok)expect(removeShelter(s,shield.id)).toEqual({ok:true});expect(isSheltered(s,5,5)).toBe(false);expect(s.buildings.some(b=>b.type==='home')).toBe(true);});
+ it('retains legacy 2x2 coverage during migration',()=>{const s=lab().run.state;addShelter(s,4,4);expect(isSheltered(s,5,5)).toBe(true);expect(isSheltered(s,4,4)).toBe(true);});
 });

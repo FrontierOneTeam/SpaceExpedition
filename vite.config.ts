@@ -8,11 +8,6 @@ import { filesToRemove, type AudioEntry } from './tools/approved-audio.ts';
 
 const BASE = '/';
 
-function approvedNames(): string[] {
-  const entries = JSON.parse(readFileSync('src/data/audio.json', 'utf8')) as AudioEntry[];
-  return entries.filter((e) => e.approved).map((e) => e.name);
-}
-
 function pngsUnder(dir: string): string[] {
   if (!existsSync(dir)) return [];
   return readdirSync(dir).flatMap((name) => {
@@ -61,8 +56,6 @@ function finishDist(): Plugin {
   };
 }
 
-const approved = approvedNames();
-
 export default defineConfig({
   base: BASE,
   plugins: [
@@ -92,17 +85,20 @@ export default defineConfig({
         ],
       },
       workbox: {
-        // The app, the art, the bundled fonts (woff2 only) and the approved sounds. Nothing else.
-        globPatterns: [
-          '**/*.{js,css,html}',
-          'assets/**/*.woff2',
-          'assets/art/*.png',
-          ...(approved.length > 0 ? [`assets/audio/{${approved.join(',')}}.{ogg,mp3}`] : []),
-        ],
+        // The app, the art and the bundled fonts (woff2 only). Sounds are not precached: a visitor
+        // downloads only the format their browser plays, cached at runtime below.
+        globPatterns: ['**/*.{js,css,html}', 'assets/**/*.woff2', 'assets/art/*.png'],
         globIgnores: ['**/node_modules/**', 'assets/art/sprite_layouts.txt'],
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
-        // Same-origin files only: no runtime caching rules, no requests to any other origin.
-        runtimeCaching: [],
+        // Same-origin files only, no requests to any other origin. A sound a player has loaded is
+        // kept (cache first), so it also works offline.
+        runtimeCaching: [
+          {
+            urlPattern: ({ url, sameOrigin }) => sameOrigin && url.pathname.startsWith(`${BASE}assets/audio/`) && /.(ogg|mp3)$/.test(url.pathname),
+            handler: 'CacheFirst',
+            options: { cacheName: 'outpost-audio', cacheableResponse: { statuses: [200] } },
+          },
+        ],
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,

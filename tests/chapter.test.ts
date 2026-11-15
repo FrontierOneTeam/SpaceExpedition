@@ -107,6 +107,27 @@ describe('chapter sep2017', () => {
     expect(chapter).toEqual(buildChapter(read(SOURCE)));
   });
 
+  it('carries each day\'s flare count and strongest record from the raw file (SPEC 16.4.5)', () => {
+    const source: Flare[] = read(SOURCE);
+    for (const day of chapter.days) {
+      const onDay = source.filter((f) => f.peakTime.slice(0, 10) === day.date);
+      expect(day.flareCount, day.date).toBe(onDay.length);
+      if (onDay.length === 0) {
+        expect(day.strongest, day.date).toBeUndefined();
+      } else {
+        const best = onDay.reduce((a, b) => (rank(b.classType) > rank(a.classType) ? b : a));
+        expect(day.strongest, day.date).toEqual({ peakTime: best.peakTime, classType: best.classType });
+      }
+    }
+    expect(byDate('2017-09-03').flareCount).toBe(0);
+    expect(byDate('2017-09-03').strongest).toBeUndefined();
+    expect(byDate('2017-09-05').flareCount).toBe(5);
+    expect(byDate('2017-09-05').strongest.classType).toBe('M4.2');
+    expect(byDate('2017-09-06').strongest).toEqual({ peakTime: '2017-09-06T12:02Z', classType: 'X9.3' });
+    expect(byDate('2017-09-11').flareCount).toBe(1);
+    expect(byDate('2017-09-11').strongest.classType).toBe('B9.8');
+  });
+
   it('points only at known cards and is listed in the archive', () => {
     const cards: { id: string }[] = read('src/data/cards.json');
     const ids = new Set(cards.map((c) => c.id));

@@ -109,7 +109,7 @@ describe('chapter end and Keep building (SPEC 4.7, 9.6)', () => {
     const ch = testChapter([0, 0, 0], 'short');
     const b: ChapterBook = { archive: ['short'], chapters: { short: ch } };
     const r = newRun(1, b);
-    r.state.air = 6;
+    r.state.air = 2;
     endDays(r, b, 3);
     expect(r.state.lost).toEqual({ cause: 'air', sol: 3 });
     expect(r.pendingReport).toBe(false);
@@ -120,16 +120,16 @@ describe('chapter end and Keep building (SPEC 4.7, 9.6)', () => {
 });
 
 describe('idle check', () => {
-  it('a run with no building at all loses on air at the end of sol 6', () => {
+  it('a run with no building at all loses on air after two rescue turns on sol 8', () => {
     const r = newRun(1, book);
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 7; i++) {
       endDay(r, book);
       expect(r.state.lost).toBeNull();
     }
     const ev = endDay(r, book).events;
-    expect(r.state.lost).toEqual({ cause: 'air', sol: 6 });
-    expect(ev.at(-1)).toEqual({ type: 'lost', cause: 'air', sol: 6 });
-    expect(r.state.day).toBe(6);
+    expect(r.state.lost).toEqual({ cause: 'air', sol: 8 });
+    expect(ev.at(-1)).toEqual({ type: 'lost', cause: 'air', sol: 8 });
+    expect(r.state.day).toBe(8);
     const before = JSON.stringify(r);
     expect(endDay(r, book).ran).toBe(false);
     expect(JSON.stringify(r)).toBe(before);

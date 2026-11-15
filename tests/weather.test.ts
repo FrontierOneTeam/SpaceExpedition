@@ -143,6 +143,7 @@ describe('radiation (SPEC 4.8, 16.1)', () => {
   it('a broken pad blocks the supply rocket and that delivery is lost', () => {
     const { run, book, s } = stormLab(calmThen([0, 0, 0, 0, 0, 2], 12));
     s.buildings = s.buildings.filter((b) => b.type !== 'o2');
+    s.parts = 5; // well under the parts store limit
     for (let i = 0; i < 5; i++) endDay(run, book);
     const parts = s.parts;
     const ev = endDay(run, book).events;
@@ -157,6 +158,7 @@ describe('radiation (SPEC 4.8, 16.1)', () => {
   it('the rocket lands +3 parts on sol 6 and 12 when the pad works', () => {
     const { run, book, s } = stormLab([]);
     s.buildings = s.buildings.filter((b) => b.type !== 'o2'); // no goal rewards
+    s.parts = 5; // well under the parts store limit
     const parts = s.parts;
     for (let i = 0; i < 5; i++) endDay(run, book);
     expect(s.parts).toBe(parts);
@@ -185,13 +187,13 @@ describe('radiation (SPEC 4.8, 16.1)', () => {
   it('the storm event records sheltered and unsheltered buildings; damage names the panel', () => {
     let { run, book, s } = stormLab([3]);
     let ev = endDay(run, book).events;
-    expect(ev).toContainEqual({ type: 'storm', level: 3, sheltered: 1, unsheltered: 6, allHabitatsSheltered: false });
+    expect(ev).toContainEqual({ type: 'storm', level: 3, sheltered: 1, unsheltered: 6, allHabitatsSheltered: false, source: 'game-rule' });
     expect(ev).toContainEqual({ type: 'damaged', buildingId: 2, building: 'sun', days: 2, daysLeft: 2 });
     ({ run, book, s } = stormLab([3]));
     s.shelters = [];
     addShelter(s, 4, 4); // o2 at (4,4), battery, habitat
     ev = endDay(run, book).events;
-    expect(ev).toContainEqual({ type: 'storm', level: 3, sheltered: 3, unsheltered: 4, allHabitatsSheltered: true });
+    expect(ev).toContainEqual({ type: 'storm', level: 3, sheltered: 3, unsheltered: 4, allHabitatsSheltered: true, source: 'game-rule' });
   });
 
   it('real chapter, no shelter: health 10, 7, 5, 4, 5, 6 over chapter days 10 to 14; the sol 12 rocket is blocked', () => {

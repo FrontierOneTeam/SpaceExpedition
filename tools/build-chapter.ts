@@ -22,8 +22,14 @@ export interface ChapterDay {
   date: string;
   sunlight: number;
   radiation: number;
+  /** Who says there is a storm: a NASA report, or the fixed game rule. Absent on calm days. */
+  stormSource?: 'nasa-report' | 'game-rule';
   flare: 'none' | 'strong' | 'major';
   flares: ChapterFlare[];
+  /** How many records in the raw DONKI response have their peakTime on this UTC date (SPEC 16.4.5). */
+  flareCount: number;
+  /** The strongest of those records. Absent when there is none. */
+  strongest?: ChapterFlare;
   cardId?: string;
   notes?: string;
 }
@@ -52,7 +58,7 @@ export interface ChapterDef {
   simplified: string[];
 }
 
-const NO_RECORD_NOTE = 'The fetched DONKI response holds no flare record for this date.';
+export const NO_RECORD_NOTE = 'The fetched DONKI response holds no flare record for this date.';
 const SIMPLIFIED = [
   'Storm levels 1 to 3 are game levels, not measurements.',
   'What breaks and how much health is lost are part of the game.',
@@ -109,20 +115,38 @@ export const CHAPTERS: ChapterDef[] = [
   },
 ];
 
-function addDays(date: string, n: number): string {
+export function addDays(date: string, n: number): string {
   const d = new Date(`${date}T00:00:00Z`);
   d.setUTCDate(d.getUTCDate() + n);
   return d.toISOString().slice(0, 10);
 }
 
-function isX(classType: string): boolean {
+export function isX(classType: string): boolean {
   return classType.startsWith('X');
 }
 
 // M5.0 or above: every X flare, and M flares with a number of 5.0 or more.
-function isStrong(classType: string): boolean {
+export function isStrong(classType: string): boolean {
   if (isX(classType)) return true;
   return classType.startsWith('M') && Number(classType.slice(1)) >= 5;
+}
+
+const CLASS_ORDER = 'ABCMX';
+
+/** Sort key for a flare class: X above M above C above B above A, then by the number. */
+export function classRank(classType: string): number {
+  const letter = CLASS_ORDER.indexOf(classType.charAt(0));
+  const n = Number(classType.slice(1));
+  return letter * 1000 + (Number.isFinite(n) ? n : 0);
+}
+
+/** The strongest record of a list; the earliest peak wins a tie. Null for an empty list. */
+export function strongestFlare(flares: RawFlare[]): ChapterFlare | null {
+  let best: RawFlare | null = null;
+  for (const f of flares) {
+    if (!best || classRank(f.classType) > classRank(best.classType) || (classRank(f.classType) === classRank(best.classType) && f.peakTime < best.peakTime)) best = f;
+  }
+  return best ? { peakTime: best.peakTime, classType: best.classType } : null;
 }
 
 export function buildChapter(rawFlares: RawFlare[], def: ChapterDef = CHAPTERS[0]): Chapter {
@@ -141,7 +165,11 @@ export function buildChapter(rawFlares: RawFlare[], def: ChapterDef = CHAPTERS[0
       radiation: def.radiation[date] ?? 0,
       flare,
       flares,
+      flareCount: onDay.length,
     };
+    const strongest = strongestFlare(onDay);
+    if (strongest) day.strongest = strongest;
+    if (day.radiation > 0) day.stormSource = 'nasa-report';
     if (def.cardIds[date]) day.cardId = def.cardIds[date];
     if (def.notes[date]) day.notes = def.notes[date];
     else if (onDay.length === 0) day.notes = NO_RECORD_NOTE;

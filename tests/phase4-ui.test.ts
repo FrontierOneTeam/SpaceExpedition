@@ -6,7 +6,7 @@ import { SAVE_KEY, loadSave, type SaveStorage } from '../src/save/save.ts';
 import { App } from '../src/ui/app.ts';
 import type { CreateMap, MapModel, MapView } from '../src/ui/mapView.ts';
 import { baseFacts, baseLines } from '../src/ui/report.ts';
-import { SoundBoard, type SoundBackend } from '../src/ui/sound.ts';
+import { SoundBoard, allApprovedSounds, nowPlaying, type SoundBackend } from '../src/ui/sound.ts';
 import type { DayLog } from '../src/sim/types.ts';
 import { book } from './helpers.ts';
 
@@ -52,6 +52,9 @@ function setup(storage: SaveStorage = memory(), sound?: SoundBoard) {
 
 const tick = () => new Promise((r) => setTimeout(r, 0));
 
+/** The nine Factorio-derived sounds (SPEC 11.3, 16.1): never requested. */
+const NEVER = ['amb_moon_base', 'ui_open_panel', 'bld_power_up', 'bld_repaired', 'evt_storm_warning', 'evt_rocket_land', 'evt_survey_expand', 'prd_question', 'astro_dance'];
+
 async function play(s: ReturnType<typeof setup>) {
   s.app.start();
   s.click('[data-action="home-start"]');
@@ -78,6 +81,7 @@ describe('phase 3 leftovers (Part A)', () => {
     const st = s.app.current!.state;
     st.air = 1;
     st.crew = 4;
+    st.criticalDays=2;
     s.click('[data-action="end-day"]');
     expect(st.lost).not.toBeNull();
     expect(s.root.querySelector('.meter--air .meter__line')).toBeNull();
@@ -94,16 +98,14 @@ describe('phase 3 leftovers (Part A)', () => {
       run.state.air = 30;
       run.state.food = 30;
       s.click('[data-action="end-day"]');
+      s.root.querySelector<HTMLElement>('[data-action="msg-next"]')?.click();
     }
     const playEl = s.root.querySelector('.play')!;
     expect(s.root.querySelector('.realcard')).not.toBeNull();
-    expect(playEl.classList.contains('has-card')).toBe(true);
-    if (s.root.querySelector('.notice--notes')) expect(playEl.classList.contains('has-notes')).toBe(true);
-    s.click('[data-action="close-card"]');
-    expect(playEl.classList.contains('has-card')).toBe(false);
-    // A tapped building's card hides the "This was real" card on phones; the class says so.
-    const css = (await import('node:fs')).readFileSync('src/ui/styles.css', 'utf8');
-    expect(css).toMatch(/\.has-card \.notice--notes,\s*\.has-bcard \.map-top__card\s*\{\s*display: none;/);
+    expect(s.root.querySelectorAll('.msg__item')).toHaveLength(1);
+    s.click('[data-action="msg-next"]');
+    expect(s.root.querySelector('.realcard')).toBeNull();
+    expect(run.chapterDay).toBe(6);
   });
 
   it('a storm on a building that was already broken keeps it broken longer', () => {
@@ -164,8 +166,15 @@ describe('phase 4 in the interface', () => {
     expect(s.played).toEqual([]);
     s.click('[data-action="home-start"]');
     await tick();
-    expect(s.played).toContain('amb_mars_wind');
-    expect(s.played.every((n) => ['amb_mars_wind', 'mc_radio_open', 'mc_radio_close'].includes(n))).toBe(true);
+    expect(s.played).toContain('amb_mars_wind_real');
+    const approved = new Set(allApprovedSounds());
+    expect(s.played.every((n) => approved.has(n)), s.played.join(',')).toBe(true);
+    for (const banned of NEVER) expect(s.played).not.toContain(banned);
+  });
+
+  it('never lists a Factorio-derived sound as approved', () => {
+    const approved = allApprovedSounds();
+    for (const banned of NEVER) expect(approved).not.toContain(banned);
   });
 
   it('without a tap nothing plays, even with the map open', async () => {
@@ -179,11 +188,18 @@ describe('phase 4 in the interface', () => {
     expect(s.played).toEqual([]);
   });
 
-  it('never shows the real-recording line today', async () => {
+  it('shows the real-recording line while the real wind plays, and for no other sound', async () => {
     const s = setup();
     await play(s);
     s.click('[data-action="open-sources"]');
-    expect(s.root.querySelector('.nowplaying')).toBeNull();
-    expect(s.root.textContent).not.toContain('Now playing');
+    const line = s.root.querySelector('.nowplaying');
+    expect(line).not.toBeNull();
+    expect(line!.textContent).toContain('Now playing');
+    expect(line!.querySelector('a')?.getAttribute('rel')).toBe('noopener noreferrer');
+    // Only the real wind has a real-recording line.
+    for (const name of allApprovedSounds()) {
+      if (name === 'amb_mars_wind_real') expect(nowPlaying(name)).not.toBeNull();
+      else expect(nowPlaying(name), name).toBeNull();
+    }
   });
 });

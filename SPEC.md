@@ -825,6 +825,16 @@ These settle rules above that were unclear or contradicted each other. Where thi
 | 11.3 | Every sound is `approved: false` until the team confirms it in phase 4. |
 | 14 | Phase 1 holds the predict rules, the Keep building rules, `cards.json` and `register.json`. The glossary arrives with its screen in phase 3. |
 
+### 16.4 Team decisions after the first phone playtest (15 November 2026)
+
+1. **Phone layout (10.1, 10.3).** On narrow screens nothing sits on top of the map except map badges and the zoom buttons. The goal, the messages and the build bar are stacked rows around the map. Only one message shows at a time. This replaces the overlay layout in 10.3 for narrow screens.
+2. **What to do next and how to build (1.2, 7.1).** The game always says the next action in plain words and marks the control to use. While a building is picked, a line says "Tap a glowing tile" and the valid tiles glow clearly.
+3. **What changed after a day (4.7).** After End the day, a short day summary lists what happened, one line each, before the morning messages.
+4. **The real records are the focus (1.2, 8.1, 9.4).** Every day shows that date's real NASA record in its own labelled strip, with the source one tap away. A timeline of the chapter's days fills in with the real records as the days pass. Days that have not happened yet stay hidden, except tomorrow's forecast (4.9). This changes "one NASA fact on screen at a time" in 1.2: the daily strip is always there, and a "This was real" card may open over it.
+5. **Flare records for every day (9.3).** Each chapter day also carries how many flares the fetched DONKI response holds for that date and the strongest one, so the daily strip can show real data on days with no flare of M5.0 or above.
+6. **Sounds (11.3).** Every sound except the nine Factorio-derived ones is `approved: true`, the two music tracks included. The team takes responsibility for where they came from. Playback skips the silent starts measured in 11.3.
+7. **Real Mars wind (9.5, 11.3).** The game's Mars wind is NASA's recording from the Perseverance rover, downloaded from NASA's own page, with `realRecording: true`, its exact clip link and NASA's credit line. The delivered wind file stays on disk and is not played.
+
 ### 16.3 Decided while the team was away (15 November 2026), for the team to confirm
 
 Each line is a reading the build needed while no one could be asked. Change any of them freely.
@@ -848,3 +858,33 @@ Each line is a reading the build needed while no one could be asked. Change any 
 | 11.3 | Three sounds are `approved: true`: `amb_mars_wind`, `mc_radio_open`, `mc_radio_close`, all with `realRecording: false`. Every other sound stays `approved: false` and silent until the team confirms where it came from. | 11.3 shows `amb_mars_wind` as approved and calls the two radio sounds "usable as sounds". Nothing in the spec approves the rest. |
 | 13.3 | A site has only 8 ice tiles. That caps water, and so crew, from about the fourth play of the chapter. | Found by the balance bot. No number was changed. |
 | 13.3 | No balance number was changed. The sensible bot completes about 16 goals in the first chapter, so the map reaches 12×12 early. | No target covers pace. A playtest with a child should judge it. |
+
+## 17. User-authorized takeover (15 November 2026)
+The user authorized execution of docs/takeover/PLAN.md. These decisions override earlier conflicting rules: ages 10-12; critical shortages give warnings and a short rescue window; buildings refund half original parts rounded down; soil shelters cover one tile at 2 soil and can be removed; buildings can move preserving crew and damage; land and diverse objectives keep expanding; archive exceeds 1000 distinct dates; emergency aid/manual repairs, in-game restart and save export/import. See HANDOFF.md for verified status. No push or deploy until explicit approval.
+
+## 18. Review of the takeover work (15 November 2026)
+
+These rules come from the review of the work in section 17 and from the user's requests the same day. Where they differ from an earlier section, this section wins.
+
+### 18.1 Archive months tell the truth about NASA's records
+
+1. Every archive chapter file is the exact output of one committed script applied to the committed raw DONKI files. No hand edits. A test proves it.
+2. `flare` follows the rule in 9.3 on every day of every chapter: `major` for an X-class flare, `strong` for M5.0 or above, otherwise `none`. A day whose strongest flare is class B, C or below M5.0 is never `strong`.
+3. NASA's flare list does not say what happened at Mars. So a storm in an archive month is a **game storm**, made by one fixed rule and always labelled as part of the game:
+   - Look at the strongest flare on the day before (by `peakTime`, UTC).
+   - X5.0 or above gives game storm level 3. X1.0 to X4.9 gives level 2. M5.0 to M9.9 gives level 1. Anything else gives level 0.
+   - The first day of a month uses the last day of the month before, when that raw file is committed.
+4. A storm with real Mars evidence keeps its real source and wins over the game rule. Today that is 11 to 13 September 2017 and 20 May 2024.
+5. Each day says which it is in `stormSource`: `nasa-report` or `game-rule`. The interface shows a game storm as a game storm. A "This was real" card, the report's "What NASA observed" column and the Real box never present a game storm as something NASA observed at Mars.
+6. The order of the months in `archive.json` is chosen so that the player does not sit through long stretches with no flare of M5.0 or above and no storm. Chapter one stays September 2017.
+
+### 18.2 Progress has to mean something
+
+1. Stocks cannot pile up without limit, and pressing End the day again and again must not be a way to win.
+2. Goals are chosen from the state of the base and the coming weather, not from a fixed cycle. A goal is always reachable, the same kind of goal does not come twice in a row, and finishing goals is what opens new land.
+3. The outpost has named stages the player can see and work toward.
+
+### 18.3 Words and sound
+
+1. All text is for ages 7 to 12: short sentences, common words, one idea at a time. This wins over "ages 10-12" in section 17 for the wording. Every control says what it does.
+2. Music plays while building and on the report, after the first tap, unless the player turns it off.
