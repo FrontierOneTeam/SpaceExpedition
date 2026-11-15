@@ -36,11 +36,21 @@ export function sourcesBodyHtml(): string {
     ${group(t('sources.additional'), additional)}`;
 }
 
+/**
+ * "Now playing" (SPEC 9.4, 11.3): shown only for a checked real recording with its exact clip link.
+ * `playing` comes from nowPlaying() in sound.ts, which returns null for every sound today.
+ */
+export function nowPlayingHtml(playing: { text: string; url: string } | null): string {
+  if (!playing) return '';
+  return `<p class="nowplaying">${esc(playing.text)} <a class="extlink" href="${esc(playing.url)}" target="_blank" rel="noopener noreferrer">${esc(t('sound.clip'))}<span class="sr-only"> ${esc(t('link.newTab'))}</span></a></p>`;
+}
+
 /** The sources screen over the play screen. */
-export function sourcesModalHtml(): string {
+export function sourcesModalHtml(playing: { text: string; url: string } | null = null): string {
   return `<div class="modal">
     <div class="modal__panel modal__panel--wide" role="dialog" aria-modal="true" aria-labelledby="sources-title">
       <h2 id="sources-title" class="modal__title">${esc(t('sources.title'))}</h2>
+      ${nowPlayingHtml(playing)}
       ${sourcesBodyHtml()}
       <div class="modal__buttons"><button type="button" class="button" data-action="close-overlay">${esc(t('nav.back'))}</button></div>
     </div>
@@ -63,7 +73,17 @@ export function reportsListHtml(entries: { entry: ReportEntry; chapter: Chapter 
   return `<ul class="reportlist">${items}</ul>`;
 }
 
-export function settingsBodyHtml(hasOutpost: boolean, confirm: boolean, cleared: boolean): string {
+/** Settings (SPEC 6.1): sound, then start over. */
+export function settingsBodyHtml(hasOutpost: boolean, confirm: boolean, cleared: boolean, muted = false): string {
+  const sound = `<section class="settings__sound">
+      <h2 class="section__title">${esc(t('sound.title'))}</h2>
+      <p role="status">${esc(t(muted ? 'sound.isOff' : 'sound.isOn'))}</p>
+      <div class="modal__buttons"><button type="button" class="button button--quiet" data-action="toggle-mute" aria-pressed="${muted}">${esc(t(muted ? 'sound.turnOn' : 'sound.turnOff'))}</button></div>
+    </section>`;
+  return sound + startOverHtml(hasOutpost, confirm, cleared);
+}
+
+function startOverHtml(hasOutpost: boolean, confirm: boolean, cleared: boolean): string {
   if (cleared) return `<p role="status">${esc(t('settings.cleared'))}</p>`;
   if (!hasOutpost) return `<p>${esc(t('settings.none'))}</p>`;
   if (confirm) {

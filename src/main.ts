@@ -1,7 +1,8 @@
-import '@fontsource/chakra-petch/700.css';
-import '@fontsource/atkinson-hyperlegible/400.css';
-import '@fontsource/atkinson-hyperlegible/700.css';
+import '@fontsource/chakra-petch/latin-700.css';
+import '@fontsource/atkinson-hyperlegible/latin-400.css';
+import '@fontsource/atkinson-hyperlegible/latin-700.css';
 import './ui/styles.css';
+import { registerSW } from 'virtual:pwa-register';
 import { App } from './ui/app';
 import { loadBook, randomSite } from './ui/book';
 import { browserStorage } from './save/save';
@@ -23,3 +24,7 @@ const app = new App(document.getElementById('app') as HTMLElement, {
 });
 
 app.start();
+
+// Offline play after the first visit (SPEC 2). When a new version has been installed, reload only
+// when it cannot interrupt play: at once on Home and other pages, otherwise when the player leaves the map.
+registerSW({ immediate: true, onNeedReload: () => app.whenSafe(() => window.location.reload()) });

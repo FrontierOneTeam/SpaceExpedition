@@ -278,3 +278,45 @@ export const CAMERA = {
   /** The "Survey expanded" moment: camera eases out and new tiles fade in over this time. */
   surveyMs: 1200,
 } as const;
+
+// ---- Life (phase 4, SPEC 11.2, 11.3). Render and sound only, never read by the rules. ----
+
+export const AUDIO = {
+  /** Volume groups (SPEC 11.3). */
+  volume: { ambience: 0.5, effects: 1, music: 0.6 },
+  /** Ambience and music drop to this share of their volume while a Mission Control sound plays. */
+  duckShare: 0.35,
+  /** At most this many event sounds play together at the end of a day. */
+  maxDaySounds: 2,
+  /** A storm that hits at this radiation level or above plays the storm-hit sound. */
+  stormHitLevel: 2,
+} as const;
+
+export const ASTRONAUT = {
+  /** One astronaut per crew member, up to this many (SPEC 11.2). */
+  max: 8,
+  /** Sheet cells (SPEC 11.1): 8 columns of 96 x 128. */
+  frameWidth: 96,
+  frameHeight: 128,
+  columns: 8,
+  /** Rows of the sheet, top to bottom, with their frame counts and speeds. */
+  anims: {
+    idle: { row: 0, frames: 2, fps: 2 },
+    walk: { row: 1, frames: 6, fps: 10 },
+    dance: { row: 2, frames: 8, fps: 10 },
+    shiver: { row: 3, frames: 2, fps: 8 },
+    run: { row: 4, frames: 6, fps: 14 },
+  },
+  /** Walking and running speed, in tiles per second. */
+  walkSpeed: 1.1,
+  runSpeed: 2.8,
+  /** Idle pause between walks, in milliseconds (SPEC 11.2: 2 to 5 seconds). */
+  pauseMinMs: 2000,
+  pauseMaxMs: 5000,
+  /** Everyone dances this long when a goal or chapter is completed. */
+  celebrateMs: 3000,
+  /** Tomorrow's radiation at or above this sends everyone to the nearest habitat. */
+  shelterRadiation: 2,
+  /** Feet sit this far below the tile centre, in world units, so they stand on the ground. */
+  footOffset: 6,
+} as const;

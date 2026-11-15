@@ -23,8 +23,13 @@ export interface BaseFacts {
   storm: number;
   /** When a storm hit: was every habitat under a shelter. Null on a day with no storm. */
   habitatSheltered: boolean | null;
-  /** Buildings the storm broke that day. */
+  /** Buildings the storm broke that day (they were working before it hit). */
   broken: BuildingType[];
+  /**
+   * Buildings that were already broken when the storm hit, so it only kept them broken longer
+   * (SPEC 16.1). Missing in reports stored before phase 4.
+   */
+  keptBroken?: BuildingType[];
   damagedPanels: number;
   /** Crew health lost that day, from any cause. */
   healthLost: number;
@@ -69,12 +74,16 @@ function chapterLogs(run: Run): DayLog[] {
 }
 
 export function baseFacts(log: DayLog): BaseFacts {
-  const facts: BaseFacts = { storm: 0, habitatSheltered: null, broken: [], damagedPanels: 0, healthLost: 0, goals: 0, prediction: null };
+  const facts: BaseFacts = { storm: 0, habitatSheltered: null, broken: [], keptBroken: [], damagedPanels: 0, healthLost: 0, goals: 0, prediction: null };
   for (const e of log.events) {
     if (e.type === 'storm') {
       facts.storm = e.level;
       facts.habitatSheltered = e.allHabitatsSheltered;
-    } else if (e.type === 'broken') facts.broken.push(e.building);
+    } else if (e.type === 'broken') {
+      // More days left than this storm added: it was still broken from an earlier hit.
+      if (e.daysLeft > e.days) facts.keptBroken!.push(e.building);
+      else facts.broken.push(e.building);
+    }
     else if (e.type === 'damaged') facts.damagedPanels++;
     else if (e.type === 'health' && e.amount < 0) facts.healthLost -= e.amount;
     else if (e.type === 'goal_done') facts.goals++;
@@ -207,7 +216,10 @@ export function baseLines(f: BaseFacts): string[] {
   if (f.storm > 0) {
     lines.push(t(STORM_LINE[f.storm]));
     if (f.habitatSheltered !== null) lines.push(t(f.habitatSheltered ? 'base.habitatSheltered' : 'base.habitatOpen'));
-    lines.push(f.broken.length > 0 ? t('base.broke', { names: names(f.broken) }) : t('base.nothingBroke'));
+    const kept = Array.isArray(f.keptBroken) ? f.keptBroken : [];
+    if (f.broken.length > 0) lines.push(t('base.broke', { names: names(f.broken) }));
+    if (kept.length > 0) lines.push(t('base.keptBroken', { names: names(kept) }));
+    if (f.broken.length === 0 && kept.length === 0) lines.push(t('base.nothingBroke'));
     if (f.damagedPanels > 0) lines.push(f.damagedPanels === 1 ? t('base.panelOne') : t('base.panelMany', { n: f.damagedPanels }));
   } else {
     lines.push(t('base.noStorm'));

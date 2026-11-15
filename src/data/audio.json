@@ -169,7 +169,7 @@
   },
   {
     "name": "mc_radio_open",
-    "approved": false,
+    "approved": true,
     "realRecording": false,
     "source": "",
     "sourceUrl": "",
@@ -177,7 +177,7 @@
   },
   {
     "name": "mc_radio_close",
-    "approved": false,
+    "approved": true,
     "realRecording": false,
     "source": "",
     "sourceUrl": "",
@@ -217,7 +217,7 @@
   },
   {
     "name": "amb_mars_wind",
-    "approved": false,
+    "approved": true,
     "realRecording": false,
     "source": "",
     "sourceUrl": "",

@@ -312,6 +312,7 @@
   "base.habitatSheltered": "Your habitat was under a shelter.",
   "base.habitatOpen": "Your habitat was not under a shelter.",
   "base.broke": "The storm broke your {names}.",
+  "base.keptBroken": "The storm kept your {names} broken for longer.",
   "base.nothingBroke": "Nothing broke.",
   "base.panelOne": "1 solar panel got weaker.",
   "base.panelMany": "{n} solar panels got weaker.",
@@ -347,5 +348,14 @@
   "settings.ask": "Start over? Your outpost will be gone. Your past reports stay.",
   "settings.yes": "Yes, start over",
   "settings.none": "There is no outpost saved right now.",
-  "settings.cleared": "Your outpost was cleared. Start a new one from Home."
+  "settings.cleared": "Your outpost was cleared. Start a new one from Home.",
+
+  "sound.title": "Sound",
+  "sound.mute": "Sound off",
+  "sound.isOn": "Sound is on.",
+  "sound.isOff": "Sound is off.",
+  "sound.turnOff": "Turn sound off",
+  "sound.turnOn": "Turn sound on",
+  "sound.nowPlayingWind": "Now playing: Mars wind, recorded by the Perseverance rover.",
+  "sound.clip": "The recording"
 }

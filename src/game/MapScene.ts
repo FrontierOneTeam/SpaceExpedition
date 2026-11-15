@@ -1,10 +1,13 @@
 // The isometric site (SPEC 5.1, 5.2, 5.3, 11.1). Draws only; the rules live in src/sim.
 // Badges and labels (draw order step 4) are HTML laid over the canvas by the interface.
+// Astronauts (SPEC 11.2) are decoration: they read the state and never change it.
 
 import Phaser from 'phaser';
 import { config, isRevealed, type Building, type GameState } from '../sim/index.ts';
 import { ART_FILE } from '../ui/info.ts';
 import type { MapCallbacks, MapInsets, MapModel } from '../ui/mapView.ts';
+import { approvedSounds } from '../ui/sound.ts';
+import { Crowd, astronautDepth, type AstroAnim } from './astronauts.ts';
 import {
   clampCamera,
   easeCamera,
@@ -20,14 +23,21 @@ import {
   type Cam,
   type Viewport,
 } from './camera.ts';
+import { soundUrls } from './phaserSound.ts';
 
-const { RENDER, SITE_SIZE, SHELTER_ALPHA, CAMERA } = config;
+const { RENDER, SITE_SIZE, SHELTER_ALPHA, CAMERA, ASTRONAUT } = config;
 const ART = import.meta.env.BASE_URL + 'assets/art/';
 
 const HALF_W = RENDER.tileWidth / 2;
 const HALF_H = RENDER.tileHeight / 2;
 
 const TERRAIN_FILES = ['ground_mars_2', 'ice_tile', 'rock_tile', 'unsurveyed_tile', 'crater_small'];
+
+const ASTRO_KEY = 'astronaut_sheet';
+
+function animKey(anim: AstroAnim): string {
+  return `astro_${anim}`;
+}
 
 /** Depth bands for the draw order of SPEC 5.2. */
 const DEPTH = { terrain: 0, highlight: 2, things: 10 } as const;
@@ -65,6 +75,9 @@ export class MapScene extends Phaser.Scene {
   private pointers = new Map<number, { x: number; y: number }>();
   private gesture: Gesture | null = null;
   private pinchDist: number | null = null;
+  /** Astronaut wandering uses Math.random: decoration only, never the simulation's generator. */
+  private crowd = new Crowd(Math.random);
+  private astroSprites = new Map<number, Phaser.GameObjects.Sprite>();
 
   constructor(
     private readonly callbacks: MapCallbacks,
@@ -76,6 +89,35 @@ export class MapScene extends Phaser.Scene {
   preload(): void {
     for (const f of TERRAIN_FILES) this.load.image(f, ART + f + '.png');
     for (const f of Object.values(ART_FILE)) this.load.image(f, ART + f + '.png');
+    this.load.spritesheet(ASTRO_KEY, ART + 'astronaut_sheet.png', { frameWidth: ASTRONAUT.frameWidth, frameHeight: ASTRONAUT.frameHeight });
+  }
+
+  /** The five rows of the astronaut sheet as animations. */
+  private makeAnims(): void {
+    if (!this.textures.exists(ASTRO_KEY)) return;
+    for (const [name, a] of Object.entries(ASTRONAUT.anims)) {
+      const key = animKey(name as AstroAnim);
+      if (this.anims.exists(key)) continue;
+      const start = a.row * ASTRONAUT.columns;
+      this.anims.create({
+        key,
+        frames: this.anims.generateFrameNumbers(ASTRO_KEY, { start, end: start + a.frames - 1 }),
+        frameRate: a.fps,
+        repeat: -1,
+      });
+    }
+  }
+
+  /**
+   * Load the approved sounds in the background, after the map is shown. Only approved entries of
+   * audio.json are ever requested; a file that fails to load stays silent.
+   */
+  private loadSounds(): void {
+    const names = approvedSounds();
+    if (names.length === 0) return;
+    for (const name of names) this.load.audio(name, soundUrls(name));
+    this.load.on('filecomplete', () => this.callbacks.onSoundsLoaded?.());
+    this.load.start();
   }
 
   create(): void {
@@ -91,7 +133,9 @@ export class MapScene extends Phaser.Scene {
       this.cam = zoomAround(this.cam, Math.exp(-dy * CAMERA.wheelStep), p.x, p.y, this.bounds(), this.viewport());
       this.apply();
     });
+    this.makeAnims();
     this.onReady(this);
+    this.loadSounds();
   }
 
   // ---- Input: drag to pan, pinch or wheel to zoom, a short press is a tap ----
@@ -189,14 +233,28 @@ export class MapScene extends Phaser.Scene {
     this.children.removeAll(true);
     this.buildingSprites = [];
     this.fadeTiles = [];
+    this.astroSprites.clear();
     const state = model.state;
+    this.crowd.sync(state);
     this.drawTerrain(state);
     this.drawHighlights(model);
     this.drawThings(model);
+    this.drawAstronauts(model, 0);
     this.layout();
   }
 
-  update(time: number): void {
+  /** Every astronaut dances for a moment (SPEC 11.2). */
+  celebrate(): void {
+    this.crowd.celebrate(this.time.now);
+  }
+
+  update(time: number, delta: number): void {
+    if (this.model) this.drawAstronauts(this.model, Math.min(delta, 100));
+    this.surveyStep(time);
+  }
+
+  /** One frame of the "Survey expanded" moment. */
+  private surveyStep(time: number): void {
     const s = this.survey;
     if (!s || !this.model) return;
     const t = Math.min(1, (time - s.start) / CAMERA.surveyMs);
@@ -312,6 +370,57 @@ export class MapScene extends Phaser.Scene {
     }
   }
 
+  /** Move the crowd on and place one sprite per astronaut, depth-sorted with the buildings (SPEC 5.2). */
+  private drawAstronauts(model: MapModel, dt: number): void {
+    if (!this.textures.exists(ASTRO_KEY)) return;
+    const motion = !model.reducedMotion;
+    this.crowd.step(dt, this.time.now, model.state, model.astronauts, model.reducedMotion);
+    const alive = new Set<number>();
+    for (const a of this.crowd.agents) {
+      alive.add(a.id);
+      let sprite = this.astroSprites.get(a.id);
+      if (!sprite || !sprite.active) {
+        sprite = this.add.sprite(0, 0, ASTRO_KEY, 0).setOrigin(0.5, 1).setScale(RENDER.astronautScale);
+        sprite.setData('astronaut', a.id);
+        this.astroSprites.set(a.id, sprite);
+      }
+      const p = tileCentre(a.r, a.c);
+      sprite.setPosition(p.x, p.y + ASTRONAUT.footOffset);
+      sprite.setDepth(DEPTH.things + astronautDepth(a) + tieBreak(Math.round(a.r), Math.round(a.c)));
+      sprite.setFlipX(a.left);
+      const key = animKey(a.anim);
+      if (motion) {
+        if (sprite.anims.currentAnim?.key !== key || !sprite.anims.isPlaying) sprite.play(key);
+      } else {
+        // Reduced motion: a still pose, no walking or dancing animation.
+        if (sprite.anims.isPlaying) sprite.anims.stop();
+        const still = a.anim === 'shiver' ? ASTRONAUT.anims.shiver.row * ASTRONAUT.columns : 0;
+        if (Number(sprite.frame.name) !== still) sprite.setFrame(still);
+      }
+    }
+    for (const [id, sprite] of this.astroSprites) {
+      if (!alive.has(id)) {
+        sprite.destroy();
+        this.astroSprites.delete(id);
+      }
+    }
+  }
+
+  /** The astronaut whose picture is under a point, front first. */
+  private pickAstronaut(wx: number, wy: number): number | null {
+    const front = [...this.astroSprites.values()].sort((a, b) => b.depth - a.depth);
+    for (const sprite of front) {
+      const bounds = sprite.getBounds();
+      if (!bounds.contains(wx, wy)) continue;
+      let lx = Math.floor((wx - bounds.x) / sprite.scaleX);
+      const ly = Math.floor((wy - bounds.y) / sprite.scaleY);
+      if (sprite.flipX) lx = ASTRONAUT.frameWidth - 1 - lx;
+      const alpha = this.textures.getPixelAlpha(lx, ly, ASTRO_KEY, sprite.frame.name);
+      if (alpha !== undefined && alpha !== null && alpha > RENDER.pickAlpha) return sprite.getData('astronaut') as number;
+    }
+    return null;
+  }
+
   private viewport(): Viewport {
     return {
       width: this.scale.width,
@@ -333,7 +442,7 @@ export class MapScene extends Phaser.Scene {
   private layout(): void {
     if (!this.model) return;
     if (this.survey) {
-      this.update(this.time.now);
+      this.surveyStep(this.time.now);
       return;
     }
     const b = this.bounds();
@@ -377,6 +486,12 @@ export class MapScene extends Phaser.Scene {
     const w = this.toWorld(px, py);
     const placing = this.model ? this.model.highlight.length > 0 || this.model.outline !== null : false;
     if (!placing) {
+      const astronaut = this.pickAstronaut(w.x, w.y);
+      if (astronaut !== null) {
+        this.crowd.tap(astronaut);
+        this.callbacks.onAstronautTap?.();
+        return null;
+      }
       const front = this.buildingSprites.slice().sort((a, b) => b.sprite.depth - a.sprite.depth);
       for (const { sprite, building } of front) {
         const bounds = sprite.getBounds();

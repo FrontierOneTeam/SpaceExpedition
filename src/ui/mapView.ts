@@ -1,6 +1,7 @@
 // What the interface needs from the map. The Phaser scene implements it; tests use a fake.
 
 import type { GameState } from '../sim/index.ts';
+import type { SoundBackend } from './sound.ts';
 
 export interface MapModel {
   state: GameState;
@@ -13,6 +14,8 @@ export interface MapModel {
   /** Buildings that get no power today (from the day preview). */
   unpowered: number[];
   reducedMotion: boolean;
+  /** What the astronauts mirror (SPEC 11.2). Read from the run; the map never changes the state. */
+  astronauts: { tomorrowRadiation: number; coldHabitats: number[] };
 }
 
 export interface MapInsets {
@@ -26,6 +29,10 @@ export interface MapCallbacks {
   onTileTap(r: number, c: number): void;
   /** The camera moved or the view resized: badges must be placed again. */
   onLayout(): void;
+  /** An astronaut was tapped (it dances once). */
+  onAstronautTap?(): void;
+  /** More approved sounds finished loading. */
+  onSoundsLoaded?(): void;
 }
 
 export interface MapView {
@@ -37,6 +44,10 @@ export interface MapView {
   scale(): number;
   /** Zoom about the middle of the view (the + and − buttons). Above 1 zooms in. */
   zoomBy(factor: number): void;
+  /** Every astronaut dances for a moment (a goal or chapter was completed). */
+  celebrate?(): void;
+  /** The map's audio engine, once it exists. */
+  sound?: SoundBackend;
   destroy(): void;
 }
 

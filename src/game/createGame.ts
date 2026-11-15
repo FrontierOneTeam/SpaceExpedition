@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { config } from '../sim/index.ts';
 import type { MapCallbacks, MapView } from '../ui/mapView.ts';
 import { MapScene } from './MapScene.ts';
+import { phaserSoundBackend } from './phaserSound.ts';
 
 /**
  * Start Phaser inside the map container and resolve once the map scene is ready.
@@ -32,6 +33,8 @@ export function createMap(container: HTMLElement, callbacks: MapCallbacks): Prom
         },
         scale: () => ready.cssScale(),
         zoomBy: (factor) => ready.zoomBy(factor),
+        celebrate: () => ready.celebrate(),
+        sound: phaserSoundBackend(game),
         destroy: () => {
           observer?.disconnect();
           game.destroy(true);
@@ -54,7 +57,7 @@ export function createMap(container: HTMLElement, callbacks: MapCallbacks): Prom
       parent: container,
       backgroundColor: config.RENDER.backgroundColour,
       scale: { mode: Phaser.Scale.NONE, width: w * pr, height: h * pr, zoom: 1 / pr },
-      audio: { noAudio: true },
+      // Sound plays through Phaser (SPEC 2, 11.3); only approved files are ever loaded.
       banner: false,
       scene: [scene],
     });

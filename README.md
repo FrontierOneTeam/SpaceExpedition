@@ -36,6 +36,10 @@ Simplified:
 
 Claude Code wrote the code from the team's `SPEC.md`. The team reviews the code, tests the game, and supplies the art, audio and content.
 
+## Install it on a phone or tablet
+
+After the game has loaded once, it works without an internet connection. To put it on your home screen: in Chrome or Edge on Android, open the menu and choose **Install app** or **Add to Home screen**; on an iPhone or iPad, tap **Share** in Safari and choose **Add to Home Screen**; on a laptop, use the install icon in the address bar. When a new version is published, the game updates itself the next time it is opened, and never in the middle of play.
+
 ## Status
 
-Phase 0: skeleton. The Home screen and the Phaser boot screen work. The game rules and the NASA data files arrive in phase 1.
+Phase 4: life. Astronauts walk around the base and react to storms, cold habitats and finished goals. Sound plays only for the three sounds the team approved (Mars wind and the two radio clicks), with a mute button. The game installs to a home screen and plays offline after the first visit. Reduced-motion settings stop all animation. Phases 0 to 3 (rules, real NASA data, the playable outpost, the report) are done.

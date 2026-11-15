@@ -350,14 +350,13 @@ p {
   display: inline-flex;
 }
 
-.meter__body {
-  position: relative;
-}
-
-.meter .tag {
-  position: absolute;
-  top: 0;
-  right: -4px;
+/* The number and its warning mark share a row, so the mark never covers the number. */
+.meter__row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  min-width: 0;
 }
 
 .weather-compact .wx__body {
@@ -1076,6 +1075,19 @@ p {
   cursor: pointer;
 }
 
+.iconbtn.is-muted {
+  border-color: var(--amber);
+}
+
+.nowplaying {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.settings__sound {
+  margin-bottom: 24px;
+}
+
 .iconbtn:focus-visible,
 .zoom__btn:focus-visible,
 .gloss:focus-visible,
@@ -1559,9 +1571,6 @@ p {
     clip: auto;
   }
 
-  .meter .tag {
-    position: static;
-  }
 
   .meter__label {
     position: static;
@@ -1830,5 +1839,52 @@ p {
     height: 1px;
     overflow: hidden;
     clip: rect(0 0 0 0);
+  }
+}
+
+/* Phones: only one large panel sits over the map at a time (phase 4). While the "This was real"
+   card, the day notes or a building's card is open, the goal card shrinks to its one line, the
+   weather row steps aside (Mission Control still says what tomorrow brings), day notes wait for
+   the card to close, and a building's card hides the "This was real" card until it is closed. */
+@media (max-width: 899.98px) {
+  .has-card .weather-compact,
+  .has-notes .weather-compact,
+  .has-bcard .weather-compact,
+  .has-card .goal__top,
+  .has-card .goal__bar,
+  .has-card .goal__line,
+  .has-notes .goal__top,
+  .has-notes .goal__bar,
+  .has-notes .goal__line,
+  .has-bcard .goal__top,
+  .has-bcard .goal__bar,
+  .has-bcard .goal__line {
+    display: none;
+  }
+
+  .has-card .notice--notes,
+  .has-bcard .map-top__card {
+    display: none;
+  }
+
+  /* Leave part of the map free to see and tap. */
+  .realcard {
+    max-height: 38vh;
+  }
+
+  .notice {
+    max-height: 34vh;
+    overflow-y: auto;
+  }
+}
+
+/* Wide enough for everything: the number, its warning and the change line each stay on one line,
+   so the meters fit the 80 px top bar. (Between 900 and 1279 px the top bar is wider than the
+   screen; that predates phase 4 and needs a layout decision.) */
+@media (min-width: 1280px) {
+  .meter__row,
+  .meter__line {
+    flex-wrap: nowrap;
+    white-space: nowrap;
   }
 }

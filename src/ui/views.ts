@@ -50,6 +50,19 @@ const CALM_ICON =
   '<path d="M32 8v6M32 50v6M8 32h6M50 32h6M15 15l4 4M45 45l4 4M15 49l4-4M45 19l4-4"/></g></svg>';
 
 /** The sources button: a circled "i", as in the Mars mockup. */
+/** The sound button: a speaker with waves when on, crossed out when off (shape, not only colour). */
+const SPEAKER_ON =
+  '<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor"/>' +
+  '<path d="M15 9a4 4 0 0 1 0 6M17.5 6.5a7.5 7.5 0 0 1 0 11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+const SPEAKER_OFF =
+  '<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor"/>' +
+  '<path d="M15.5 9.5l5 5M20.5 9.5l-5 5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>';
+
+/** The mute button, in the top bar and in Settings (SPEC 10.2, 11.3). */
+export function muteButtonHtml(muted: boolean): string {
+  return `<button type="button" class="iconbtn${muted ? ' is-muted' : ''}" data-action="toggle-mute" aria-pressed="${muted}" aria-label="${esc(t('sound.mute'))}" title="${esc(t(muted ? 'sound.turnOn' : 'sound.turnOff'))}">${muted ? SPEAKER_OFF : SPEAKER_ON}</button>`;
+}
+
 const INFO_ICON =
   '<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/>' +
   '<path d="M12 10.5v6.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><circle cx="12" cy="7.2" r="1.5" fill="currentColor"/></svg>';
@@ -79,13 +92,14 @@ function levelTag(level: MeterLevel, warnKey: 'meter.low' | 'meter.short', dange
 }
 
 function meter(name: string, iconName: string, label: string, value: number, lineHtml: string, level: MeterLevel, tag: string): string {
+  // The number and its warning mark share one row, so the mark never covers the number.
+  const line = lineHtml ? `<span class="meter__line">${lineHtml}</span>` : '';
   return `<div class="meter meter--${name}${levelClass(level)}">
     ${icon(iconName, 'meter__icon')}
     <div class="meter__body">
       <span class="meter__label">${esc(label)}</span>
-      <span class="meter__num">${value}</span>
-      <span class="meter__line">${lineHtml}</span>
-      ${tag}
+      <span class="meter__row"><span class="meter__num">${value}</span>${tag}</span>
+      ${line}
     </div>
   </div>`;
 }
@@ -95,13 +109,15 @@ function changeHtml(change: number): string {
   return `${esc(changeLine(change))} <span class="meter__word">${esc(t('meter.tomorrow'))}</span>`;
 }
 
-export function topBarHtml(run: Run, chapter: Chapter, preview: DayPreview): string {
+export function topBarHtml(run: Run, chapter: Chapter, preview: DayPreview, muted = false): string {
   const state = run.state;
   const day = shownDay(run, chapter);
   const date = chapter.days[day.chapterDay - 1]?.date ?? chapter.startDate;
   const power = powerLevel(preview, state.charge);
   const air = airLevel(state, preview.change.air);
   const food = foodLevel(state, preview.change.food);
+  // After a lost run there is no tomorrow: no change line.
+  const ended = state.lost !== null;
   const marks = Array.from({ length: config.UI.healthMarks }, (_, i) => `<span class="mark${i < state.health ? ' is-on' : ''}"></span>`).join('');
   const replay = run.replay > 1 ? `<span class="date__replay">${esc(replayLine(chapter, run.replay))}</span>` : '';
   return `
@@ -113,6 +129,7 @@ export function topBarHtml(run: Run, chapter: Chapter, preview: DayPreview): str
     </div>
   </div>
   <div class="tools">
+    ${muteButtonHtml(muted)}
     <button type="button" class="iconbtn" data-action="open-sources" aria-label="${esc(t('top.sources'))}" title="${esc(t('top.sources'))}">${INFO_ICON}</button>
   </div>
   <div class="date">
@@ -123,8 +140,8 @@ export function topBarHtml(run: Run, chapter: Chapter, preview: DayPreview): str
   </div>
   <div class="meters">
     ${meter('power', 'icon_power', t('meter.power'), preview.power.supply, esc(t('meter.needs', { n: preview.power.demand })), power, levelTag(power, 'meter.short', 'meter.short'))}
-    ${meter('air', 'icon_air', t('meter.air'), state.air, changeHtml(preview.change.air), air, levelTag(air, 'meter.low', 'meter.veryLow'))}
-    ${meter('food', 'icon_food', t('meter.food'), state.food, changeHtml(preview.change.food), food, levelTag(food, 'meter.low', 'meter.veryLow'))}
+    ${meter('air', 'icon_air', t('meter.air'), state.air, ended ? '' : changeHtml(preview.change.air), air, levelTag(air, 'meter.low', 'meter.veryLow'))}
+    ${meter('food', 'icon_food', t('meter.food'), state.food, ended ? '' : changeHtml(preview.change.food), food, levelTag(food, 'meter.low', 'meter.veryLow'))}
   </div>
   <div class="health" role="img" aria-label="${esc(t('top.healthAria', { n: state.health, max: config.UI.healthMarks, crew: state.crew }))}">
     <span class="health__label">${esc(t('top.health', { crew: state.crew }))}</span>

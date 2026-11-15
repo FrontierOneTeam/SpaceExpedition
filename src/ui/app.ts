@@ -31,6 +31,7 @@ import {
   type Run,
   type SimEvent,
 } from '../sim/index.ts';
+import { astroWorld } from '../game/astronauts.ts';
 import { emptySave, loadSave, writeSave, type SaveFile, type SaveStorage } from '../save/save.ts';
 import { guidedHint, missionControlMessage, shelterHintTop, type Hint } from './advice.ts';
 import { cardDue, cardSources } from './content.ts';
@@ -50,6 +51,7 @@ import {
   sourcesBodyHtml,
   sourcesModalHtml,
 } from './screens.ts';
+import { MESSAGE_WRAP, SOUND, SoundBoard, ambienceFor, daySounds, nowPlaying } from './sound.ts';
 import { t, type StringKey } from './strings.ts';
 import {
   buildHtml,
@@ -75,6 +77,8 @@ export interface AppDeps {
   randomSite: () => number;
   now: () => number;
   reducedMotion: () => boolean;
+  /** Sound player; a silent one is made when left out. */
+  sound?: SoundBoard;
 }
 
 type Notice =
@@ -113,11 +117,26 @@ export class App {
   private pastIndex = -1;
   /** The open tap-to-explain bubble. */
   private glossOpen: { word: string; x: number; y: number; below: boolean } | null = null;
+  readonly sound: SoundBoard;
+  /** The Mission Control message and "This was real" card last announced with a sound. */
+  private lastMc: string | null = null;
+  private lastCard: string | null = null;
+  /** Buildings without power at the last render, for the power up and down sounds. Null: just record. */
+  private lastUnpowered: Set<number> | null = null;
+  /** False while the chapter-complete sound plays; the report music starts after it. */
+  private reportMusicReady = true;
+  /** A new version of the game is ready: reload once the player is off the play screen. */
+  private pendingReload: (() => void) | null = null;
 
   constructor(
     private readonly root: HTMLElement,
     private readonly deps: AppDeps,
   ) {
+    this.sound = deps.sound ?? new SoundBoard();
+    // No sound before the first tap (SPEC 11.3).
+    const unlock = () => this.sound.unlock();
+    root.addEventListener('pointerdown', unlock, true);
+    root.addEventListener('keydown', unlock, true);
     root.addEventListener('click', (e) => this.onClick(e));
     // Glossary words are spans with role="button": Enter and Space open them too.
     root.addEventListener('keydown', (e) => {
@@ -132,8 +151,18 @@ export class App {
   /** Show Home. */
   start(): void {
     this.save = loadSave(this.deps.storage);
+    this.sound.setMuted(this.save.muted);
     this.run = this.save.outpost;
     this.showScreen('home');
+  }
+
+  /**
+   * Run `reload` when it cannot interrupt play: now when off the play screen, otherwise the next
+   * time the player leaves it. Used when a new version of the game has been installed.
+   */
+  whenSafe(reload: () => void): void {
+    if (this.screen !== 'play') reload();
+    else this.pendingReload = reload;
   }
 
   /** The current run, for tests. */
@@ -158,8 +187,15 @@ export class App {
     this.screen = screen;
     this.playRoot = null;
     this.glossOpen = null;
+    this.sound.detach();
     this.map?.destroy();
     this.map = null;
+    const reload = this.pendingReload;
+    if (reload) {
+      this.pendingReload = null;
+      reload();
+      return;
+    }
     if (screen === 'home') {
       this.root.innerHTML = homeHtml(this.run !== null, this.storedReports().length > 0);
     } else if (screen === 'sources') {
@@ -167,7 +203,7 @@ export class App {
     } else if (screen === 'reports') {
       this.root.innerHTML = pageHtml(t('reports.title'), reportsListHtml(this.storedReports()), 'go-home');
     } else if (screen === 'settings') {
-      this.root.innerHTML = pageHtml(t('settings.title'), settingsBodyHtml(this.run !== null, this.settingsConfirm, this.settingsCleared), 'go-home');
+      this.root.innerHTML = pageHtml(t('settings.title'), settingsBodyHtml(this.run !== null, this.settingsConfirm, this.settingsCleared, this.save.muted), 'go-home');
     } else {
       const found = this.storedReports().find((r) => r.index === this.pastIndex);
       if (!found) {
@@ -254,8 +290,12 @@ export class App {
       <div class="gloss-layer"></div>
     </div>`;
     this.playRoot = this.root.querySelector('.play');
+    this.sound.detach();
     this.map?.destroy();
     this.map = null;
+    this.lastMc = null;
+    this.lastCard = null;
+    this.lastUnpowered = null;
     this.render();
     const canvas = this.part('canvas');
     if (canvas) {
@@ -263,10 +303,13 @@ export class App {
         .createMap(canvas, {
           onTileTap: (r, c) => this.onTileTap(r, c),
           onLayout: () => this.placeBadges(),
+          onAstronautTap: () => this.sound.effect(SOUND.dance),
+          onSoundsLoaded: () => this.sound.refresh(),
         })
         .then((view) => {
           canvas.querySelector('.map__loading')?.remove();
           this.map = view;
+          if (view.sound) this.sound.attach(view.sound);
           this.render();
         });
     }
@@ -292,13 +335,14 @@ export class App {
     const blocked = this.blocked();
     this.hint = blocked ? null : guidedHint(state, this.selected);
 
-    this.setHtml('top', topBarHtml(run, chapter, preview));
+    this.setHtml('top', topBarHtml(run, chapter, preview, this.save.muted));
     // On phones the weather row shows only when today or tomorrow has a flare or radiation (phone mockup).
     // The last day stays visible so "End of these records" shows.
     const quiet = (d: typeof today) => d !== null && d.radiation === 0 && d.flare === 'none';
     const wxClass = quiet(today) && quiet(tomorrow) ? 'weather-compact is-quiet' : 'weather-compact';
     this.setHtml('maptop', goalCardHtml(state) + `<div class="${wxClass}">${weatherHtml(today, tomorrow, true)}</div>`);
-    this.setHtml('card', this.cardHtml(run, chapter));
+    const card = this.cardHtml(run, chapter);
+    this.setHtml('card', card);
     this.setHtml('weather', weatherHtml(today, tomorrow, false));
 
     const grid = this.part('buildgrid');
@@ -315,9 +359,17 @@ export class App {
     this.lastHintType = hintType;
 
     this.setHtml('endrow', endRowHtml(state, blocked));
-    this.setHtml('mc', missionControlHtml(missionControlMessage(run, chapter), blocked));
+    const mc = missionControlMessage(run, chapter);
+    this.setHtml('mc', missionControlHtml(mc, blocked));
     this.setHtml('notice', this.noticeHtml(preview));
     this.setHtml('overlay', this.overlayHtml());
+    // Phones: only one large panel over the map at a time (styles.css). Day notes wait while the
+    // "This was real" card is open; a tapped building's card hides that card until it is closed.
+    const n = this.notice;
+    this.playRoot.classList.toggle('has-card', card !== '');
+    this.playRoot.classList.toggle('has-notes', n?.kind === 'notes');
+    this.playRoot.classList.toggle('has-bcard', n?.kind === 'building' || n?.kind === 'shelter');
+    this.renderSound(run, mc.text, card !== '', preview);
 
     if (this.map) {
       this.map.render({
@@ -327,11 +379,52 @@ export class App {
         hintTile: this.hint?.kind === 'tile' ? { r: this.hint.r, c: this.hint.c } : null,
         unpowered: preview.power.unpowered.map((u) => u.buildingId),
         reducedMotion: this.deps.reducedMotion(),
+        astronauts: astroWorld(run, chapter),
       });
       this.map.setInsets(this.measureInsets());
     }
     this.placeBadges(preview);
     this.renderGloss();
+  }
+
+  // ---- Sound (SPEC 11.3) ----
+
+  /** Loops for the screen, and sounds for what changed since the last render. */
+  private renderSound(run: Run, mcText: string, cardShown: boolean, preview: DayPreview): void {
+    this.updateLoops();
+    // Each new Mission Control message is wrapped in the radio sounds.
+    if (mcText !== this.lastMc) {
+      this.lastMc = mcText;
+      this.sound.message(MESSAGE_WRAP);
+    }
+    const cardKey = cardShown ? this.morningKey(run) : null;
+    if (cardKey && cardKey !== this.lastCard) this.sound.message([SOUND.realEvent]);
+    this.lastCard = cardKey;
+    // A building lost or got back its power because of something the player did.
+    const now = new Set(preview.power.unpowered.map((u) => u.buildingId));
+    const before = this.lastUnpowered;
+    if (before) {
+      const standing = new Set(run.state.buildings.map((b) => b.id));
+      if ([...now].some((id) => !before.has(id))) this.sound.effect(SOUND.powerDown);
+      else if ([...before].some((id) => !now.has(id) && standing.has(id))) this.sound.effect(SOUND.powerUp);
+    }
+    this.lastUnpowered = now;
+  }
+
+  /** One ambience loop and at most one music track. */
+  private updateLoops(): void {
+    const run = this.run;
+    if (this.screen !== 'play' || !run) {
+      this.sound.setAmbience([]);
+      this.sound.setMusic(null);
+      return;
+    }
+    const chapter = this.chapter();
+    const { today } = forecast(chapter, run.chapterDay);
+    this.sound.setAmbience(ambienceFor(chapter.site, today ? today.radiation : 0));
+    const reportOpen = run.pendingReport || this.overlay === 'lostReport';
+    if (reportOpen) this.sound.setMusic(this.reportMusicReady ? SOUND.report : null);
+    else this.sound.setMusic(run.state.lost ? null : SOUND.calm);
   }
 
   /** The key of this morning, for remembering a closed card. */
@@ -357,7 +450,7 @@ export class App {
 
   private overlayHtml(): string {
     const run = this.run!;
-    if (this.overlay === 'sources') return sourcesModalHtml();
+    if (this.overlay === 'sources') return sourcesModalHtml(nowPlaying(this.sound.ambienceName()));
     if (this.overlay === 'confirmNewSite') return confirmNewSiteHtml();
     if (this.overlay === 'title') return titleCardHtml(this.chapter(), run.replay);
     if (run.state.lost) {
@@ -458,7 +551,7 @@ export class App {
     if (n.kind === 'text') return `<div class="notice notice--${n.tone}" role="status"><p>${glossText(n.text)}</p>${close}</div>`;
     if (n.kind === 'notes') {
       const lines = n.lines.map((l) => `<li>${glossText(l)}</li>`).join('');
-      return `<div class="notice"><div><b>${glossText(t('notes.title', { n: n.sol }))}</b><ul>${lines}</ul></div>${close}</div>`;
+      return `<div class="notice notice--notes"><div><b>${glossText(t('notes.title', { n: n.sol }))}</b><ul>${lines}</ul></div>${close}</div>`;
     }
     const state = run.state;
     if (n.kind === 'shelter') {
@@ -534,7 +627,18 @@ export class App {
     }
     if (!target || !this.root.contains(target)) return;
     if (target instanceof HTMLButtonElement && target.disabled) return;
-    switch (target.dataset.action) {
+    this.sound.unlock();
+    const action = target.dataset.action ?? '';
+    if (PANEL_ACTIONS.has(action)) this.sound.effect(SOUND.openPanel);
+    else if (!OWN_SOUND.has(action)) this.sound.effect(SOUND.tap);
+    switch (action) {
+      case 'toggle-mute':
+        this.save.muted = !this.save.muted;
+        this.sound.setMuted(this.save.muted);
+        writeSave(this.deps.storage, this.save);
+        if (this.screen === 'play') this.render();
+        else if (this.screen === 'settings') this.showScreen('settings');
+        break;
       case 'gloss':
         this.openGloss(target);
         break;
@@ -680,6 +784,7 @@ export class App {
     const run = this.run;
     if (!run || this.blocked()) return;
     if (!isUnlocked(run.state, type)) {
+      this.sound.effect(SOUND.cant);
       const n = unlockGoalNumber(type);
       this.notice = { kind: 'text', tone: 'info', text: n ? t('build.lockedTap', { goal: starterGoalText(n - 1) }) : reasonText('locked') };
       this.render();
@@ -692,6 +797,7 @@ export class App {
     }
     this.resetUi();
     this.selected = type;
+    this.sound.effect(SOUND.select);
     if (type === 'shelter') {
       // Start the outline on the guided spot when it can go there.
       const top = shelterHintTop(run.state);
@@ -702,6 +808,7 @@ export class App {
 
   /** After a building is placed, keep it chosen while another can be afforded, so several go in a row. */
   private afterPlace(type: PlaceableType): void {
+    this.sound.effect(SOUND.place);
     this.resetUi();
     if (canAfford(this.run!.state, type)) this.selected = type;
     this.persist();
@@ -717,6 +824,7 @@ export class App {
       const b = buildingAt(state, r, c);
       const s = shelterAt(state, r, c);
       this.notice = b ? { kind: 'building', id: b.id, confirm: false } : s ? { kind: 'shelter', id: s.id, confirm: false } : null;
+      if (this.notice) this.sound.effect(SOUND.openPanel);
       this.render();
       return;
     }
@@ -726,6 +834,7 @@ export class App {
     }
     const check = canPlace(state, type, r, c);
     if (!check.ok) {
+      this.sound.effect(SOUND.cant);
       this.notice = { kind: 'text', tone: 'warn', text: reasonText(check.reason) };
       this.render();
       return;
@@ -763,6 +872,7 @@ export class App {
       this.outline = ok;
       this.notice = null;
     } else {
+      this.sound.effect(SOUND.cant);
       const check = canPlaceShelter(state, r, c);
       this.notice = { kind: 'text', tone: 'warn', text: check.ok ? reasonText('occupied') : reasonText(check.reason) };
     }
@@ -776,6 +886,7 @@ export class App {
     if (n.kind === 'building') removeBuilding(run.state, n.id);
     else if (n.kind === 'shelter') removeShelter(run.state, n.id);
     else return;
+    this.sound.effect(SOUND.remove);
     this.notice = null;
     this.persist();
     this.render();
@@ -803,6 +914,8 @@ export class App {
     const ringBefore = run.state.ring;
     const result = endDay(run, this.deps.book);
     if (!result.ran) return;
+    this.sound.effect(SOUND.endDay);
+    this.playDaySounds(result.events);
     this.resetUi();
     // The chapter ended: store its report once, now (SPEC 12). A reload never stores it again.
     if (result.events.some((e) => e.type === 'chapter_end')) {
@@ -817,6 +930,29 @@ export class App {
     this.render();
   }
 
+  /** Sounds and astronaut moments for an ended day (SPEC 11.2, 11.3). */
+  private playDaySounds(events: SimEvent[]): void {
+    const run = this.run!;
+    const { tomorrow } = forecast(this.chapter(), run.chapterDay);
+    const storm = tomorrow !== null && tomorrow.radiation >= 2 && !run.pendingReport;
+    for (const name of daySounds(events, storm, run.state.question !== null)) {
+      if (name === SOUND.chapterComplete) {
+        this.reportMusicReady = false;
+        this.sound.effect(name, () => {
+          this.reportMusicReady = true;
+          this.updateLoops();
+        });
+      } else this.sound.effect(name);
+    }
+    if (events.some((e) => e.type === 'goal_done' || e.type === 'chapter_end')) {
+      this.map?.celebrate?.();
+      this.sound.effect(SOUND.dance);
+    }
+    if (events.some((e) => e.type === 'unpowered' && e.building === 'home')) this.sound.effect(SOUND.shiver);
+    // Power changes from the day itself are covered by the day's sounds.
+    this.lastUnpowered = null;
+  }
+
   private onKeepBuilding(): void {
     const run = this.run;
     if (!run || !keepBuilding(run, this.deps.book)) return;
@@ -827,6 +963,11 @@ export class App {
     this.render();
   }
 }
+
+/** Buttons that open a panel play the open-panel sound. */
+const PANEL_ACTIONS = new Set(['open-sources', 'open-reports', 'open-report', 'open-settings', 'lost-report']);
+/** Buttons whose sound is chosen where they are handled. */
+const OWN_SOUND = new Set(['select', 'end-day', 'remove-yes']);
 
 /** Widest a glossary bubble may be, in CSS pixels. */
 const UI_GLOSS_WIDTH = 280;
