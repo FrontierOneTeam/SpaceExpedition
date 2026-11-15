@@ -1,0 +1,383 @@
+{
+  "checkedAt": "2026-11-15",
+  "notes": [
+    {
+      "id": "moxie",
+      "verdict": "PASS",
+      "for": "o2",
+      "name": "NASA: Perseverance makes oxygen on Mars (MOXIE)",
+      "url": "https://www.nasa.gov/news-release/nasas-perseverance-mars-rover-extracts-first-oxygen-from-red-planet/",
+      "place": "mars",
+      "text": "A tool on the Perseverance rover made oxygen on Mars. It took the oxygen out of carbon dioxide, which is most of the Mars air.",
+      "quotes": [
+        "converting some of the Red Planet's thin, carbon dioxide-rich atmosphere into oxygen",
+        "MOXIE works by separating oxygen atoms from carbon dioxide molecules",
+        "taking carbon dioxide - the bulk of the atmosphere - and converting it into oxygen"
+      ],
+      "howRead": "curl",
+      "caution": "A small first test (about 5.4 grams in an hour, about 10 minutes of breathing for an astronaut per the page), not a working oxygen supply. Page is a 2021 release; past tense used."
+    },
+    {
+      "id": "iss-oxygen",
+      "verdict": "PASS",
+      "for": "o2",
+      "name": "NASA: How the space station makes oxygen (ECLSS)",
+      "url": "https://www.nasa.gov/reference/environmental-control-and-life-support-systems-eclss/",
+      "place": "space station",
+      "text": "The space station makes oxygen for the crew to breathe. It splits water into oxygen and hydrogen.",
+      "quotes": [
+        "The Oxygen Generation System produces oxygen for the crew to breathe.",
+        "electrolyzes, or breaks apart, water provided by the Water Recovery System, yielding oxygen and hydrogen as byproducts"
+      ],
+      "howRead": "curl",
+      "caution": "Space station, not Mars. Label it as such in the game."
+    },
+    {
+      "id": "iss-water",
+      "verdict": "PASS",
+      "for": "lab",
+      "name": "NASA: How the space station reuses water (ECLSS)",
+      "url": "https://www.nasa.gov/reference/environmental-control-and-life-support-systems-eclss/",
+      "place": "space station",
+      "text": "The space station cleans and reuses its water. Some of that water comes from the crew's urine.",
+      "quotes": [
+        "The Water Recovery System provides clean water by reclaiming wastewater (including water from crew members' urine), cabin humidity condensate"
+      ],
+      "howRead": "curl",
+      "caution": "Space station, not Mars. Fits the water-recycling research card (rec) best; a loose fit for the greenhouse. No percentage used (the page says about 90 percent, other NASA pages give other figures)."
+    },
+    {
+      "id": "osdr-plants",
+      "verdict": "FIX",
+      "for": "farm",
+      "name": "NASA OSDR study OSD-745: lettuce grown on the space station",
+      "url": "https://osdr.nasa.gov/osdr/data/osd/meta/745",
+      "place": "space station",
+      "text": "Scientists grew red lettuce on the space station. Their study says leafy plants like this can make safe, fresh food to add to astronauts' meals.",
+      "quotes": [
+        "red romaine lettuce, Lactuca sativa cv 'Outredgeous,' plants were grown in Veggie plant growth chambers on the International Space Station (ISS) and compared with ground-grown plants",
+        "This study indicated that leafy vegetable crops can produce safe, edible, fresh food to supplement to the astronauts' diet"
+      ],
+      "howRead": "curl",
+      "caution": "Draft said 'They found'; the page says 'indicated' and 'supplement', so wording softened. Read from the official OSDR API record (osdr.nasa.gov); the human study page https://osdr.nasa.gov/bio/repo/data/studies/OSD-745 is a JavaScript shell that returned no text to curl. The same record also lists flight vs ground differences in some minerals. Space station, not Mars."
+    },
+    {
+      "id": "csa-food",
+      "verdict": "PASS",
+      "for": "farm",
+      "name": "Canadian Space Agency: Growing healthy food in space and in remote areas",
+      "url": "https://www.asc-csa.gc.ca/eng/sciences/food-production/growing-healthy-food-in-space-and-remote-areas.asp",
+      "place": "general",
+      "text": "The Canadian Space Agency is learning how to grow healthy food in hard places. Astronauts who go far from Earth will need to grow their own food.",
+      "quotes": [
+        "the Canadian Space Agency (CSA) is working with its partners to learn how to grow healthy food in harsh environments, both in space and on Earth",
+        "space travellers will need to develop \"green thumbs\" to grow their own food in space"
+      ],
+      "howRead": "curl",
+      "caution": "An overview page; the SPEC's 'food-production toolkit' is not named on it. First curl attempt timed out, second succeeded (HTTP 200). Credit CSA; check its copyright notice before using any image."
+    },
+    {
+      "id": "mars-ice",
+      "verdict": "PASS",
+      "for": "mine",
+      "name": "NASA: Mapping buried water ice on Mars (SWIM)",
+      "url": "https://www.nasa.gov/solar-system/planets/mars/nasa-is-locating-ice-on-mars-with-this-new-map/",
+      "place": "mars",
+      "text": "NASA maps show where water ice is probably buried under the ground on Mars. Future astronauts could use it for drinking water.",
+      "quotes": [
+        "These Mars global maps show the likely distribution of water ice buried within the upper 3 feet (1 meter) of the planet's surface",
+        "Buried ice will be a vital resource for astronauts on Mars, serving as drinking water and a key ingredient for rocket fuel."
+      ],
+      "howRead": "curl",
+      "caution": "No mine exists; the map is of likely ice, not a mining plan. The game's ice tile is made up. The extra JPL 2002 Odyssey page was not opened by me and is not used."
+    },
+    {
+      "id": "regolith-shield",
+      "verdict": "PASS",
+      "for": "shelter",
+      "name": "NASA: How NASA will protect astronauts from space radiation at the Moon",
+      "url": "https://science.nasa.gov/science-research/heliophysics/how-nasa-will-protect-astronauts-from-space-radiation-at-the-moon/",
+      "place": "moon",
+      "text": "The more stuff between people and radiation, the safer they are. On the Moon, astronauts could pile soil over their shelters.",
+      "quotes": [
+        "The more mass between the crew and radiation, the more likely that dangerous particles will deposit their energy before reaching the crew.",
+        "On the Moon, astronauts could pile lunar soil, or regolith, over their shelters"
+      ],
+      "howRead": "curl",
+      "caution": "About the MOON and an idea ('could'), not a built Mars shelter; keep 'On the Moon' in the text. Honest but loose fit for a Mars game; the game's shelter numbers are not real values."
+    },
+    {
+      "id": "mmpact",
+      "verdict": "PASS",
+      "for": "pad",
+      "name": "NASA: Construction technology for Moon and Mars exploration (MMPACT)",
+      "url": "https://www.nasa.gov/directorates/stmd/nasa-enables-construction-technology-for-moon-and-mars-exploration/",
+      "place": "general",
+      "text": "A NASA project is exploring robot 3D printers that could build on other worlds. So far it has tested the idea with pretend Moon and Mars soil.",
+      "quotes": [
+        "is exploring applications of large-scale, robotic 3D printing technology for construction on other planets",
+        "demonstrations using simulated lunar and Martian surface material, known as regolith, show the concept could become reality",
+        "The process can be used to autonomously build monolithic structures like radiation shielding and rocket landing pads."
+      ],
+      "howRead": "curl",
+      "caution": "Fits the landing pad (pad) honestly. It is a stretch for the soil digger (page says nothing about digging) and for the parts factory (only a separate powder-printing technique is mentioned; see the Parts factory notebook page). Tested with simulated soil on Earth; no pad exists on Mars."
+    },
+    {
+      "id": "solar-arrays",
+      "verdict": "PASS",
+      "for": "sun",
+      "name": "NASA Space Place: What powers a spacecraft?",
+      "url": "https://spaceplace.nasa.gov/what-powers-a-spacecraft/en/",
+      "place": "mars",
+      "text": "Solar panels have powered machines on Mars. The Spirit and Opportunity rovers used them.",
+      "quotes": [
+        "Solar energy has also been used to power spacecraft on Mars.",
+        "NASA's Mars Exploration Rovers, Spirit and Opportunity, and Mars' Phoenix lander all used power from solar panels"
+      ],
+      "howRead": "curl",
+      "caution": "The page also says 'and so does the InSight lander' in present tense; InSight's 2022 status page is past events, so keep past tense and do not repeat that clause."
+    },
+    {
+      "id": "insight-power",
+      "verdict": "PASS",
+      "for": "sun",
+      "name": "NASA: InSight's power after a Mars dust storm",
+      "url": "https://www.nasa.gov/solar-system/nasas-insight-sees-power-levels-stabilize-after-dust-storm/",
+      "place": "mars",
+      "text": "Dust built up on the InSight lander's solar panels. That gave the lander less power.",
+      "quotes": [
+        "dust had been accumulating on InSight's solar panels, reducing the lander's power supply."
+      ],
+      "howRead": "curl",
+      "caution": "A January 2022 status report. I did not read how the mission ended, so say nothing about that. Past tense only."
+    },
+    {
+      "id": "kilopower",
+      "verdict": "FIX",
+      "for": "nuke",
+      "name": "NASA: Kilopower small reactor test",
+      "url": "https://www.nasa.gov/news-release/demonstration-proves-nuclear-fission-system-can-provide-space-exploration-power/",
+      "place": "earth",
+      "text": "NASA tested a small nuclear power system on Earth that is made for use in space. Four of them would make enough power for an outpost.",
+      "quotes": [
+        "have successfully demonstrated a new nuclear reactor power system that could enable long-duration crewed missions to the Moon, Mars and destinations beyond",
+        "The Kilopower experiment was conducted at the NNSA's Nevada National Security Site",
+        "Kilopower is a small, lightweight fission power system",
+        "Four Kilopower units would provide enough power to establish an outpost."
+      ],
+      "howRead": "curl",
+      "caution": "Draft said 'for power in space', which could read as a test in space; it was a 2018 test on Earth (a vacuum chamber simulated space). The page's own outpost example leans toward the Moon. The release only says a flight demonstration is possible; do not say it has flown. Game output is not a real value."
+    },
+    {
+      "id": "mars-comms",
+      "verdict": "PASS",
+      "for": "general",
+      "name": "NASA: How far is a light-day? (Earth to Mars light time)",
+      "url": "https://science.nasa.gov/mission/voyager/voyager-1/voyager-1-what-is-a-light-day/",
+      "place": "mars",
+      "text": "Radio messages take time to cross space between Earth and Mars. The trip can take from three minutes to 22 minutes.",
+      "quotes": [
+        "it can take anywhere from three minutes to 22 minutes for light to travel between the two planets. Same for a radio transmission, either to or from a spacecraft at Mars."
+      ],
+      "howRead": "curl",
+      "caution": "One way only, depends on where the planets are. A side note on a Voyager page. The game's delay is a simplified model, not these numbers."
+    },
+    {
+      "id": "human-health",
+      "verdict": "FIX",
+      "for": "general",
+      "name": "NASA: Space radiation and astronaut safety",
+      "url": "https://science.nasa.gov/science-research/heliophysics/how-nasa-will-protect-astronauts-from-space-radiation-at-the-moon/",
+      "place": "general",
+      "text": "Fast particles from the Sun can pass right through skin and damage cells. In extreme cases they can make astronauts sick with radiation sickness.",
+      "quotes": [
+        "SEPs are dangerous because they pass right through skin, shedding energy and fragmenting cells or DNA on their way.",
+        "This damage can increase risk for cancer later in life, or in extreme cases, cause acute radiation sickness in the short-term."
+      ],
+      "howRead": "curl",
+      "caution": "Draft said 'through the body'; the page says 'through skin'. The page says Earth's magnetic field protects people on Earth and the space station is 'within Earth's protection', so this risk is for crews beyond that. Game health numbers are simplified."
+    },
+    {
+      "id": "perseverance-wind",
+      "verdict": "PASS",
+      "for": "general",
+      "name": "NASA: Perseverance SuperCam records wind on Mars",
+      "url": "https://science.nasa.gov/resource/perseverance-rovers-supercam-records-wind-on-mars/",
+      "place": "mars",
+      "text": "This sound was recorded by the Perseverance rover on Mars. You can hear some wind about 20 seconds in.",
+      "quotes": [
+        "This recording was made on Feb. 22, 2021, on the fourth sol (Martian day) by the SuperCam instrument on NASA's Perseverance rover",
+        "Some wind can be heard, especially around 20 seconds into the recording."
+      ],
+      "howRead": "curl",
+      "caution": "The page says 'Rover background sounds have been removed', so the audio is processed; wait for the team's check before a 'real recording' label. Credit line on page: NASA/JPL-Caltech/LANL/CNES/CNRS/ISAE-Supaero. The MP3 link answered HTTP 200 (audio/mpeg); I did not download or listen to it."
+    },
+    {
+      "id": "mars-trek",
+      "verdict": "FAIL",
+      "for": "general",
+      "name": "NASA Mars Trek",
+      "url": "https://trek.nasa.gov/mars/",
+      "place": "mars",
+      "text": "",
+      "quotes": [],
+      "howRead": "browser",
+      "caution": "No text was drafted, and the page is a JavaScript app: curl returned a tiny shell and the browser returned only the title 'Mars Trek'. I found no credit or licence line, so nothing can be verified. Do not use a Trek image until a teammate reads the credit for that exact layer in the tool."
+    },
+    {
+      "id": "radlab",
+      "verdict": "FIX",
+      "for": "general",
+      "name": "NASA OSDR RadLab portal",
+      "url": "https://visualization.osdr.nasa.gov/radlab/gui/overview/",
+      "place": "space station",
+      "text": "RadLab is a NASA website that gathers radiation readings from many space instruments. It began with detectors on the space station.",
+      "quotes": [
+        "RadLab is a portal that aims to provide a single point of access to radiation telemetry data from multiple databases maintained by multiple space agencies.",
+        "Originally focused on radiation data from detectors aboard the International Space Station, RadLab has now expanded its scope"
+      ],
+      "howRead": "browser",
+      "caution": "No two-sentence text was drafted, so this wording is new and describes only what the portal is. Overview read in the browser (curl got HTTP 500); the second quote is from https://www.nasa.gov/radlab-portal-expands-horizons/ read with curl. The API URL for 10-12 Sep 2017 returned HTTP 200 (about 228 KB) but I did not parse it, so the draft's row counts and dose figures are NOT verified. Space station values are not Mars values."
+    }
+  ],
+  "pages": [
+    {
+      "page": "solar panel",
+      "verdict": "PASS",
+      "title": "Sun Power",
+      "text": "Solar panels have powered machines on Mars. The Spirit and Opportunity rovers used them.",
+      "sourceId": "solar-arrays",
+      "quotes": [
+        "Solar energy has also been used to power spacecraft on Mars.",
+        "Spirit and Opportunity, and Mars' Phoenix lander all used power from solar panels"
+      ]
+    },
+    {
+      "page": "battery",
+      "verdict": "PASS",
+      "title": "Saving Power",
+      "text": "Solar panels charge a battery in a spacecraft. The battery keeps it going when it moves out of direct sunlight.",
+      "sourceId": "solar-arrays",
+      "quotes": [
+        "The electricity from the solar panels charges a battery in the spacecraft. These batteries can power the spacecraft even when it moves out of direct sunlight."
+      ]
+    },
+    {
+      "page": "oxygen maker",
+      "verdict": "PASS",
+      "title": "Making Oxygen",
+      "text": "A tool on the Perseverance rover made oxygen on Mars. It took the oxygen out of carbon dioxide.",
+      "sourceId": "moxie",
+      "quotes": [
+        "converting some of the Red Planet's thin, carbon dioxide-rich atmosphere into oxygen",
+        "MOXIE works by separating oxygen atoms from carbon dioxide molecules"
+      ]
+    },
+    {
+      "page": "greenhouse",
+      "verdict": "FIX",
+      "title": "Space Lettuce",
+      "text": "Scientists grew red lettuce on the space station. Their study says leafy plants like this can make safe, fresh food to add to astronauts' meals.",
+      "sourceId": "osdr-plants",
+      "quotes": [
+        "red romaine lettuce ... plants were grown in Veggie plant growth chambers on the International Space Station (ISS)",
+        "leafy vegetable crops can produce safe, edible, fresh food to supplement to the astronauts' diet"
+      ]
+    },
+    {
+      "page": "habitat",
+      "verdict": "FAIL",
+      "title": "",
+      "text": "",
+      "sourceId": "",
+      "quotes": []
+    },
+    {
+      "page": "ice mine",
+      "verdict": "PASS",
+      "title": "Buried Ice",
+      "text": "NASA maps show where water ice is probably buried under the ground on Mars. Future astronauts could use it for drinking water.",
+      "sourceId": "mars-ice",
+      "quotes": [
+        "show the likely distribution of water ice buried within the upper 3 feet (1 meter) of the planet's surface",
+        "Buried ice will be a vital resource for astronauts on Mars, serving as drinking water"
+      ]
+    },
+    {
+      "page": "soil digger",
+      "verdict": "FAIL",
+      "title": "",
+      "text": "",
+      "sourceId": "",
+      "quotes": []
+    },
+    {
+      "page": "parts factory",
+      "verdict": "FIX",
+      "title": "Printing Parts",
+      "text": "One 3D printing method uses heat and pressure on layers of powder to make small parts. It can be used on planets or space stations to make things like interlocking tiles and replacement parts.",
+      "sourceId": "mmpact",
+      "quotes": [
+        "heat and pressure are applied to layers of powder to produce metallic, ceramic, or composite objects",
+        "can be used on planetary surfaces as well as in microgravity environments like space stations to produce items including interlocking tiles and replacement parts"
+      ],
+      "caution": "Draft said 'NASA studies a way to make parts'; the page ties this technique to an outside researcher with NIAC funding, so it is not attributed to NASA directly. It is a powder printer, not a soil-to-parts factory: a stretch for the game building. Team may prefer to leave this page without content."
+    },
+    {
+      "page": "soil shelter",
+      "verdict": "PASS",
+      "title": "Soil Shelter",
+      "text": "The more stuff between people and radiation, the safer they are. On the Moon, astronauts could pile soil, called regolith, over their shelters.",
+      "sourceId": "regolith-shield",
+      "quotes": [
+        "The more mass between the crew and radiation, the more likely that dangerous particles will deposit their energy before reaching the crew.",
+        "On the Moon, astronauts could pile lunar soil, or regolith, over their shelters"
+      ]
+    },
+    {
+      "page": "landing pad",
+      "verdict": "PASS",
+      "title": "Landing Pads",
+      "text": "NASA is exploring robot builders that use local soil. One use is building rocket landing pads.",
+      "sourceId": "mmpact",
+      "quotes": [
+        "is exploring applications of large-scale, robotic 3D printing technology for construction on other planets",
+        "The regolith itself is used as the aggregate, or granular material, for these concretes.",
+        "The process can be used to autonomously build monolithic structures like radiation shielding and rocket landing pads."
+      ],
+      "caution": "Tested with simulated soil on Earth; no pad exists on Mars. 'Local soil' is the page's in-situ idea; the landing-pad sentence is about the Contour Crafting technique inside the MMPACT description."
+    },
+    {
+      "page": "solar flare",
+      "verdict": "FIX",
+      "title": "Solar Flares",
+      "text": "A solar flare is a sudden, bright burst of energy from the Sun. Flares in 1972, during the Apollo missions, remind us that radiation can threaten astronauts and machines.",
+      "sourceId": "glossary",
+      "quotes": [
+        "Today, the Apollo-era flares serve as a reminder of the threat of radiation exposure to technology and astronauts in space.",
+        "Aug. 4-7 that year",
+        "Between the Apollo 16 and 17 missions, the solar eruptions were a near miss for lunar explorers."
+      ],
+      "caution": "Sentence 1 is the approved SPEC 8.3 glossary entry (not fetched). Draft sentence 2 said all flares remind us; the page says the Apollo-era (1972) flares do. 'Machines' paraphrases the page's 'technology'. The 1972 year is stated on the page ('those 1972 storms'). Source page: regolith-shield URL."
+    },
+    {
+      "page": "radiation storm",
+      "verdict": "PASS",
+      "title": "Particle Storm",
+      "text": "A particle storm is a burst of very fast particles thrown out by the Sun. These particles can pass right through skin and damage cells.",
+      "sourceId": "human-health",
+      "quotes": [
+        "SEPs are dangerous because they pass right through skin, shedding energy and fragmenting cells or DNA on their way."
+      ],
+      "caution": "Sentence 1 is the approved SPEC 8.3 glossary entry (not fetched). The page's term is 'SEPs' (solar energetic particles), not 'particle storm', so sentence 2 relies on the team treating them as the same thing."
+    },
+    {
+      "page": "radio blackout",
+      "verdict": "FAIL",
+      "title": "",
+      "text": "",
+      "sourceId": "",
+      "quotes": []
+    }
+  ]
+}

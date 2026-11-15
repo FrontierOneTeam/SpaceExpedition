@@ -28,5 +28,29 @@
     "date": "2017-09-12",
     "text": "The high radiation lasted more than two days. From orbit, NASA's MAVEN spacecraft saw Mars glow with an aurora more than 25 times brighter than any it had seen.",
     "sourceIds": ["curiosity-rad", "curiosity-rad-swri"]
+  },
+  {
+    "id": "may2024-11",
+    "date": "2024-05-11",
+    "text": "The Sun fired a class X5.8 flare. It came from sunspot region 13664.",
+    "sourceIds": ["donki"]
+  },
+  {
+    "id": "may2024-14",
+    "date": "2024-05-14",
+    "text": "A class X8.7 flare reached its peak at 16:51 UTC. It came from sunspot region 13664.",
+    "sourceIds": ["donki"]
+  },
+  {
+    "id": "may2024-19",
+    "date": "2024-05-19",
+    "text": "From 14 to 20 May 2024, NASA's MAVEN spacecraft detected auroras on Mars. Mars lost its magnetic field long ago, so auroras there can spread over the whole planet.",
+    "sourceIds": ["mars-storm-2024"]
+  },
+  {
+    "id": "may2024-20",
+    "date": "2024-05-20",
+    "text": "On this day in 2024 a giant flare sent X-rays and gamma rays from the Sun toward Mars. NASA's Curiosity rover measured its biggest radiation surge since it landed.",
+    "sourceIds": ["mars-storm-2024"]
   }
 ]

@@ -34,5 +34,14 @@
     "kind": "reading",
     "usedFor": "The 'biggest flare that solar cycle had seen' line on the 6 September card",
     "status": "used"
+  },
+  {
+    "id": "mars-storm-2024",
+    "name": "NASA article, 10 June 2024: NASA Watches Mars Light Up During Epic Solar Storm",
+    "url": "https://www.nasa.gov/solar-system/planets/mars/nasa-watches-mars-light-up-during-epic-solar-storm/",
+    "group": "additional",
+    "kind": "reading",
+    "usedFor": "The Mars radiation storm of 20 May 2024, and the MAVEN auroras",
+    "status": "planned"
   }
 ]

@@ -4,8 +4,8 @@ import { fileURLToPath } from 'node:url';
 
 const toolsDir = dirname(fileURLToPath(import.meta.url));
 const root = resolve(toolsDir, '..');
-const rawPath = join(root, 'src', 'data', 'raw', 'donki-flr-2017-09-02_2017-09-15.json');
-const outPath = join(root, 'src', 'data', 'chapters', 'sep2017.json');
+const rawDir = join(root, 'src', 'data', 'raw');
+const outDir = join(root, 'src', 'data', 'chapters');
 
 export interface RawFlare {
   peakTime: string;
@@ -38,21 +38,20 @@ export interface Chapter {
   simplified: string[];
 }
 
-// Curated values that do not come from DONKI (SPEC 9.3, 9.4, 16.2).
-const START_DATE = '2017-09-02';
-const DAY_COUNT = 14;
-const RADIATION: Record<string, number> = {
-  '2017-09-11': 3,
-  '2017-09-12': 2,
-  '2017-09-13': 1,
-};
-const CARD_IDS: Record<string, string> = {
-  '2017-09-06': 'sep2017-06',
-  '2017-09-07': 'sep2017-07',
-  '2017-09-10': 'sep2017-10',
-  '2017-09-11': 'sep2017-11',
-  '2017-09-12': 'sep2017-12',
-};
+// Curated values that do not come from DONKI (SPEC 9.3, 9.4, 16.2), one definition per chapter.
+export interface ChapterDef {
+  id: string;
+  title: string;
+  startDate: string;
+  dayCount: number;
+  rawFile: string;
+  setup: string;
+  radiation: Record<string, number>;
+  cardIds: Record<string, string>;
+  notes: Record<string, string>; // overrides the default "no record" note on that date
+  simplified: string[];
+}
+
 const NO_RECORD_NOTE = 'The fetched DONKI response holds no flare record for this date.';
 const SIMPLIFIED = [
   'Storm levels 1 to 3 are game levels, not measurements.',
@@ -62,6 +61,52 @@ const SIMPLIFIED = [
   'Sunlight is steady in this chapter.',
   'One sol is shown as one Earth date.',
   'The outpost and its site are made up.',
+];
+
+export const CHAPTERS: ChapterDef[] = [
+  {
+    id: 'sep2017',
+    title: 'The September 2017 storms',
+    startDate: '2017-09-02',
+    dayCount: 14,
+    rawFile: 'donki-flr-2017-09-02_2017-09-15.json',
+    setup: 'A giant sunspot is turning to face you.',
+    radiation: { '2017-09-11': 3, '2017-09-12': 2, '2017-09-13': 1 },
+    cardIds: {
+      '2017-09-06': 'sep2017-06',
+      '2017-09-07': 'sep2017-07',
+      '2017-09-10': 'sep2017-10',
+      '2017-09-11': 'sep2017-11',
+      '2017-09-12': 'sep2017-12',
+    },
+    notes: {},
+    simplified: SIMPLIFIED,
+  },
+  {
+    id: 'may2024',
+    title: 'The May 2024 storms',
+    startDate: '2024-05-11',
+    dayCount: 14,
+    rawFile: 'donki-flr-2024-05-08_2024-05-25.json',
+    setup: 'The Sun has been firing big flares for days.',
+    radiation: { '2024-05-20': 3 },
+    cardIds: {
+      '2024-05-11': 'may2024-11',
+      '2024-05-14': 'may2024-14',
+      '2024-05-19': 'may2024-19',
+      '2024-05-20': 'may2024-20',
+    },
+    notes: {
+      '2024-05-20':
+        `${NO_RECORD_NOTE} NASA later estimated a class X12 flare on 20 May 2024 from Solar Orbiter data. ` +
+        "Radiation level 3 is a game mapping of NASA's report that Curiosity measured its biggest radiation surge since landing. " +
+        'No source says how long it lasted, so the game marks this one day only.',
+    },
+    simplified: [
+      ...SIMPLIFIED,
+      "The storm lasts one day in the game. NASA's report does not say how long it lasted.",
+    ],
+  },
 ];
 
 function addDays(date: string, n: number): string {
@@ -80,10 +125,10 @@ function isStrong(classType: string): boolean {
   return classType.startsWith('M') && Number(classType.slice(1)) >= 5;
 }
 
-export function buildChapter(rawFlares: RawFlare[]): Chapter {
+export function buildChapter(rawFlares: RawFlare[], def: ChapterDef = CHAPTERS[0]): Chapter {
   const days: ChapterDay[] = [];
-  for (let i = 0; i < DAY_COUNT; i++) {
-    const date = addDays(START_DATE, i);
+  for (let i = 0; i < def.dayCount; i++) {
+    const date = addDays(def.startDate, i);
     const onDay = rawFlares.filter((f) => f.peakTime.slice(0, 10) === date);
     const flares = onDay
       .filter((f) => isStrong(f.classType))
@@ -93,29 +138,33 @@ export function buildChapter(rawFlares: RawFlare[]): Chapter {
     const day: ChapterDay = {
       date,
       sunlight: 1,
-      radiation: RADIATION[date] ?? 0,
+      radiation: def.radiation[date] ?? 0,
       flare,
       flares,
     };
-    if (CARD_IDS[date]) day.cardId = CARD_IDS[date];
-    if (onDay.length === 0) day.notes = NO_RECORD_NOTE;
+    if (def.cardIds[date]) day.cardId = def.cardIds[date];
+    if (def.notes[date]) day.notes = def.notes[date];
+    else if (onDay.length === 0) day.notes = NO_RECORD_NOTE;
     days.push(day);
   }
   return {
-    id: 'sep2017',
-    title: 'The September 2017 storms',
+    id: def.id,
+    title: def.title,
     site: 'mars',
-    startDate: START_DATE,
-    setup: 'A giant sunspot is turning to face you.',
+    startDate: def.startDate,
+    setup: def.setup,
     days,
-    simplified: [...SIMPLIFIED],
+    simplified: [...def.simplified],
   };
 }
 
 function main(): void {
-  const raw = JSON.parse(readFileSync(rawPath, 'utf8')) as RawFlare[];
-  writeFileSync(outPath, JSON.stringify(buildChapter(raw), null, 2) + '\n');
-  console.log(`wrote ${outPath}`);
+  for (const def of CHAPTERS) {
+    const raw = JSON.parse(readFileSync(join(rawDir, def.rawFile), 'utf8')) as RawFlare[];
+    const outPath = join(outDir, `${def.id}.json`);
+    writeFileSync(outPath, JSON.stringify(buildChapter(raw, def), null, 2) + '\n');
+    console.log(`wrote ${outPath}`);
+  }
 }
 
 // Run only when started directly (not when imported by a test).
