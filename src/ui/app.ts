@@ -2,6 +2,7 @@
 // map to redraw from the state. No framework: one class, plain DOM.
 
 import {
+  answerQuestion,
   buildingAt,
   canPlace,
   canPlaceShelter,
@@ -24,33 +25,47 @@ import {
   type Chapter,
   type ChapterBook,
   type DayPreview,
+  type GameState,
   type PlaceableType,
+  type PredictAnswer,
   type Run,
   type SimEvent,
 } from '../sim/index.ts';
 import { emptySave, loadSave, writeSave, type SaveFile, type SaveStorage } from '../save/save.ts';
 import { guidedHint, missionControlMessage, shelterHintTop, type Hint } from './advice.ts';
+import { cardDue, cardSources } from './content.ts';
 import { failureChain } from './failureChain.ts';
-import { esc } from './format.ts';
-import { renderHome } from './home.ts';
-import { buildingAbout, buildingName, reasonText, starterGoalText, unlockGoalNumber } from './info.ts';
+import { esc, replayLine } from './format.ts';
+import { glossSentence, glossText } from './glossary.ts';
+import { homeHtml } from './home.ts';
+import { buildingAbout, buildingLower, buildingName, costOf, reasonText, starterGoalText, unlockGoalNumber } from './info.ts';
 import type { CreateMap, MapView } from './mapView.ts';
+import { buildReport, looksLikeReport, reportView, type ReportEntry } from './report.ts';
+import {
+  pageHtml,
+  reportBodyHtml,
+  reportModalHtml,
+  reportsListHtml,
+  settingsBodyHtml,
+  sourcesBodyHtml,
+  sourcesModalHtml,
+} from './screens.ts';
 import { t, type StringKey } from './strings.ts';
 import {
   buildHtml,
-  chapterEndHtml,
   confirmNewSiteHtml,
   endRowHtml,
   goalCardHtml,
   icon,
   lostHtml,
   missionControlHtml,
+  realCardHtml,
   titleCardHtml,
   topBarHtml,
   weatherHtml,
 } from './views.ts';
 
-const { BUILDINGS, RENDER, UI } = config;
+const { BUILDINGS, RENDER, UI, CAMERA } = config;
 
 export interface AppDeps {
   book: ChapterBook;
@@ -68,11 +83,16 @@ type Notice =
   | { kind: 'building'; id: number; confirm: boolean }
   | { kind: 'shelter'; id: number; confirm: boolean };
 
-type Overlay = 'title' | 'confirmNewSite' | null;
+/** Panels over the play screen. The report itself shows whenever a report is pending. */
+type Overlay = 'title' | 'confirmNewSite' | 'sources' | 'lostReport' | null;
+
+/** Screens reached from Home. */
+type Screen = 'home' | 'sources' | 'reports' | 'report' | 'settings' | 'play';
 
 export class App {
   private save: SaveFile = emptySave();
   private run: Run | null = null;
+  private screen: Screen = 'home';
   private selected: PlaceableType | null = null;
   private outline: { r: number; c: number } | null = null;
   private wasteWarned: { type: PlaceableType; r: number; c: number } | null = null;
@@ -83,24 +103,79 @@ export class App {
   private lastEndDay = -Infinity;
   private hint: Hint = null;
   private lastHintType: PlaceableType | null = null;
+  /** The morning whose "This was real" card was closed. */
+  private cardClosedFor: string | null = null;
+  /** The report's New site button was pressed: show its confirmation inside the report. */
+  private reportConfirm = false;
+  private settingsConfirm = false;
+  private settingsCleared = false;
+  /** Which stored report Past reports opened. */
+  private pastIndex = -1;
+  /** The open tap-to-explain bubble. */
+  private glossOpen: { word: string; x: number; y: number; below: boolean } | null = null;
 
   constructor(
     private readonly root: HTMLElement,
     private readonly deps: AppDeps,
   ) {
     root.addEventListener('click', (e) => this.onClick(e));
+    // Glossary words are spans with role="button": Enter and Space open them too.
+    root.addEventListener('keydown', (e) => {
+      const el = e.target as HTMLElement | null;
+      if (el && el.classList?.contains('gloss') && (e.key === 'Enter' || e.key === ' ')) {
+        e.preventDefault();
+        el.click();
+      }
+    });
   }
 
   /** Show Home. */
   start(): void {
     this.save = loadSave(this.deps.storage);
     this.run = this.save.outpost;
-    renderHome(this.root, this.run !== null, () => this.onStart());
+    this.showScreen('home');
   }
 
   /** The current run, for tests. */
   get current(): Run | null {
     return this.run;
+  }
+
+  /** The stored reports that can still be shown, with their place in the save. */
+  storedReports(): { entry: ReportEntry; chapter: Chapter; index: number }[] {
+    const out: { entry: ReportEntry; chapter: Chapter; index: number }[] = [];
+    this.save.reports.forEach((r, index) => {
+      if (!looksLikeReport(r)) return;
+      const chapter = this.deps.book.chapters[r.chapterId];
+      if (chapter) out.push({ entry: r, chapter, index });
+    });
+    return out;
+  }
+
+  // ---- Screens reached from Home ----
+
+  private showScreen(screen: Exclude<Screen, 'play'>): void {
+    this.screen = screen;
+    this.playRoot = null;
+    this.glossOpen = null;
+    this.map?.destroy();
+    this.map = null;
+    if (screen === 'home') {
+      this.root.innerHTML = homeHtml(this.run !== null, this.storedReports().length > 0);
+    } else if (screen === 'sources') {
+      this.root.innerHTML = pageHtml(t('sources.title'), sourcesBodyHtml(), 'go-home');
+    } else if (screen === 'reports') {
+      this.root.innerHTML = pageHtml(t('reports.title'), reportsListHtml(this.storedReports()), 'go-home');
+    } else if (screen === 'settings') {
+      this.root.innerHTML = pageHtml(t('settings.title'), settingsBodyHtml(this.run !== null, this.settingsConfirm, this.settingsCleared), 'go-home');
+    } else {
+      const found = this.storedReports().find((r) => r.index === this.pastIndex);
+      if (!found) {
+        this.showScreen('reports');
+        return;
+      }
+      this.root.innerHTML = pageHtml(t('reports.title'), `<article class="report report--page">${reportBodyHtml(reportView(found.entry, found.chapter))}</article>`, 'open-reports');
+    }
   }
 
   // ---- Flow ----
@@ -140,6 +215,8 @@ export class App {
   private startNewRun(siteNumber: number): void {
     this.run = newRun(siteNumber, this.deps.book);
     this.resetUi();
+    this.reportConfirm = false;
+    this.cardClosedFor = null;
     this.overlay = 'title';
     this.persist();
     this.render();
@@ -148,13 +225,22 @@ export class App {
   // ---- Play screen ----
 
   private enterPlay(): void {
+    this.screen = 'play';
+    this.glossOpen = null;
     this.root.innerHTML = `<div class="play">
       <header class="topbar" data-part="top"></header>
       <section class="map" aria-label="${esc(t('map.aria'))}">
         <div class="map__canvas" data-part="canvas"><p class="map__loading">${esc(t('boot.loading'))}</p></div>
         <div class="map__badges" data-part="badges"></div>
+        <div class="zoom">
+          <button type="button" class="zoom__btn" data-action="zoom-in" aria-label="${esc(t('map.zoomIn'))}">+</button>
+          <button type="button" class="zoom__btn" data-action="zoom-out" aria-label="${esc(t('map.zoomOut'))}">−</button>
+        </div>
       </section>
-      <div class="map-top" data-part="maptop"></div>
+      <div class="map-top">
+        <div class="map-top__fixed" data-part="maptop"></div>
+        <div class="map-top__card" data-part="card"></div>
+      </div>
       <div class="map-bottom" data-part="mapbottom">
         <div class="notice-slot" data-part="notice" aria-live="polite"></div>
         <div class="mc" data-part="mc" aria-live="polite"></div>
@@ -165,11 +251,14 @@ export class App {
         <div class="endrow" data-part="endrow"></div>
       </aside>
       <div class="overlay" data-part="overlay"></div>
+      <div class="gloss-layer"></div>
     </div>`;
     this.playRoot = this.root.querySelector('.play');
+    this.map?.destroy();
+    this.map = null;
     this.render();
     const canvas = this.part('canvas');
-    if (canvas && !this.map) {
+    if (canvas) {
       void this.deps
         .createMap(canvas, {
           onTileTap: (r, c) => this.onTileTap(r, c),
@@ -209,6 +298,7 @@ export class App {
     const quiet = (d: typeof today) => d !== null && d.radiation === 0 && d.flare === 'none';
     const wxClass = quiet(today) && quiet(tomorrow) ? 'weather-compact is-quiet' : 'weather-compact';
     this.setHtml('maptop', goalCardHtml(state) + `<div class="${wxClass}">${weatherHtml(today, tomorrow, true)}</div>`);
+    this.setHtml('card', this.cardHtml(run, chapter));
     this.setHtml('weather', weatherHtml(today, tomorrow, false));
 
     const grid = this.part('buildgrid');
@@ -225,7 +315,7 @@ export class App {
     this.lastHintType = hintType;
 
     this.setHtml('endrow', endRowHtml(state, blocked));
-    this.setHtml('mc', missionControlHtml(missionControlMessage(run, chapter)));
+    this.setHtml('mc', missionControlHtml(missionControlMessage(run, chapter), blocked));
     this.setHtml('notice', this.noticeHtml(preview));
     this.setHtml('overlay', this.overlayHtml());
 
@@ -241,14 +331,43 @@ export class App {
       this.map.setInsets(this.measureInsets());
     }
     this.placeBadges(preview);
+    this.renderGloss();
+  }
+
+  /** The key of this morning, for remembering a closed card. */
+  private morningKey(run: Run): string {
+    return `${run.chapterId}:${run.replay}:${run.state.day}`;
+  }
+
+  /** The "This was real" card of this morning, unless it was closed. Never depends on the radio. */
+  private cardHtml(run: Run, chapter: Chapter): string {
+    const card = cardDue(run, chapter);
+    if (!card || this.cardClosedFor === this.morningKey(run)) return '';
+    const sources = cardSources(card);
+    return sources ? realCardHtml(card, sources) : '';
+  }
+
+  /** What comes after Keep building, in one line (SPEC 10.7). */
+  private nextLine(run: Run): string {
+    const archive = this.deps.book.archive;
+    const i = archive.indexOf(run.chapterId);
+    if (i >= 0 && i + 1 < archive.length) return t('report.nextChapter', { title: getChapter(this.deps.book, archive[i + 1]).title });
+    return t('report.nextReplay', { replay: replayLine(getChapter(this.deps.book, archive[0]), run.replay + 1) });
   }
 
   private overlayHtml(): string {
     const run = this.run!;
+    if (this.overlay === 'sources') return sourcesModalHtml();
     if (this.overlay === 'confirmNewSite') return confirmNewSiteHtml();
     if (this.overlay === 'title') return titleCardHtml(this.chapter(), run.replay);
-    if (run.state.lost) return lostHtml(failureChain(run.state));
-    if (run.pendingReport) return chapterEndHtml();
+    if (run.state.lost) {
+      if (this.overlay === 'lostReport') return reportModalHtml(reportView(buildReport(run, this.chapter(), true), this.chapter()), { kind: 'lost' });
+      return lostHtml(failureChain(run.state));
+    }
+    if (run.pendingReport) {
+      const view = reportView(buildReport(run, this.chapter(), false), this.chapter());
+      return reportModalHtml(view, { kind: 'chapter', next: this.nextLine(run), confirm: this.reportConfirm });
+    }
     return '';
   }
 
@@ -325,7 +444,8 @@ export class App {
     }
     const hint = this.hint;
     if (hint && hint.kind === 'tile') at(hint.r, hint.c, -RENDER.tileHeight / 2, 'badge--label badge--hint', esc(hint.label));
-    layer.innerHTML = items.join('');
+    const html = items.join('');
+    if (layer.innerHTML !== html) layer.innerHTML = html;
   }
 
   // ---- Notices: one short line, the day's notes, or a building's card ----
@@ -335,17 +455,17 @@ export class App {
     const run = this.run!;
     if (!n) return '';
     const close = `<button type="button" class="notice__close" data-action="close-notice" aria-label="${esc(t('notice.close'))}">×</button>`;
-    if (n.kind === 'text') return `<div class="notice notice--${n.tone}" role="status"><p>${esc(n.text)}</p>${close}</div>`;
+    if (n.kind === 'text') return `<div class="notice notice--${n.tone}" role="status"><p>${glossText(n.text)}</p>${close}</div>`;
     if (n.kind === 'notes') {
-      const lines = n.lines.map((l) => `<li>${esc(l)}</li>`).join('');
-      return `<div class="notice"><div><b>${esc(t('notes.title', { n: n.sol }))}</b><ul>${lines}</ul></div>${close}</div>`;
+      const lines = n.lines.map((l) => `<li>${glossText(l)}</li>`).join('');
+      return `<div class="notice"><div><b>${glossText(t('notes.title', { n: n.sol }))}</b><ul>${lines}</ul></div>${close}</div>`;
     }
     const state = run.state;
     if (n.kind === 'shelter') {
       const s = state.shelters.find((x) => x.id === n.id);
       if (!s) return '';
       const empty = !shelterTiles(s).some((tile) => buildingAt(state, tile.r, tile.c));
-      return this.cardHtml(buildingName('shelter'), buildingAbout('shelter'), [t('info.sheltered')], empty, n.confirm, close);
+      return this.buildingCardHtml(buildingName('shelter'), buildingAbout('shelter'), [t('info.sheltered')], empty, n.confirm, close);
     }
     const b = state.buildings.find((x) => x.id === n.id);
     if (!b) return '';
@@ -354,10 +474,10 @@ export class App {
     else if (preview.power.unpowered.some((u) => u.buildingId === b.id)) status.push(t('info.noPower'));
     if (b.damagedDays > 0) status.push(b.damagedDays === 1 ? t('badge.weakTomorrow') : t('badge.weakFor', { n: b.damagedDays }));
     if (isSheltered(state, b.r, b.c)) status.push(t('info.sheltered'));
-    return this.cardHtml(buildingName(b.type), buildingAbout(b.type), status, BUILDINGS[b.type].removable, n.confirm, close);
+    return this.buildingCardHtml(buildingName(b.type), buildingAbout(b.type), status, BUILDINGS[b.type].removable, n.confirm, close);
   }
 
-  private cardHtml(name: string, about: string, status: string[], removable: boolean, confirm: boolean, close: string): string {
+  private buildingCardHtml(name: string, about: string, status: string[], removable: boolean, confirm: boolean, close: string): string {
     const statusHtml = status.length ? `<p class="notice__status">${status.map(esc).join(' ')}</p>` : '';
     let actions = '';
     if (removable && !this.blocked()) {
@@ -369,16 +489,98 @@ export class App {
            </div>`
         : `<div class="notice__buttons"><button type="button" class="button button--small button--quiet" data-action="remove">${esc(t('remove.button'))}</button></div>`;
     }
-    return `<div class="notice notice--card"><div><p><b>${esc(name)}.</b> ${esc(about)}</p>${statusHtml}${actions}</div>${close}</div>`;
+    return `<div class="notice notice--card"><div><p><b>${esc(name)}.</b> ${glossText(about)}</p>${statusHtml}${actions}</div>${close}</div>`;
+  }
+
+  // ---- Tap-to-explain bubble (SPEC 8.3) ----
+
+  private renderGloss(): void {
+    const layer = this.root.querySelector<HTMLElement>('.gloss-layer');
+    if (!layer) return;
+    const g = this.glossOpen;
+    const sentence = g ? glossSentence(g.word) : null;
+    if (!g || !sentence) {
+      if (layer.innerHTML !== '') layer.innerHTML = '';
+      return;
+    }
+    const pos = g.below ? `top:${g.y.toFixed(0)}px` : `bottom:${g.y.toFixed(0)}px`;
+    layer.innerHTML = `<div class="gloss-bubble" role="tooltip" style="left:${g.x.toFixed(0)}px;${pos}"><b>${esc(g.word)}</b> ${esc(sentence)}</div>`;
+  }
+
+  private openGloss(el: HTMLElement): void {
+    const word = el.dataset.word ?? '';
+    if (this.glossOpen && this.glossOpen.word === word) {
+      this.glossOpen = null;
+    } else {
+      const rect = el.getBoundingClientRect();
+      const vw = typeof window !== 'undefined' ? window.innerWidth : 360;
+      const vh = typeof window !== 'undefined' ? window.innerHeight : 640;
+      const width = Math.min(UI_GLOSS_WIDTH, vw - 16);
+      const x = Math.max(8, Math.min(rect.left, vw - 8 - width));
+      const below = rect.bottom + 140 < vh;
+      this.glossOpen = { word, x, y: below ? rect.bottom + 6 : vh - rect.top + 6, below };
+    }
+    this.renderGloss();
   }
 
   // ---- Input ----
 
   private onClick(e: Event): void {
     const target = (e.target as HTMLElement | null)?.closest<HTMLElement>('[data-action]');
+    // Any tap closes an open glossary bubble; a tap on a glossary word opens its own.
+    if (this.glossOpen && target?.dataset.action !== 'gloss') {
+      this.glossOpen = null;
+      this.renderGloss();
+    }
     if (!target || !this.root.contains(target)) return;
     if (target instanceof HTMLButtonElement && target.disabled) return;
     switch (target.dataset.action) {
+      case 'gloss':
+        this.openGloss(target);
+        break;
+      case 'home-start':
+        this.onStart();
+        break;
+      case 'go-home':
+        this.settingsConfirm = false;
+        this.settingsCleared = false;
+        this.showScreen('home');
+        break;
+      case 'open-sources':
+        if (this.screen === 'play') {
+          if (this.overlay === null || this.overlay === 'title') {
+            this.overlay = 'sources';
+            this.render();
+          }
+        } else this.showScreen('sources');
+        break;
+      case 'close-overlay':
+        this.overlay = null;
+        this.render();
+        break;
+      case 'open-reports':
+        this.showScreen('reports');
+        break;
+      case 'open-report':
+        this.pastIndex = Number(target.dataset.index);
+        this.showScreen('report');
+        break;
+      case 'open-settings':
+        this.settingsConfirm = false;
+        this.settingsCleared = false;
+        this.showScreen('settings');
+        break;
+      case 'start-over':
+        this.settingsConfirm = true;
+        this.showScreen('settings');
+        break;
+      case 'start-over-no':
+        this.settingsConfirm = false;
+        this.showScreen('settings');
+        break;
+      case 'start-over-yes':
+        this.onStartOver();
+        break;
       case 'select':
         this.select(target.dataset.type as PlaceableType);
         break;
@@ -388,6 +590,19 @@ export class App {
         break;
       case 'end-day':
         this.onEndDay();
+        break;
+      case 'predict':
+        this.onPredict(target.dataset.answer as PredictAnswer | 'skip');
+        break;
+      case 'close-card':
+        if (this.run) this.cardClosedFor = this.morningKey(this.run);
+        this.render();
+        break;
+      case 'zoom-in':
+        this.map?.zoomBy(CAMERA.buttonStep);
+        break;
+      case 'zoom-out':
+        this.map?.zoomBy(1 / CAMERA.buttonStep);
         break;
       case 'close-notice':
         this.notice = null;
@@ -411,6 +626,27 @@ export class App {
       case 'keep-building':
         this.onKeepBuilding();
         break;
+      case 'report-new-site':
+        this.reportConfirm = true;
+        this.render();
+        break;
+      case 'report-new-site-no':
+        this.reportConfirm = false;
+        this.render();
+        break;
+      case 'report-new-site-yes':
+        if (this.run?.pendingReport) this.startNewRun(this.deps.randomSite());
+        break;
+      case 'lost-report':
+        if (this.run?.state.lost) {
+          this.overlay = 'lostReport';
+          this.render();
+        }
+        break;
+      case 'lost-report-back':
+        this.overlay = null;
+        this.render();
+        break;
       case 'try-again':
         if (this.run) this.startNewRun(this.run.siteNumber);
         break;
@@ -427,6 +663,17 @@ export class App {
         this.render();
         break;
     }
+  }
+
+  private onStartOver(): void {
+    this.run = null;
+    this.save.outpost = null;
+    writeSave(this.deps.storage, this.save);
+    this.resetUi();
+    this.overlay = null;
+    this.settingsConfirm = false;
+    this.settingsCleared = true;
+    this.showScreen('settings');
   }
 
   private select(type: PlaceableType): void {
@@ -450,6 +697,14 @@ export class App {
       const top = shelterHintTop(run.state);
       if (top && currentGoal(run.state).id === 'starter_cover' && canPlaceShelter(run.state, top.r, top.c).ok) this.outline = top;
     }
+    this.render();
+  }
+
+  /** After a building is placed, keep it chosen while another can be afforded, so several go in a row. */
+  private afterPlace(type: PlaceableType): void {
+    this.resetUi();
+    if (canAfford(this.run!.state, type)) this.selected = type;
+    this.persist();
     this.render();
   }
 
@@ -483,9 +738,7 @@ export class App {
       return;
     }
     place(state, type, r, c);
-    this.resetUi();
-    this.persist();
-    this.render();
+    this.afterPlace(type);
   }
 
   private tapShelter(r: number, c: number): void {
@@ -493,9 +746,7 @@ export class App {
     const o = this.outline;
     if (o && r >= o.r && r <= o.r + 1 && c >= o.c && c <= o.c + 1 && canPlaceShelter(state, o.r, o.c).ok) {
       place(state, 'shelter', o.r, o.c);
-      this.resetUi();
-      this.persist();
-      this.render();
+      this.afterPlace('shelter');
       return;
     }
     // Move the outline to a valid block containing the tapped tile, preferring the guided spot.
@@ -530,6 +781,17 @@ export class App {
     this.render();
   }
 
+  /** The predict question (SPEC 8.2): no reward, no penalty. Blocked only while a panel covers the screen. */
+  private onPredict(answer: PredictAnswer | 'skip'): void {
+    const run = this.run;
+    if (!run || this.blocked()) return;
+    const q = run.state.question;
+    if (!q || !answerQuestion(run.state, answer)) return;
+    this.notice = answer === 'skip' ? null : { kind: 'text', tone: 'info', text: t('predict.ack', { name: buildingLower(q.building) }) };
+    this.persist();
+    this.render();
+  }
+
   private onEndDay(): void {
     const run = this.run;
     if (!run || this.blocked()) return;
@@ -538,11 +800,19 @@ export class App {
     if (now - this.lastEndDay < UI.endDayCooldownMs) return;
     this.lastEndDay = now;
     const sol = run.state.day;
+    const ringBefore = run.state.ring;
     const result = endDay(run, this.deps.book);
     if (!result.ran) return;
     this.resetUi();
+    // The chapter ended: store its report once, now (SPEC 12). A reload never stores it again.
+    if (result.events.some((e) => e.type === 'chapter_end')) {
+      this.save.reports.push(buildReport(run, this.chapter(), false));
+      this.reportConfirm = false;
+    }
     const lines = dayNotes(result.events);
-    if (lines.length > 0 && !run.state.lost) this.notice = { kind: 'notes', sol, lines };
+    // The pan hint waits until the map is 8x8 (SPEC 5.6).
+    if (ringBefore === 0 && run.state.ring > 0) lines.push(t('notes.panHint'));
+    if (lines.length > 0 && !run.state.lost && !run.pendingReport) this.notice = { kind: 'notes', sol, lines };
     this.persist();
     this.render();
   }
@@ -551,10 +821,19 @@ export class App {
     const run = this.run;
     if (!run || !keepBuilding(run, this.deps.book)) return;
     this.resetUi();
+    this.reportConfirm = false;
     this.overlay = 'title';
     this.persist();
     this.render();
   }
+}
+
+/** Widest a glossary bubble may be, in CSS pixels. */
+const UI_GLOSS_WIDTH = 280;
+
+function canAfford(state: GameState, type: PlaceableType): boolean {
+  const cost = costOf(type);
+  return state.parts >= cost.parts && state.soil >= cost.soil;
 }
 
 function isSame(a: { r: number; c: number }, b: { r: number; c: number } | null): boolean {
@@ -566,11 +845,20 @@ const SHIELD =
 
 const STORM_NOTE: StringKey[] = ['notes.storm1', 'notes.storm1', 'notes.storm2', 'notes.storm3'];
 
-/** A short, calm list of what happened, from the day's events. */
+/** The scored prediction, in a friendly line (SPEC 8.2). */
+export function predictionLine(e: Extract<SimEvent, { type: 'prediction_scored' }>): string {
+  const name = buildingLower(e.building);
+  if (e.saved) return t('notes.predictSaved', { name });
+  if (e.right) return t(e.broke ? 'notes.predictRightBroke' : 'notes.predictRightFine', { name });
+  return t(e.broke ? 'notes.predictWrongBroke' : 'notes.predictWrongFine', { name });
+}
+
+/** A short, calm list of what happened, from the day's events. The prediction result comes first. */
 export function dayNotes(events: SimEvent[]): string[] {
   const lines: string[] = [];
   let broken = 0;
   const unlocked: string[] = [];
+  let predicted: string | null = null;
   for (const e of events) {
     switch (e.type) {
       case 'storm':
@@ -597,9 +885,13 @@ export function dayNotes(events: SimEvent[]): string[] {
       case 'map_grew':
         lines.push(t('notes.mapGrew'));
         break;
+      case 'prediction_scored':
+        predicted = predictionLine(e);
+        break;
     }
   }
   if (broken > 0) lines.splice(Math.min(1, lines.length), 0, broken === 1 ? t('notes.brokeOne') : t('notes.brokeMany', { n: broken }));
   if (unlocked.length > 0) lines.push(t('notes.unlocked', { names: unlocked.join(t('list.separator')) }));
+  if (predicted) lines.unshift(predicted);
   return lines;
 }

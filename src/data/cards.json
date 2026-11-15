@@ -2,7 +2,7 @@
   {
     "id": "sep2017-06",
     "date": "2017-09-06",
-    "text": "On this day in 2017 the Sun fired two giant flares. One was class X9.3, the biggest of that whole solar cycle.",
+    "text": "On this day in 2017 the Sun fired two giant flares. One was class X9.3, the biggest flare that solar cycle had seen.",
     "sourceIds": ["donki", "stce-review"]
   },
   {
@@ -14,19 +14,19 @@
   {
     "id": "sep2017-10",
     "date": "2017-09-10",
-    "text": "A class X8.2 flare burst from the Sun at 16:06 UTC. Fast particles from it were now racing toward Mars.",
+    "text": "A class X8.2 flare reached its peak at 16:06 UTC. It came from the same sunspot region, 12673.",
     "sourceIds": ["donki"]
   },
   {
     "id": "sep2017-11",
     "date": "2017-09-11",
-    "text": "The particles hit Mars. NASA's Curiosity rover measured radiation on the ground more than double anything it had recorded before.",
-    "sourceIds": ["curiosity-rad"]
+    "text": "A blast from the Sun hit Mars. NASA's Curiosity rover measured radiation on the ground more than double anything it had recorded before.",
+    "sourceIds": ["curiosity-rad", "curiosity-rad-swri"]
   },
   {
     "id": "sep2017-12",
     "date": "2017-09-12",
-    "text": "The high radiation lasted more than two days. From orbit, NASA's MAVEN spacecraft saw Mars glow with an aurora 25 times brighter than any it had seen.",
-    "sourceIds": ["curiosity-rad"]
+    "text": "The high radiation lasted more than two days. From orbit, NASA's MAVEN spacecraft saw Mars glow with an aurora more than 25 times brighter than any it had seen.",
+    "sourceIds": ["curiosity-rad", "curiosity-rad-swri"]
   }
 ]

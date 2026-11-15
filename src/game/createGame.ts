@@ -31,6 +31,7 @@ export function createMap(container: HTMLElement, callbacks: MapCallbacks): Prom
           return ready.worldToCss(x, y);
         },
         scale: () => ready.cssScale(),
+        zoomBy: (factor) => ready.zoomBy(factor),
         destroy: () => {
           observer?.disconnect();
           game.destroy(true);

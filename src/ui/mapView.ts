@@ -35,6 +35,8 @@ export interface MapView {
   tileToScreen(r: number, c: number, lift?: number): { x: number; y: number };
   /** World units to CSS pixels at the current zoom. */
   scale(): number;
+  /** Zoom about the middle of the view (the + and − buttons). Above 1 zooms in. */
+  zoomBy(factor: number): void;
   destroy(): void;
 }
 

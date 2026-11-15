@@ -25,6 +25,8 @@ export type Mood = 'calm' | 'worried' | 'cheering';
 export interface McMessage {
   text: string;
   mood: Mood;
+  /** True when the message is the predict question, shown with its answer buttons. */
+  question?: boolean;
 }
 
 // ---- Guided start ----
@@ -190,11 +192,13 @@ function idleTip(state: GameState): McMessage {
 }
 
 /**
- * This morning's one message. Priority: tomorrow's weather warning; then advice from Earth
- * (yesterday's problem, goal progress, an idle tip), which a radio blackout replaces.
- * The predict question belongs to phase 3 and is not shown.
+ * This morning's one message. Priority: the predict question; tomorrow's weather warning; then
+ * advice from Earth (yesterday's problem, goal progress, an idle tip), which a radio blackout
+ * replaces. The question and the warning never depend on the radio (SPEC 4.9, 10.4).
  */
 export function missionControlMessage(run: Run, chapter: Chapter): McMessage {
+  const q = run.state.question;
+  if (q && !run.state.lost) return { text: t('mc.question', { name: buildingLower(q.building) }), mood: 'worried', question: true };
   const { tomorrow } = forecast(chapter, run.chapterDay);
   if (tomorrow && tomorrow.radiation >= 2) return { text: t('mc.warnStorm'), mood: 'worried' };
   if (tomorrow && tomorrow.radiation === 1) return { text: t('mc.warnRising'), mood: 'worried' };

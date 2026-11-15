@@ -10,6 +10,15 @@
   },
   {
     "id": "curiosity-rad",
+    "name": "NASA JPL news release, 29 September 2017: Large Solar Storm Sparks Global Aurora and Doubles Radiation Levels on the Martian Surface",
+    "url": "https://www.jpl.nasa.gov/news/large-solar-storm-sparks-global-aurora-and-doubles-radiation-levels-on-the-martian-surface/",
+    "group": "additional",
+    "kind": "reading",
+    "usedFor": "The Mars radiation storm of 11 September 2017, and the MAVEN aurora",
+    "status": "used"
+  },
+  {
+    "id": "curiosity-rad-swri",
     "name": "Curiosity rover radiation report, September 2017 (Southwest Research Institute)",
     "url": "https://www.swri.org/node/11852",
     "group": "additional",
@@ -23,7 +32,7 @@
     "url": "https://www.stce.be/esww15/program/Sept_2017_activity_summary.pdf",
     "group": "additional",
     "kind": "reading",
-    "usedFor": "The 'biggest of that solar cycle' line on the 6 September card",
-    "status": "planned"
+    "usedFor": "The 'biggest flare that solar cycle had seen' line on the 6 September card",
+    "status": "used"
   }
 ]

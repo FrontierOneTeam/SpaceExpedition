@@ -836,4 +836,10 @@ Each line is a reading the build needed while no one could be asked. Change any 
 | 8.2 | The report's tally is "right out of answered". A skipped question is not counted. | 8.2 says a skip carries no penalty. |
 | 8.2 | The predict question is fixed at the start of the day. It does not change if the player builds before answering. | Simplest reading. |
 | 9.4 | The seven "Simplified" lines in the chapter file are short full sentences made from the fragments in 9.4. | The box needs sentences a child can read. |
+| 9.3 | Card `sep2017-06` now ends "the biggest flare that solar cycle had seen". | The sources were written in 2017, while the cycle was still going. They say "current solar cycle", not the whole cycle. |
+| 9.3 | Card `sep2017-10` now reads "A class X8.2 flare reached its peak at 16:06 UTC. It came from the same sunspot region, 12673." | 16:06 is the peak time. No official source ties the particles at Mars to this flare, so that line was removed. |
+| 9.3 | Card `sep2017-11` now starts "A blast from the Sun hit Mars." | Same reason. The NASA JPL release says a blast from the Sun hit Mars and dates it 11 September 2017. |
+| 9.3 | Card `sep2017-12` now says "more than 25 times brighter". | The NASA JPL release says "more than 25 times brighter". |
+| 9.5 | `curiosity-rad` is now the NASA JPL release of 29 September 2017 (opened and read on 15 November 2026). The SwRI page is its own row, `curiosity-rad-swri`. `stce-review` is `used`. | Closes the `TODO(content)` in 9.5. |
+| 13.3 | A site has only 8 ice tiles. That caps water, and so crew, from about the fourth play of the chapter. | Found by the balance bot. No number was changed. |
 | 13.3 | No balance number was changed. The sensible bot completes about 16 goals in the first chapter, so the map reaches 12×12 early. | No target covers pace. A playtest with a child should judge it. |

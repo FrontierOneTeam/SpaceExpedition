@@ -147,6 +147,14 @@ export function starterGoalText(index: number): string {
   return t(STARTER_TEXT[index]);
 }
 
+/** "You have 4." for a repeating goal, so the child sees where they stand. Empty for starter goals. */
+export function goalHave(goal: GoalInfo, state: GameState): string {
+  if (goal.kind === 'starter') return '';
+  if (goal.id === 'house_crew') return t('goal.have.house', { n: state.crew });
+  if (goal.id === 'fill_stores') return t('goal.have.stores', { air: state.air, food: state.food });
+  return t('goal.have.parts', { n: state.parts });
+}
+
 export function goalReward(goal: GoalInfo): string {
   if (goal.growsMap) return t('goal.rewardLand', { n: goal.rewardParts });
   if (goal.unlocks.length > 0) {

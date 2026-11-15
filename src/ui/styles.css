@@ -169,8 +169,8 @@ p {
 .topbar {
   grid-area: top;
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  grid-template-areas: 'brand date' 'meters meters' 'health health';
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas: 'brand date tools' 'meters meters meters' 'health health health';
   gap: 6px 10px;
   padding: 8px 16px;
   background: var(--bg);
@@ -416,7 +416,8 @@ p {
 
 .map__canvas canvas {
   display: block;
-  touch-action: manipulation;
+  /* The map handles drag and pinch itself. */
+  touch-action: none;
 }
 
 .map__loading {
@@ -489,8 +490,18 @@ p {
   pointer-events: none;
 }
 
-.map-top > * {
+.map-top > * > * {
   pointer-events: auto;
+}
+
+.map-top__fixed {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.map-top__card:empty {
+  display: none;
 }
 
 .goal {
@@ -1034,6 +1045,455 @@ p {
   line-height: 1;
 }
 
+/* ---- Phase 3: tools, zoom, card, predict, glossary, report and pages ---- */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.tools {
+  grid-area: tools;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.iconbtn {
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.iconbtn:focus-visible,
+.zoom__btn:focus-visible,
+.gloss:focus-visible,
+.reportitem:focus-visible,
+.extlink:focus-visible {
+  outline: 3px solid var(--text);
+  outline-offset: 2px;
+}
+
+.zoom {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.zoom__btn {
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(21, 16, 26, 0.92);
+  color: var(--text);
+  font-family: var(--font-heading);
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+
+/* Narrow: keep the goal card and weather clear of the zoom buttons. */
+.map-top {
+  padding-right: 60px;
+}
+
+.realcard {
+  display: flex;
+  gap: 4px;
+  align-items: flex-start;
+  max-width: 520px;
+  margin-top: 6px;
+  padding: 8px 4px 8px 12px;
+  background: rgba(33, 25, 38, 0.97);
+  border: 2px solid var(--text);
+  border-left-width: 6px;
+  border-radius: 12px;
+  font-size: 15px;
+}
+
+.realcard__body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.realcard__title {
+  font-family: var(--font-heading);
+  color: var(--amber);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.realcard__date {
+  font-weight: 700;
+}
+
+.realcard__src,
+.tl__src {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.extlink {
+  color: var(--amber);
+  font-weight: 700;
+  text-decoration: underline;
+  overflow-wrap: anywhere;
+}
+
+.mc__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.mc__answers {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.mc:has(.mc__answers) {
+  flex-wrap: wrap;
+}
+
+.gloss {
+  text-decoration: underline dotted;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  padding: 10px 0;
+  margin: -10px 0;
+}
+
+.gloss-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+}
+
+.gloss-layer:empty {
+  display: none;
+}
+
+.gloss-bubble {
+  position: fixed;
+  max-width: min(280px, calc(100vw - 16px));
+  padding: 10px 12px;
+  background: var(--text);
+  color: var(--bg);
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+  font-size: 15px;
+  line-height: 1.35;
+}
+
+.link--left {
+  padding-left: 0;
+  text-align: left;
+}
+
+.modal__panel--wide {
+  max-width: 640px;
+}
+
+.honesty {
+  color: var(--muted);
+}
+
+.section__title {
+  font-family: var(--font-heading);
+  font-size: 1.05rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--amber);
+  margin: 8px 0 0;
+}
+
+.sources {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.source {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.source__used {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.home__links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 12px;
+}
+
+.page {
+  min-height: 100vh;
+  padding: 16px;
+}
+
+.page__inner {
+  max-width: 760px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.page__title {
+  font-size: 1.75rem;
+}
+
+.reportlist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.reportitem {
+  width: 100%;
+  min-height: 56px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 10px 14px;
+  background: var(--panel);
+  border: 2px solid var(--line);
+  border-radius: 12px;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.reportitem__title {
+  font-family: var(--font-heading);
+  font-weight: 700;
+}
+
+.reportitem__line {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 2px solid var(--danger);
+  border-radius: 12px;
+}
+
+.confirm__ask {
+  font-weight: 700;
+}
+
+/* The report */
+
+.modal--report {
+  align-items: stretch;
+}
+
+.modal__panel.report {
+  max-width: 760px;
+  padding-bottom: 0;
+}
+
+.report {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.report__title {
+  font-size: 1.75rem;
+}
+
+.report__period {
+  color: var(--amber);
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.report__replay,
+.report__partial {
+  color: var(--muted);
+}
+
+.report__list {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tl__date {
+  font-family: var(--font-heading);
+  font-size: 1.1rem;
+  margin: 0 0 6px;
+}
+
+.tl__cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+}
+
+.tl__col {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: 12px;
+}
+
+.tl__col--nasa {
+  background: #1b2433;
+  border: 2px solid #5b8fc9;
+}
+
+.tl__col--base {
+  background: var(--panel-2);
+  border: 2px dashed var(--line);
+}
+
+.tl__label {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.tl__col--nasa .tl__label::before {
+  content: '★ ';
+}
+
+.tl__col--base .tl__label::before {
+  content: '⌂ ';
+}
+
+.tl__sol {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.grew {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+}
+
+.grew__item {
+  padding: 8px 12px;
+  background: var(--panel-2);
+  border-radius: 12px;
+}
+
+.grew__item dt {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.grew__item dd {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 1.15rem;
+}
+
+.realbox {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  padding: 12px;
+  border: 2px solid var(--line);
+  border-radius: 12px;
+}
+
+.report__actions {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0 -20px;
+  padding: 12px 20px 16px;
+  background: var(--panel);
+  border-top: 1px solid var(--line);
+}
+
+.report__main {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.report__main .button:first-child {
+  flex: 1 1 200px;
+}
+
+.report__next {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.report--page {
+  padding-bottom: 24px;
+}
+
+@media (min-width: 600px) {
+  .tl__cols,
+  .realbox {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
 @keyframes pulse {
   from {
     box-shadow: 0 0 0 0 rgba(242, 165, 58, 0.7);
@@ -1126,6 +1586,30 @@ p {
 
   .map-top {
     padding: 16px;
+  }
+
+  .zoom {
+    top: 16px;
+    right: 16px;
+  }
+
+  .zoom__btn {
+    width: 52px;
+    height: 52px;
+  }
+
+  .tools {
+    order: 10;
+  }
+
+  .iconbtn {
+    width: 52px;
+    height: 52px;
+  }
+
+  .mc__answers {
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .goal {
@@ -1224,12 +1708,12 @@ p {
   }
 
   .bb {
-    min-height: 116px;
+    min-height: 100px;
   }
 
   .bb__img {
-    width: 64px;
-    height: 72px;
+    width: 60px;
+    height: 56px;
   }
 
   .build__about,
@@ -1239,9 +1723,14 @@ p {
     font-size: 15px;
   }
 
+  /* End the day stays visible even when the side panel must scroll (SPEC 10.5). */
   .endrow {
+    position: sticky;
+    bottom: -16px;
     margin-top: auto;
-    padding: 0;
+    padding: 12px 0 16px;
+    margin-bottom: -16px;
+    background: var(--bg);
   }
 
   .counts--row {
@@ -1306,6 +1795,27 @@ p {
 
   .goal__text {
     font-size: 1rem;
+  }
+
+  .mc__answers {
+    flex-basis: 100%;
+  }
+
+  /* The phone's map is short: the card shrinks and scrolls inside the map instead of running under Mission Control. */
+  .map-top {
+    max-height: 100%;
+    min-height: 0;
+  }
+
+  .map-top__card {
+    display: flex;
+    min-height: 0;
+  }
+
+  .realcard {
+    max-height: 100%;
+    overflow-y: auto;
+    font-size: 14px;
   }
 }
 

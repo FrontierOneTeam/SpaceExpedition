@@ -4,7 +4,6 @@ Each line says what is missing and where in SPEC.md it comes from.
 
 ## Sources (SPEC 9.5)
 
-- `curiosity-rad`: add the NASA JPL link and its date. The SwRI link is already in the spec.
 - Optional register rows a teammate can add, each with the exact record and two sourced sentences:
   - `osdr-plants`
   - `csa-food`

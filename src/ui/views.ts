@@ -14,8 +14,10 @@ import {
   type Run,
 } from '../sim/index.ts';
 import type { McMessage, Mood } from './advice.ts';
+import type { Card, SourceRow } from './content.ts';
 import type { ChainPanel } from './failureChain.ts';
-import { changeLine, chapterRange, datePair, esc, replayLine, shortDate } from './format.ts';
+import { changeLine, chapterRange, datePair, esc, longDate, replayLine, shortDate } from './format.ts';
+import { glossText } from './glossary.ts';
 import {
   ART_FILE,
   BUILD_MENU,
@@ -24,6 +26,7 @@ import {
   buildingName,
   costOf,
   foodLevel,
+  goalHave,
   goalReward,
   goalText,
   powerLevel,
@@ -45,6 +48,11 @@ const CALM_ICON =
   '<svg class="icon" viewBox="0 0 64 64" aria-hidden="true"><rect x="2" y="2" width="60" height="60" rx="14" fill="#5b8fc9"/>' +
   '<circle cx="32" cy="32" r="13" fill="#ffd166"/><g stroke="#ffd166" stroke-width="4" stroke-linecap="round">' +
   '<path d="M32 8v6M32 50v6M8 32h6M50 32h6M15 15l4 4M45 45l4 4M15 49l4-4M45 19l4-4"/></g></svg>';
+
+/** The sources button: a circled "i", as in the Mars mockup. */
+const INFO_ICON =
+  '<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/>' +
+  '<path d="M12 10.5v6.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><circle cx="12" cy="7.2" r="1.5" fill="currentColor"/></svg>';
 
 // ---- Top bar ----
 
@@ -104,8 +112,11 @@ export function topBarHtml(run: Run, chapter: Chapter, preview: DayPreview): str
       <span class="brand__site">${esc(t('top.site', { n: run.siteNumber }))}</span>
     </div>
   </div>
+  <div class="tools">
+    <button type="button" class="iconbtn" data-action="open-sources" aria-label="${esc(t('top.sources'))}" title="${esc(t('top.sources'))}">${INFO_ICON}</button>
+  </div>
   <div class="date">
-    <span class="date__main"><b class="date__sol">${esc(t('top.sol', { n: day.sol }))}</b> · <span class="date__real">${esc(shortDate(date))}</span></span>
+    <span class="date__main"><b class="date__sol">${glossText(t('top.sol', { n: day.sol }))}</b> · <span class="date__real">${esc(shortDate(date))}</span></span>
     <span class="date__line">${esc(t('top.chapterDay', { n: day.chapterDay, total: chapter.days.length }))}</span>
     <span class="date__line">${esc(t('top.honesty'))}</span>
     ${replay}
@@ -128,24 +139,44 @@ export function goalCardHtml(state: GameState): string {
   const done = isGoalDone(state, goal);
   const pct = Math.round((Math.min(goal.progress, goal.target) / Math.max(1, goal.target)) * 100);
   const status = done ? t('goal.ready') : t('goal.progress', { n: goal.progress, target: goal.target });
+  const have = goalHave(goal, state);
+  const line = have ? `${have} ${goalReward(goal)}` : goalReward(goal);
   return `<div class="goal">
     <span class="goal__top"><span class="goal__label">${esc(t('goal.label'))}</span><span class="goal__status">${esc(status)}</span></span>
     <span class="goal__text">${esc(goalText(goal))}</span>
     <span class="goal__bar" role="progressbar" aria-valuemin="0" aria-valuemax="${goal.target}" aria-valuenow="${goal.progress}"><span style="width:${pct}%"></span></span>
-    <span class="goal__line">${esc(goalReward(goal))}</span>
+    <span class="goal__line">${esc(line)}</span>
   </div>`;
+}
+
+// ---- "This was real" card (SPEC 8.1) ----
+
+/** External links open in a new tab and never pass on the page. */
+export function sourceLink(row: SourceRow): string {
+  return `<a class="extlink" href="${esc(row.url)}" target="_blank" rel="noopener noreferrer">${esc(row.name)}<span class="sr-only"> ${esc(t('link.newTab'))}</span></a>`;
+}
+
+export function realCardHtml(card: Card, sources: SourceRow[]): string {
+  return `<aside class="realcard" aria-labelledby="realcard-title">
+    <div class="realcard__body">
+      <p class="realcard__head"><b id="realcard-title" class="realcard__title">${esc(t('card.title'))}</b> <span class="realcard__date">${esc(longDate(card.date))}</span></p>
+      <p class="realcard__text">${glossText(card.text)}</p>
+      <p class="realcard__src">${esc(t('card.sources'))} ${sources.map(sourceLink).join(t('list.separator'))}</p>
+    </div>
+    <button type="button" class="notice__close" data-action="close-card" aria-label="${esc(t('notice.close'))}">×</button>
+  </aside>`;
 }
 
 // ---- Space weather ----
 
 function tileHtml(label: string, tile: WeatherTile, compact: boolean): string {
   const img = tile.icon === 'calm' ? CALM_ICON : icon('icon_storm');
-  const line = tile.line && !compact ? `<span class="wx__line">${esc(tile.line)}</span>` : '';
+  const line = tile.line && !compact ? `<span class="wx__line">${glossText(tile.line)}</span>` : '';
   return `<div class="wx${tile.danger ? ' is-danger' : ''}">
     ${img}
     <div class="wx__body">
       <span class="wx__when">${esc(label)}</span>
-      <span class="wx__name">${tile.danger ? '<span class="tag__mark" aria-hidden="true">!</span>' : ''}${esc(tile.name)}</span>
+      <span class="wx__name">${tile.danger ? '<span class="tag__mark" aria-hidden="true">!</span>' : ''}${glossText(tile.name)}</span>
       ${line}
     </div>
   </div>`;
@@ -197,7 +228,7 @@ export function buildHtml(state: GameState, selected: PlaceableType | null, hint
     </button>`;
   }).join('');
   const about = selected
-    ? `<p class="build__about"><b>${esc(buildingName(selected))}.</b> ${esc(buildingAbout(selected))}
+    ? `<p class="build__about"><b>${esc(buildingName(selected))}.</b> ${glossText(buildingAbout(selected))}
         <button type="button" class="link" data-action="cancel">${esc(t('build.cancel'))}</button></p>`
     : `<p class="build__about build__about--idle">${esc(t('build.howTo'))}</p>`;
   return `<div class="build__head">
@@ -217,12 +248,21 @@ export function endRowHtml(state: GameState, disabled: boolean): string {
 
 const MOOD_KEY: Record<Mood, StringKey> = { calm: 'mc.mood.calm', worried: 'mc.mood.worried', cheering: 'mc.mood.cheering' };
 
-export function missionControlHtml(msg: McMessage): string {
+export function missionControlHtml(msg: McMessage, disabled: boolean): string {
+  const dis = disabled ? ' disabled' : '';
+  const answers = msg.question
+    ? `<div class="mc__answers">
+        <button type="button" class="button button--small button--quiet" data-action="predict" data-answer="fine"${dis}>${esc(t('predict.fine'))}</button>
+        <button type="button" class="button button--small button--quiet" data-action="predict" data-answer="break"${dis}>${esc(t('predict.break'))}</button>
+        <button type="button" class="link" data-action="predict" data-answer="skip"${dis}>${esc(t('predict.skip'))}</button>
+      </div>`
+    : '';
   return `<div class="mc__portrait mc__portrait--${msg.mood}" style="background-image:url('${ART}mission_control.png')" role="img" aria-label="${esc(t(MOOD_KEY[msg.mood]))}"></div>
     <div class="mc__body">
       <span class="mc__from">${esc(t('mc.from', { n: config.UI.missionControlMinutes }))}</span>
-      <p class="mc__text">${esc(msg.text)}</p>
-    </div>`;
+      <p class="mc__text">${glossText(msg.text)}</p>
+    </div>
+    ${answers}`;
 }
 
 // ---- Overlays ----
@@ -261,21 +301,10 @@ export function lostHtml(chain: ChainPanel[]): string {
       <h2 id="lost-title" class="modal__title">${esc(t('lost.title'))}</h2>
       <ol class="chain">${panels}</ol>
       <p>${esc(t('lost.body'))}</p>
+      <p><button type="button" class="link link--left" data-action="lost-report">${esc(t('lost.report'))}</button></p>
       <div class="modal__buttons">
         <button type="button" class="button" data-action="try-again">${esc(t('lost.tryAgain'))}</button>
         <button type="button" class="button button--quiet" data-action="new-site">${esc(t('lost.newSite'))}</button>
-      </div>
-    </div>
-  </div>`;
-}
-
-export function chapterEndHtml(): string {
-  return `<div class="modal">
-    <div class="modal__panel" role="dialog" aria-modal="true" aria-labelledby="end-title">
-      <h2 id="end-title" class="modal__title">${esc(t('chapterEnd.title'))}</h2>
-      <p>${esc(t('chapterEnd.body'))}</p>
-      <div class="modal__buttons">
-        <button type="button" class="button" data-action="keep-building">${esc(t('chapterEnd.keep'))}</button>
       </div>
     </div>
   </div>`;

@@ -265,3 +265,16 @@ export const UI = {
   siteMin: 1000,
   siteMax: 9999,
 } as const;
+
+// ---- Camera (phase 3, SPEC 5.3, 5.6). Render-only. ----
+
+export const CAMERA = {
+  /** Closest zoom: CSS pixels per world unit, so a tile is drawn at twice its size (SPEC 5.6). */
+  maxZoom: 2,
+  /** One tap on + or − zooms by this factor. */
+  buttonStep: 1.4,
+  /** Mouse wheel: zoom factor per wheel unit, as exp(-deltaY * wheelStep). */
+  wheelStep: 0.0015,
+  /** The "Survey expanded" moment: camera eases out and new tiles fade in over this time. */
+  surveyMs: 1200,
+} as const;

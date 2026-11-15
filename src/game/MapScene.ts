@@ -5,8 +5,23 @@ import Phaser from 'phaser';
 import { config, isRevealed, type Building, type GameState } from '../sim/index.ts';
 import { ART_FILE } from '../ui/info.ts';
 import type { MapCallbacks, MapInsets, MapModel } from '../ui/mapView.ts';
+import {
+  clampCamera,
+  easeCamera,
+  fitCamera,
+  panBy,
+  revealedBounds,
+  screenToWorld,
+  viewMidpoint,
+  worldToScreen,
+  zoomAround,
+  zoomCentre,
+  type Bounds,
+  type Cam,
+  type Viewport,
+} from './camera.ts';
 
-const { RENDER, REVEAL_RINGS, SITE_SIZE, SHELTER_ALPHA } = config;
+const { RENDER, SITE_SIZE, SHELTER_ALPHA, CAMERA } = config;
 const ART = import.meta.env.BASE_URL + 'assets/art/';
 
 const HALF_W = RENDER.tileWidth / 2;
@@ -27,14 +42,29 @@ function tieBreak(r: number, c: number): number {
   return (c - r + SITE_SIZE) / 1000;
 }
 
+interface Gesture {
+  start: { x: number; y: number };
+  /** Moved further than a tap allows: a drag, never a tap. */
+  moved: boolean;
+  /** Two fingers were down at some point: a pinch, never a tap. */
+  multi: boolean;
+}
+
 export class MapScene extends Phaser.Scene {
   private model: MapModel | null = null;
   private insets: MapInsets = { top: 0, bottom: 0 };
   private pixelRatio = 1;
-  private zoom = 1;
-  private centre = { x: 0, y: 0 };
+  private cam: Cam | null = null;
+  /** True once the player has panned or zoomed; until then the camera keeps fitting the revealed area. */
+  private userMoved = false;
+  private shownRing: number | null = null;
+  /** The "Survey expanded" moment in progress. */
+  private survey: { from: Cam; start: number; prevRing: number } | null = null;
+  private fadeTiles: Phaser.GameObjects.Image[] = [];
   private buildingSprites: { sprite: Phaser.GameObjects.Image; building: Building }[] = [];
-  private downAt: { x: number; y: number } | null = null;
+  private pointers = new Map<number, { x: number; y: number }>();
+  private gesture: Gesture | null = null;
+  private pinchDist: number | null = null;
 
   constructor(
     private readonly callbacks: MapCallbacks,
@@ -49,18 +79,90 @@ export class MapScene extends Phaser.Scene {
   }
 
   create(): void {
-    this.input.on('pointerdown', (p: Phaser.Input.Pointer) => {
-      this.downAt = { x: p.x, y: p.y };
-    });
-    this.input.on('pointerup', (p: Phaser.Input.Pointer) => {
-      const down = this.downAt;
-      this.downAt = null;
-      if (!down) return;
-      if (Math.hypot(p.x - down.x, p.y - down.y) > RENDER.tapSlopPx * this.pixelRatio) return;
-      const tile = this.pick(p.x, p.y);
-      if (tile) this.callbacks.onTileTap(tile.r, tile.c);
+    // A second touch pointer, for pinch.
+    this.input.addPointer(1);
+    this.input.on('pointerdown', (p: Phaser.Input.Pointer) => this.onDown(p));
+    this.input.on('pointermove', (p: Phaser.Input.Pointer) => this.onMove(p));
+    this.input.on('pointerup', (p: Phaser.Input.Pointer) => this.onUp(p, true));
+    this.input.on('pointerupoutside', (p: Phaser.Input.Pointer) => this.onUp(p, false));
+    this.input.on('wheel', (p: Phaser.Input.Pointer, _over: unknown, _dx: number, dy: number) => {
+      if (!this.cam || !this.model) return;
+      this.userInput();
+      this.cam = zoomAround(this.cam, Math.exp(-dy * CAMERA.wheelStep), p.x, p.y, this.bounds(), this.viewport());
+      this.apply();
     });
     this.onReady(this);
+  }
+
+  // ---- Input: drag to pan, pinch or wheel to zoom, a short press is a tap ----
+
+  private onDown(p: Phaser.Input.Pointer): void {
+    this.pointers.set(p.id, { x: p.x, y: p.y });
+    if (this.pointers.size === 1) {
+      this.gesture = { start: { x: p.x, y: p.y }, moved: false, multi: false };
+    } else {
+      if (this.gesture) this.gesture.multi = true;
+      this.pinchDist = this.pointerSpread();
+    }
+  }
+
+  private pointerSpread(): number | null {
+    const pts = [...this.pointers.values()];
+    if (pts.length < 2) return null;
+    return Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+  }
+
+  private onMove(p: Phaser.Input.Pointer): void {
+    const prev = this.pointers.get(p.id);
+    if (!prev || !this.cam || !this.model) return;
+    const cur = { x: p.x, y: p.y };
+    this.pointers.set(p.id, cur);
+    const g = this.gesture;
+    if (!g) return;
+    if (this.pointers.size >= 2) {
+      const dist = this.pointerSpread();
+      if (dist && this.pinchDist) {
+        const pts = [...this.pointers.values()];
+        const mid = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 };
+        this.userInput();
+        this.cam = zoomAround(this.cam, dist / this.pinchDist, mid.x, mid.y, this.bounds(), this.viewport());
+        this.apply();
+      }
+      this.pinchDist = dist;
+      return;
+    }
+    if (!g.moved && Math.hypot(cur.x - g.start.x, cur.y - g.start.y) > RENDER.tapSlopPx * this.pixelRatio) g.moved = true;
+    if (!g.moved || g.multi) return;
+    this.userInput();
+    this.cam = panBy(this.cam, cur.x - prev.x, cur.y - prev.y, this.bounds(), this.viewport());
+    this.apply();
+  }
+
+  private onUp(p: Phaser.Input.Pointer, inside: boolean): void {
+    if (!this.pointers.has(p.id)) return;
+    this.pointers.delete(p.id);
+    this.pinchDist = this.pointerSpread();
+    if (this.pointers.size > 0) return;
+    const g = this.gesture;
+    this.gesture = null;
+    // A drag or a pinch never counts as a tap on a tile.
+    if (!inside || !g || g.moved || g.multi) return;
+    const tile = this.pick(p.x, p.y);
+    if (tile) this.callbacks.onTileTap(tile.r, tile.c);
+  }
+
+  /** The player took the camera: stop fitting, and finish any survey moment at once. */
+  private userInput(): void {
+    this.userMoved = true;
+    if (this.survey) this.finishSurvey();
+  }
+
+  /** The + and − buttons. */
+  zoomBy(factor: number): void {
+    if (!this.cam || !this.model) return;
+    this.userInput();
+    this.cam = zoomCentre(this.cam, factor, this.bounds(), this.viewport());
+    this.apply();
   }
 
   setPixelRatio(ratio: number): void {
@@ -68,24 +170,53 @@ export class MapScene extends Phaser.Scene {
   }
 
   setInsets(insets: MapInsets): void {
+    if (insets.top === this.insets.top && insets.bottom === this.insets.bottom && this.cam) return;
     this.insets = insets;
-    this.fit();
+    this.layout();
   }
 
   /** Redraw everything from the model. Turn-based, so a full redraw is cheap enough. */
   draw(model: MapModel): void {
+    const ring = model.state.ring;
+    if (this.shownRing !== null && ring > this.shownRing) {
+      // "Survey expanded": ease out to the new area and fade the new tiles in (SPEC 5.3).
+      this.userMoved = false;
+      this.survey = model.reducedMotion || !this.cam ? null : { from: this.cam, start: this.time.now, prevRing: this.shownRing };
+    }
+    this.shownRing = ring;
     this.model = model;
     this.tweens.killAll();
     this.children.removeAll(true);
     this.buildingSprites = [];
+    this.fadeTiles = [];
     const state = model.state;
     this.drawTerrain(state);
     this.drawHighlights(model);
     this.drawThings(model);
-    this.fit();
+    this.layout();
+  }
+
+  update(time: number): void {
+    const s = this.survey;
+    if (!s || !this.model) return;
+    const t = Math.min(1, (time - s.start) / CAMERA.surveyMs);
+    this.cam = easeCamera(s.from, fitCamera(this.bounds(), this.viewport()), t);
+    for (const tile of this.fadeTiles) tile.setAlpha(t);
+    if (t >= 1) this.finishSurvey();
+    else this.apply();
+  }
+
+  private finishSurvey(): void {
+    this.survey = null;
+    for (const tile of this.fadeTiles) tile.setAlpha(1);
+    this.fadeTiles = [];
+    if (!this.userMoved) this.cam = fitCamera(this.bounds(), this.viewport());
+    this.apply();
   }
 
   private drawTerrain(state: GameState): void {
+    const s = this.survey;
+    const progress = s ? Math.min(1, (this.time.now - s.start) / CAMERA.surveyMs) : 1;
     for (let r = 0; r < SITE_SIZE; r++) {
       for (let c = 0; c < SITE_SIZE; c++) {
         const { x, y } = tileCentre(r, c);
@@ -93,8 +224,18 @@ export class MapScene extends Phaser.Scene {
         const revealed = isRevealed(state.ring, r, c);
         const key = !revealed ? 'unsurveyed_tile' : kind === 'ice' ? 'ice_tile' : kind === 'rock' ? 'rock_tile' : 'ground_mars_2';
         const depth = DEPTH.terrain + (r + c) / 100;
-        this.add.image(x, y, key).setScale(RENDER.artScale).setDepth(depth);
-        if (revealed && kind === 'crater') this.add.image(x, y, 'crater_small').setScale(RENDER.artScale).setDepth(depth + 0.001);
+        const fresh = s !== null && revealed && !isRevealed(s.prevRing, r, c);
+        if (fresh) {
+          // The unsurveyed tile stays underneath while the new one fades in over it.
+          this.add.image(x, y, 'unsurveyed_tile').setScale(RENDER.artScale).setDepth(depth - 0.0005);
+        }
+        const img = this.add.image(x, y, key).setScale(RENDER.artScale).setDepth(depth);
+        const parts = [img];
+        if (revealed && kind === 'crater') parts.push(this.add.image(x, y, 'crater_small').setScale(RENDER.artScale).setDepth(depth + 0.001));
+        if (fresh) {
+          for (const p of parts) p.setAlpha(progress);
+          this.fadeTiles.push(...parts);
+        }
       }
     }
   }
@@ -171,53 +312,64 @@ export class MapScene extends Phaser.Scene {
     }
   }
 
-  /** Fit the revealed area into the part of the view not covered by panels. */
-  private fit(): void {
+  private viewport(): Viewport {
+    return {
+      width: this.scale.width,
+      height: this.scale.height,
+      insetTop: this.insets.top * this.pixelRatio,
+      insetBottom: this.insets.bottom * this.pixelRatio,
+      pixelRatio: this.pixelRatio,
+    };
+  }
+
+  private bounds(): Bounds {
+    return revealedBounds(this.model ? this.model.state.ring : 0);
+  }
+
+  /**
+   * Place the camera: fit the revealed area until the player moves it (at 6x6 the base then
+   * fills the view), otherwise keep their view, clamped. A survey moment drives it from update().
+   */
+  private layout(): void {
     if (!this.model) return;
-    const ring = REVEAL_RINGS[Math.min(this.model.state.ring, REVEAL_RINGS.length - 1)];
-    const span = ring.max - ring.min;
-    const left = -span * HALF_W - HALF_W;
-    const right = span * HALF_W + HALF_W;
-    const top = 2 * ring.min * HALF_H - HALF_H - RENDER.fitHeadroom;
-    const bottom = 2 * ring.max * HALF_H + HALF_H;
-    const w = this.scale.width;
-    const h = this.scale.height;
-    const insetTop = this.insets.top * this.pixelRatio;
-    const insetBottom = this.insets.bottom * this.pixelRatio;
-    const availH = Math.max(1, h - insetTop - insetBottom);
-    const zoom = Math.max(0.01, Math.min(w / (right - left), availH / (bottom - top)) * RENDER.fitMargin);
-    const cx = (left + right) / 2;
-    const cy = (top + bottom) / 2 - (insetTop + availH / 2 - h / 2) / zoom;
-    this.zoom = zoom;
-    this.centre = { x: cx, y: cy };
+    if (this.survey) {
+      this.update(this.time.now);
+      return;
+    }
+    const b = this.bounds();
+    const vp = this.viewport();
+    this.cam = !this.userMoved || !this.cam ? fitCamera(b, vp) : clampCamera(this.cam, b, vp);
+    this.apply();
+  }
+
+  private apply(): void {
+    const c = this.cam;
+    if (!c) return;
+    const mid = viewMidpoint(c, this.viewport());
     const cam = this.cameras.main;
-    cam.setZoom(zoom);
-    cam.centerOn(cx, cy);
+    cam.setZoom(c.zoom);
+    cam.centerOn(mid.x, mid.y);
     this.callbacks.onLayout();
   }
 
-  /** Re-fit after the canvas changed size. */
+  /** Re-place the camera after the canvas changed size. */
   refit(): void {
-    this.fit();
+    this.layout();
   }
 
   private toWorld(px: number, py: number): { x: number; y: number } {
-    return {
-      x: (px - this.scale.width / 2) / this.zoom + this.centre.x,
-      y: (py - this.scale.height / 2) / this.zoom + this.centre.y,
-    };
+    return this.cam ? screenToWorld(this.cam, this.viewport(), px, py) : { x: 0, y: 0 };
   }
 
   /** CSS pixels from the map's top-left corner. */
   worldToCss(x: number, y: number): { x: number; y: number } {
-    return {
-      x: ((x - this.centre.x) * this.zoom + this.scale.width / 2) / this.pixelRatio,
-      y: ((y - this.centre.y) * this.zoom + this.scale.height / 2) / this.pixelRatio,
-    };
+    if (!this.cam) return { x: 0, y: 0 };
+    const p = worldToScreen(this.cam, this.viewport(), x, y);
+    return { x: p.x / this.pixelRatio, y: p.y / this.pixelRatio };
   }
 
   cssScale(): number {
-    return this.zoom / this.pixelRatio;
+    return this.cam ? this.cam.zoom / this.pixelRatio : 1;
   }
 
   /** A tap on a building's picture picks that building; otherwise the ground tile under it. */
