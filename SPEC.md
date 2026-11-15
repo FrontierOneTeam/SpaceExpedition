@@ -824,3 +824,16 @@ These settle rules above that were unclear or contradicted each other. Where thi
 | 11 | The placeholder generator copies two small tone clips kept in `tools/`. |
 | 11.3 | Every sound is `approved: false` until the team confirms it in phase 4. |
 | 14 | Phase 1 holds the predict rules, the Keep building rules, `cards.json` and `register.json`. The glossary arrives with its screen in phase 3. |
+
+### 16.3 Decided while the team was away (15 November 2026), for the team to confirm
+
+Each line is a reading the build needed while no one could be asked. Change any of them freely.
+
+| Section | Decision | Why |
+|---|---|---|
+| 4.6, 4.8 | A broken battery gives no power. Charge above `4 × working batteries` is lost before the power step. | 4.8 says a broken building does nothing, and 4.2 says power is stored only in batteries. |
+| 4.9 | A `major` flare shows in the weather tile as "Big solar flare". | 4.9 names only the `strong` label. |
+| 8.2 | The report's tally is "right out of answered". A skipped question is not counted. | 8.2 says a skip carries no penalty. |
+| 8.2 | The predict question is fixed at the start of the day. It does not change if the player builds before answering. | Simplest reading. |
+| 9.4 | The seven "Simplified" lines in the chapter file are short full sentences made from the fragments in 9.4. | The box needs sentences a child can read. |
+| 13.3 | No balance number was changed. The sensible bot completes about 16 goals in the first chapter, so the map reaches 12×12 early. | No target covers pace. A playtest with a child should judge it. |

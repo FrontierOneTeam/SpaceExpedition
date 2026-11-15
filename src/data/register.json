@@ -1,0 +1,29 @@
+[
+  {
+    "id": "donki",
+    "name": "DONKI space weather records",
+    "url": "https://ccmc.gsfc.nasa.gov/tools/DONKI/",
+    "group": "listed",
+    "kind": "data",
+    "usedFor": "Real flare dates and classes in every chapter",
+    "status": "used"
+  },
+  {
+    "id": "curiosity-rad",
+    "name": "Curiosity rover radiation report, September 2017 (Southwest Research Institute)",
+    "url": "https://www.swri.org/node/11852",
+    "group": "additional",
+    "kind": "reading",
+    "usedFor": "The Mars radiation storm of 11 September 2017, and the MAVEN aurora",
+    "status": "used"
+  },
+  {
+    "id": "stce-review",
+    "name": "STCE space weather review, 4 to 15 September 2017",
+    "url": "https://www.stce.be/esww15/program/Sept_2017_activity_summary.pdf",
+    "group": "additional",
+    "kind": "reading",
+    "usedFor": "The 'biggest of that solar cycle' line on the 6 September card",
+    "status": "planned"
+  }
+]
